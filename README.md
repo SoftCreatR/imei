@@ -1,6 +1,6 @@
 <div align=center>
 
-{LOGO}
+![Logo](https://raw.githubusercontent.com/SoftCreatR/imei/master/imei-logo.png)
 
 # IMEI - ImageMagick Easy Install
 #### Automated ImageMagick compilation from sources for Debian/Ubuntu including advanced delegate support.
@@ -14,4 +14,8 @@
 
 WIP
 
-<p align="center"><img src="https://raw.githubusercontent.com/SoftCreatR/imei/master/imei.png" alt="IMEI"></p>
+<div align=center>
+
+![Screenshot](https://raw.githubusercontent.com/SoftCreatR/imei/master/imei.png)
+
+</div>
