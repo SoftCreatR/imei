@@ -10,4 +10,4 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Build
-        run: sudo bash install-imagemagick7.sh
+        run: sudo bash imei.sh

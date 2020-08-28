@@ -30,5 +30,5 @@ addons:
 
 script:
   - sudo echo "Travis Banch = $TRAVIS_BRANCH"
-  - sudo apt-get install -y --force-yes wget
-  - sudo bash install-imagemagick7.sh --travis || exit 1
+  - sudo apt-get install -y wget
+  - sudo bash imei.sh --travis || exit 1

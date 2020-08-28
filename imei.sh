@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 ##############################################################
-# Title          : install-imagemagick7.sh                   #
-# Description    : ImageMagick® 7 for Debian/Ubuntu,         #
+# Title          : IMEI - ImageMagick Easy Install           #
+# Description    : ImageMagick® for Debian/Ubuntu,           #
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
@@ -10,7 +10,7 @@
 # License        : MIT                                       #
 # Version        : 4.0.0                                     #
 #                                                            #
-# Usage          : bash install-imagemagick7.sh              #
+# Usage          : bash imei.sh                              #
 ##############################################################
 
 ######################
@@ -78,7 +78,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 INSTALLER_VER=$(grep -oP 'Version\s+:\s+\K([\d\.]+)' "$0")
 INSTALLER_LATEST_VER=$(wget -qO- https://1-2.dev/im | grep -oP 'Version\s+:\s+\K([\d\.]+)')
-WORK_DIR=/usr/local/src
+WORK_DIR=/usr/local/src/imei
 LOG_FILE=/var/log/install-imagemagick.log
 OS_DISTRO="$(lsb_release -ds)"
 OS_ARCH="$(uname -m)"
@@ -141,7 +141,10 @@ if test -f "$LOG_FILE"; then
   rm "$LOG_FILE"
 fi
 
-# Check if temp directory was created
+# Create working directory
+mkdir -p "$WORK_DIR"
+
+# Check if working directory was created
 if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
   echo -e "${CRED}Could not create temp directory $WORK_DIR${CEND}"
   exit 1
@@ -180,12 +183,12 @@ export MAKEFLAGS="-j$((NUM_CORES + 1)) -l${NUM_CORES}"
 
 # Build dependencies
 install_deps() {
-  echo -ne ' Installing dependencies              [..]\r'
+  echo -ne ' Installing dependencies       [..]\r'
 
   if {
     # Update package list
     [ -z "$TRAVIS_BUILD" ] && {
-        apt-get update -qq >/dev/null 2>&1
+      apt-get update -qq >/dev/null 2>&1
     }
 
     # Allow installation of source files
@@ -198,10 +201,10 @@ install_deps() {
     apt-get -o Dpkg::Options::="--force-confmiss" -o Dpkg::Options::="--force-confold" -y install \
       git make cmake automake yasm g++ pkg-config
   } >>"$LOG_FILE" 2>&1; then
-    echo -ne " Installing dependencies              [${CGREEN}OK${CEND}]\\r"
+    echo -ne " Installing dependencies       [${CGREEN}OK${CEND}]\\r"
     echo -ne '\n'
   else
-    echo -e " Installing dependencies              [${CRED}FAILURE${CEND}]"
+    echo -e " Installing dependencies       [${CRED}FAILURE${CEND}]"
     echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
     exit 1
 
@@ -213,7 +216,7 @@ install_aom() {
   cd "$WORK_DIR" || exit 1
 
   if {
-    echo -ne ' Building aom                         [..]\r'
+    echo -ne ' Building aom                  [..]\r'
 
     {
       [ -n "$AOM_VER" ] &&
@@ -228,10 +231,10 @@ install_aom() {
         ldconfig
     } >>"$LOG_FILE" 2>&1
   }; then
-    echo -ne " Building aom                         [${CGREEN}OK${CEND}]\\r"
+    echo -ne " Building aom                  [${CGREEN}OK${CEND}]\\r"
     echo -ne '\n'
   else
-    echo -e " Building aom                         [${CRED}FAILURE${CEND}]"
+    echo -e " Building aom                  [${CRED}FAILURE${CEND}]"
     echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
     exit 1
   fi
@@ -242,7 +245,7 @@ install_libheif() {
   cd "$WORK_DIR" || exit 1
 
   if {
-    echo -ne ' Building libheif                     [..]\r'
+    echo -ne ' Building libheif              [..]\r'
 
     {
       [ -n "$LIBHEIF_VER" ] &&
@@ -254,10 +257,10 @@ install_libheif() {
         ldconfig
     } >>"$LOG_FILE" 2>&1
   }; then
-    echo -ne " Building libheif                     [${CGREEN}OK${CEND}]\\r"
+    echo -ne " Building libheif              [${CGREEN}OK${CEND}]\\r"
     echo -ne '\n'
   else
-    echo -e " Building libheif                     [${CRED}FAILURE${CEND}]"
+    echo -e " Building libheif              [${CRED}FAILURE${CEND}]"
     echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
     exit 1
   fi
@@ -268,7 +271,7 @@ install_imagemagick() {
   cd "$WORK_DIR" || exit 1
 
   if {
-    echo -ne ' Building ImageMagick                 [..]\r'
+    echo -ne ' Building ImageMagick          [..]\r'
 
     {
       [ -n "$IMAGEMAGICK_VER" ] &&
@@ -281,17 +284,17 @@ install_imagemagick() {
         ldconfig
     } >>"$LOG_FILE" 2>&1
   }; then
-    echo -ne " Building ImageMagick                 [${CGREEN}OK${CEND}]\\r"
+    echo -ne " Building ImageMagick          [${CGREEN}OK${CEND}]\\r"
     echo -ne '\n'
   else
-    echo -e " Building ImageMagick                 [${CRED}FAILURE${CEND}]"
+    echo -e " Building ImageMagick          [${CRED}FAILURE${CEND}]"
     echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
     exit 1
   fi
 }
 
 finish_installation() {
-  echo -ne ' Performing final steps               [..]\r'
+  echo -ne ' Performing final steps        [..]\r'
 
   if {
     {
@@ -299,26 +302,26 @@ finish_installation() {
       #apt-mark hold imagemagick
     } >>"$LOG_FILE" 2>&1
   }; then
-    echo -ne " Performing final steps               [${CGREEN}OK${CEND}]\\r"
+    echo -ne " Performing final steps        [${CGREEN}OK${CEND}]\\r"
     echo -ne '\n'
   else
-    echo -e " Performing final steps               [${CRED}FAILURE${CEND}]"
+    echo -e " Performing final steps        [${CRED}FAILURE${CEND}]"
     echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
     exit 1
   fi
 
-  echo -ne '     Verifying ImageMagick installation  [..]\r'
+  echo -ne ' Verifying installation        [..]\r'
 
   # Check if ImageMagick version matches
   VERIFY_INSTALLATION=$(identify -version | grep -oP "$IMAGEMAGICK_VER")
 
   if [ -n "$VERIFY_INSTALLATION" ]; then
-    echo -ne " Verifying ImageMagick installation  [${CGREEN}OK${CEND}]\\r"
+    echo -ne " Verifying installation        [${CGREEN}OK${CEND}]\\r"
     echo ""
     echo -e " ${CGREEN}ImageMagick was compiled successfully!${CEND}"
     echo -e "\n Installation log : $LOG_FILE\n"
   else
-    echo -e " Verifying ImageMagick installation   [${CRED}FAILURE${CEND}]"
+    echo -e " Verifying installation        [${CRED}FAILURE${CEND}]"
     echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
   fi
 }
@@ -329,9 +332,9 @@ finish_installation() {
 
 clear
 
-echo " ###########################################"
-echo " Welcome to the ImageMagick installer ${INSTALLER_VER}"
-echo " ###########################################"
+echo " #####################################################"
+echo " Welcome to the IMEI - ImageMagick Easy Install ${INSTALLER_VER}"
+echo " #####################################################"
 echo ""
 
 if [ "$(version "$INSTALLER_VER")" -lt "$(version "$INSTALLER_LATEST_VER")" ]; then
@@ -342,10 +345,10 @@ fi
 echo " Detected OS    : $OS_DISTRO"
 echo " Detected Arch  : $OS_ARCH"
 
-if [[ $NUM_CORES -lt 4 ]]; then
+if [[ $NUM_CORES -lt 2 ]]; then
   echo -e " Detected Cores : $NUM_CORES ${CYELLOW}(Slow compilation)${CEND}"
 else
-  echo " Detected Cores : $NUM_CORES"
+  echo -e " Detected Cores : $NUM_CORES ${CGREEN}(Fast compilation)${CEND}"
 fi
 
 echo ""
