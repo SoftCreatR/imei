@@ -1,0 +1,13 @@
+name: CI
+
+on: [ push ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Build
+        run: sudo bash install-imagemagick7.sh

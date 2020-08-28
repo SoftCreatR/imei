@@ -1,0 +1,34 @@
+os: linux
+dist: bionic
+
+language: shell
+
+branches:
+  only:
+    - master
+
+cache:
+  apt: true
+  directories:
+    - /usr/local/src
+
+before_install:
+  - rm -rf ~/.gnupg
+
+git:
+  quiet: true
+
+env:
+  global:
+    - MAKEFLAGS="-j 2"
+
+before_script:
+  - sudo apt-get -qq autoremove --purge
+addons:
+  apt:
+    update: true
+
+script:
+  - sudo echo "Travis Banch = $TRAVIS_BRANCH"
+  - sudo apt-get install -y --force-yes wget
+  - sudo bash install-imagemagick7.sh --travis || exit 1
