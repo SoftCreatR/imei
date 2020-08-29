@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-08-29 18:41                          #
+# Date           : 2020-08-29 19:31                          #
 # License        : MIT                                       #
-# Version        : 4.1.0                                     #
+# Version        : 4.1.1                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -356,7 +356,7 @@ echo " Welcome to IMEI - ImageMagick Easy Install ${INSTALLER_VER}"
 echo " #################################################"
 echo ""
 
-if [ "$(version "$INSTALLER_VER")" -lt "$(version "$INSTALLER_LATEST_VER")" ]; then
+if [ -z "$TRAVIS_BUILD" ] && [ "$(version "$INSTALLER_VER")" -lt "$(version "$INSTALLER_LATEST_VER")" ]; then
   echo -e " ${CYELLOW}A newer installer version ($INSTALLER_LATEST_VER) is available!${CEND}"
   echo ""
 fi
