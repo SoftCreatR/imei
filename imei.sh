@@ -83,8 +83,8 @@ LOG_FILE=/var/log/install-imagemagick.log
 
 OS_DISTRO="$(lsb_release -ds)"
 OS_ARCH="$(uname -m)"
-DISTRO_ID="$(lsb_release -si)"
-DISTRO_CODENAME="$(lsb_release -sc)"
+#DISTRO_ID="$(lsb_release -si)"
+#DISTRO_CODENAME="$(lsb_release -sc)"
 
 if test -z "$IMAGEMAGICK_VER"; then
   IMAGEMAGICK_VER=$(
