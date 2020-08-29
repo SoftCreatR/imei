@@ -1,19 +1,21 @@
-os: linux
-dist: bionic
-
+---
 language: shell
 
-branches:
-  only:
-    - master
+os:
+  - linux
+
+matrix:
+  include:
+    - dist: focal
+    - dist: bionic
+    - dist: xenial
+
+sudo: required
 
 cache:
   apt: true
   directories:
     - /usr/local/src
-
-before_install:
-  - rm -rf ~/.gnupg
 
 git:
   quiet: true
@@ -24,6 +26,7 @@ env:
 
 before_script:
   - sudo apt-get -qq autoremove --purge
+
 addons:
   apt:
     update: true
