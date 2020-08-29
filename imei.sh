@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-08-28 06:52:12                       #
+# Date           : 2020-08-29 18:41                          #
 # License        : MIT                                       #
-# Version        : 4.0.0                                     #
+# Version        : 4.1.0                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -77,11 +77,14 @@ export DEBIAN_FRONTEND=noninteractive
 #############
 
 INSTALLER_VER=$(grep -oP 'Version\s+:\s+\K([\d\.]+)' "$0")
-INSTALLER_LATEST_VER=$(wget -qO- https://1-2.dev/im | grep -oP 'Version\s+:\s+\K([\d\.]+)')
+INSTALLER_LATEST_VER=$(wget -qO- https://1-2.dev/imei | grep -oP 'Version\s+:\s+\K([\d\.]+)')
 WORK_DIR=/usr/local/src/imei
 LOG_FILE=/var/log/install-imagemagick.log
+
 OS_DISTRO="$(lsb_release -ds)"
 OS_ARCH="$(uname -m)"
+DISTRO_ID="$(lsb_release -si)"
+DISTRO_CODENAME="$(lsb_release -sc)"
 
 if test -z "$IMAGEMAGICK_VER"; then
   IMAGEMAGICK_VER=$(
@@ -168,11 +171,6 @@ if test -z "$LIBHEIF_VER"; then
   exit 1
 fi
 
-# Remove old imagemagick, if installed
-if [ -z "$TRAVIS_BUILD" ] && command_exists imagemagick; then
-  apt-get remove imagemagick --autoremove --purge
-fi
-
 #######################
 # Installer functions #
 #######################
@@ -195,11 +193,11 @@ install_deps() {
     sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list
 
     # Satisfy build dependencies for imagemagick
-    apt build-dep -qq imagemagick >/dev/null 2>&1
+    apt build-dep -qq imagemagick -y >/dev/null 2>&1
 
     # Install build dependencies
     apt-get -o Dpkg::Options::="--force-confmiss" -o Dpkg::Options::="--force-confold" -y install \
-      git make cmake automake yasm g++ pkg-config
+      git make cmake automake yasm g++ pkg-config libde265-dev libx265-dev
   } >>"$LOG_FILE" 2>&1; then
     echo -ne " Installing dependencies       [${CGREEN}OK${CEND}]\\r"
     echo -ne '\n'
@@ -207,7 +205,6 @@ install_deps() {
     echo -e " Installing dependencies       [${CRED}FAILURE${CEND}]"
     echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
     exit 1
-
   fi
 }
 
@@ -225,7 +222,11 @@ install_aom() {
         tar -xf "$AOM_VER.tar.gz" &&
         mkdir "$WORK_DIR/build_aom" &&
         cd "$WORK_DIR/build_aom" &&
-        cmake "../aom-$AOM_VER/" -DENABLE_TESTS=0 -DBUILD_SHARED_LIBS=1 &&
+        cmake "../aom-$AOM_VER/" \
+          -DENABLE_TESTS=0 \
+          -DENABLE_DOCS=0 \
+          -DBUILD_SHARED_LIBS=1 \
+          -O3 &&
         make &&
         make install &&
         ldconfig
@@ -252,7 +253,11 @@ install_libheif() {
         wget -qc --show-progress "https://github.com/strukturag/libheif/releases/download/v$LIBHEIF_VER/libheif-$LIBHEIF_VER.tar.gz" &&
         tar -xf "libheif-$LIBHEIF_VER.tar.gz" &&
         cd "libheif-$LIBHEIF_VER" &&
-        ./configure &&
+        ./configure \
+          CFLAGS="-g -O3 -Wall -pthread" \
+          --disable-dependency-tracking \
+          --disable-examples \
+          --disable-go &&
         make install &&
         ldconfig
     } >>"$LOG_FILE" 2>&1
@@ -279,7 +284,21 @@ install_imagemagick() {
           -O "ImageMagick-$IMAGEMAGICK_VER.tar.gz" &&
         tar -xf "ImageMagick-$IMAGEMAGICK_VER.tar.gz" &&
         cd "ImageMagick-$IMAGEMAGICK_VER" &&
-        ./configure --without-magick-plus-plus --disable-docs --with-heic=yes &&
+        ./configure \
+          CC=gcc \
+          CFLAGS="-O3 -march=native" \
+          CXX=g++ \
+          CXXFLAGS="-O3 -march=native" \
+          --prefix=/usr \
+          --without-magick-plus-plus \
+          --without-perl \
+          --disable-shared \
+          --disable-dependency-tracking \
+          --disable-docs \
+          --with-jemalloc=yes \
+          --with-tcmalloc=yes \
+          --with-umem=yes \
+          --with-heic=yes &&
         make install &&
         ldconfig
     } >>"$LOG_FILE" 2>&1
@@ -294,32 +313,32 @@ install_imagemagick() {
 }
 
 finish_installation() {
-  echo -ne ' Performing final steps        [..]\r'
-
-  if {
-    {
-      echo -e 'Package: imagemagick*\nPin: release *\nPin-Priority: -1' >/etc/apt/preferences.d/imagemagick.pref
-      #apt-mark hold imagemagick
-    } >>"$LOG_FILE" 2>&1
-  }; then
-    echo -ne " Performing final steps        [${CGREEN}OK${CEND}]\\r"
-    echo -ne '\n'
-  else
-    echo -e " Performing final steps        [${CRED}FAILURE${CEND}]"
-    echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
-    exit 1
-  fi
+  #echo -ne ' Performing final steps        [..]\r'
+  
+  # This may fail due to strange errors. Log it, but ignore any failure.
+  #{
+  #  echo -e 'Package: *imagemagick*\nPin: release *\nPin-Priority: -1' >/etc/apt/preferences.d/imagemagick.pref
+  #  apt-mark hold "*imagemagick*"
+  #} >>"$LOG_FILE" 2>&1
+  
+  #echo -ne " Performing final steps        [${CGREEN}OK${CEND}]\\r"
+  #echo -ne '\n'
 
   echo -ne ' Verifying installation        [..]\r'
 
   # Check if ImageMagick version matches
-  VERIFY_INSTALLATION=$(identify -version | grep -oP "$IMAGEMAGICK_VER")
+  if command_exists identify; then
+    VERIFY_INSTALLATION=$(identify -version | grep -oP "$IMAGEMAGICK_VER")
 
-  if [ -n "$VERIFY_INSTALLATION" ]; then
-    echo -ne " Verifying installation        [${CGREEN}OK${CEND}]\\r"
-    echo ""
-    echo -e " ${CGREEN}ImageMagick was compiled successfully!${CEND}"
-    echo -e "\n Installation log : $LOG_FILE\n"
+    if [ -n "$VERIFY_INSTALLATION" ]; then
+      echo -ne " Verifying installation        [${CGREEN}OK${CEND}]\\r"
+      echo ""
+      echo -e " ${CGREEN}ImageMagick was compiled successfully!${CEND}"
+      echo -e "\n Installation log : $LOG_FILE\n"
+    else
+      echo -e " Verifying installation        [${CRED}FAILURE${CEND}]"
+      echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
+    fi
   else
     echo -e " Verifying installation        [${CRED}FAILURE${CEND}]"
     echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
@@ -332,9 +351,9 @@ finish_installation() {
 
 clear
 
-echo " #####################################################"
-echo " Welcome to the IMEI - ImageMagick Easy Install ${INSTALLER_VER}"
-echo " #####################################################"
+echo " #################################################"
+echo " Welcome to IMEI - ImageMagick Easy Install ${INSTALLER_VER}"
+echo " #################################################"
 echo ""
 
 if [ "$(version "$INSTALLER_VER")" -lt "$(version "$INSTALLER_LATEST_VER")" ]; then
@@ -361,8 +380,6 @@ echo " #####################"
 echo " Installation Process"
 echo " #####################"
 echo ""
-
-sleep 3
 
 install_deps
 install_aom
