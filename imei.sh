@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-08-29 19:31                          #
+# Date           : 2020-08-30 05:46                          #
 # License        : MIT                                       #
-# Version        : 4.1.1                                     #
+# Version        : 4.1.2                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -76,15 +76,13 @@ export DEBIAN_FRONTEND=noninteractive
 # Variables #
 #############
 
+START=$(date +%s)
 INSTALLER_VER=$(grep -oP 'Version\s+:\s+\K([\d\.]+)' "$0")
 INSTALLER_LATEST_VER=$(wget -qO- https://1-2.dev/imei | grep -oP 'Version\s+:\s+\K([\d\.]+)')
 WORK_DIR=/usr/local/src/imei
 LOG_FILE=/var/log/install-imagemagick.log
-
 OS_DISTRO="$(lsb_release -ds)"
 OS_ARCH="$(uname -m)"
-#DISTRO_ID="$(lsb_release -si)"
-#DISTRO_CODENAME="$(lsb_release -sc)"
 
 if test -z "$IMAGEMAGICK_VER"; then
   IMAGEMAGICK_VER=$(
@@ -122,12 +120,31 @@ CEND="${CSI}0m"
 # Helper functions #
 ####################
 
-cleanup() {
-  rm -rf "$WORK_DIR"
+displaytime() {
+  local T=$1
+  local D=$((T / 60 / 60 / 24))
+  local H=$((T / 60 / 60 % 24))
+  local M=$((T / 60 % 60))
+  local S=$((T % 60))
+
+  ((D > 0)) && printf '%d days ' $D
+  ((H > 0)) && printf '%d hours ' $H
+  ((M > 0)) && printf '%d minutes ' $M
+  ((D > 0 || H > 0 || M > 0)) && printf 'and '
+
+  printf '%d seconds\n' $S
 }
 
 version() {
   echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'
+}
+
+finish() {
+  [ -z "$TRAVIS_BUILD" ] && {
+    rm -rf "$WORK_DIR"
+  }
+
+  echo -e "${CBLUE} Execution time: $(displaytime $(($(date +%s) - START)))${CEND}.\n\n"
 }
 
 ########
@@ -135,9 +152,7 @@ version() {
 ########
 
 # Call cleanup function on exit
-[ -z "$TRAVIS_BUILD" ] && {
-  trap cleanup EXIT
-}
+trap finish EXIT
 
 # Remove log file
 if test -f "$LOG_FILE"; then
@@ -314,13 +329,13 @@ install_imagemagick() {
 
 finish_installation() {
   #echo -ne ' Performing final steps        [..]\r'
-  
+
   # This may fail due to strange errors. Log it, but ignore any failure.
   #{
   #  echo -e 'Package: *imagemagick*\nPin: release *\nPin-Priority: -1' >/etc/apt/preferences.d/imagemagick.pref
   #  apt-mark hold "*imagemagick*"
   #} >>"$LOG_FILE" 2>&1
-  
+
   #echo -ne " Performing final steps        [${CGREEN}OK${CEND}]\\r"
   #echo -ne '\n'
 
@@ -386,8 +401,5 @@ install_aom
 install_libheif
 install_imagemagick
 finish_installation
-
-echo ""
-echo ""
 
 exit 0
