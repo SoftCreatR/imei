@@ -4,13 +4,16 @@ language: shell
 os:
   - linux
 
-matrix:
+jobs:
   include:
-    - dist: focal
-    - dist: bionic
-    - dist: xenial
-
-sudo: required
+    - name: focal
+      dist: focal
+      
+    - name: bionic
+      dist: bionic
+      
+    - name: xenial
+      dist: xenial
 
 cache:
   apt: true
