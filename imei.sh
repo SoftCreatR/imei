@@ -8,7 +8,7 @@
 # Author         : Sascha Greuel <hello@1-2.dev>             #
 # Date           : 2020-08-30 05:46                          #
 # License        : MIT                                       #
-# Version        : 4.1.2                                     #
+# Version        : 4.1.3                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -77,8 +77,12 @@ export DEBIAN_FRONTEND=noninteractive
 #############
 
 START=$(date +%s)
-INSTALLER_VER=$(grep -oP 'Version\s+:\s+\K([\d\.]+)' "$0")
-INSTALLER_LATEST_VER=$(wget -qO- https://1-2.dev/imei | grep -oP 'Version\s+:\s+\K([\d\.]+)')
+
+if test -f "$0"; then
+  INSTALLER_VER=$(grep -oP 'Version\s+:\s+\K([\d\.]+)' "$0")
+  INSTALLER_LATEST_VER=$(wget -qO- https://1-2.dev/imei | grep -oP 'Version\s+:\s+\K([\d\.]+)')
+fi
+
 WORK_DIR=/usr/local/src/imei
 LOG_FILE=/var/log/install-imagemagick.log
 OS_DISTRO="$(lsb_release -ds)"
@@ -371,7 +375,7 @@ echo " Welcome to IMEI - ImageMagick Easy Install ${INSTALLER_VER}"
 echo " #################################################"
 echo ""
 
-if [ -z "$TRAVIS_BUILD" ] && [ "$(version "$INSTALLER_VER")" -lt "$(version "$INSTALLER_LATEST_VER")" ]; then
+if [ -z "$TRAVIS_BUILD" ] && test -n "$INSTALLER_VER" && [ "$(version "$INSTALLER_VER")" -lt "$(version "$INSTALLER_LATEST_VER")" ]; then
   echo -e " ${CYELLOW}A newer installer version ($INSTALLER_LATEST_VER) is available!${CEND}"
   echo ""
 fi

@@ -6,13 +6,13 @@ os:
 
 jobs:
   include:
-    - name: focal
+    - name: "Focal Fossa Test Build"
       dist: focal
       
-    - name: bionic
+    - name: "Bionic Beaver Test Build"
       dist: bionic
       
-    - name: xenial
+    - name: "Xenial Xerus Test Build"
       dist: xenial
 
 cache:
