@@ -87,6 +87,7 @@ $ sudo imei.sh
 
 * [ ] Add cronjob for automatic updates
 * [ ] Add ImageMagick modules choice
+* [ ] CentOS 8 compatibility
 
 ## Contributing
 

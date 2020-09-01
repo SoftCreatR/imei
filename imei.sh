@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-08-30 05:46                          #
+# Date           : 2020-09-01 22:50                          #
 # License        : MIT                                       #
-# Version        : 4.1.3                                     #
+# Version        : 4.1.4                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -237,8 +237,8 @@ install_aom() {
     {
       [ -n "$AOM_VER" ] &&
         wget -qc --show-progress "https://github.com/jbeich/aom/archive/v$AOM_VER.tar.gz" \
-          -O "$AOM_VER.tar.gz" &&
-        tar -xf "$AOM_VER.tar.gz" &&
+          -O "aom-$AOM_VER.tar.gz" &&
+        tar -xf "aom-$AOM_VER.tar.gz" &&
         mkdir "$WORK_DIR/build_aom" &&
         cd "$WORK_DIR/build_aom" &&
         cmake "../aom-$AOM_VER/" \
