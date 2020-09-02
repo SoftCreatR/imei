@@ -225,9 +225,9 @@ install_deps() {
 
   if {
     # Update package list
-    [ -z "$TRAVIS_BUILD" ] && {
+    if [ -z "$TRAVIS_BUILD" ]; then
       apt-get update -qq
-    }
+    fi
 
     # Allow installation of source files
     sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list
