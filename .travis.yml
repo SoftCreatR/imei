@@ -15,26 +15,31 @@ jobs:
     - name: "Xenial Xerus Test Build"
       dist: xenial
 
-cache:
-  apt: true
-  directories:
-    - /usr/local/src
-
 git:
   quiet: true
+  depth: false
 
 env:
   global:
     - MAKEFLAGS="-j 2"
 
-before_script:
-  - sudo apt-get -qq autoremove --purge
-
 addons:
   apt:
     update: true
+    packages:
+      - wget
+      - jq
+      - cmake
+      - yasm
+      - libde265-dev
+      - libx265-dev
+
+cache:
+  directories:
+    - /usr/local/src
 
 script:
-  - sudo echo "Travis Banch = $TRAVIS_BRANCH"
-  - sudo apt-get install -y wget
-  - sudo bash imei.sh --travis || exit 1
+  - sudo bash imei.sh --travis --log-file "build.log" || exit 1
+
+after_failure:
+  - sudo tail -5 build.log

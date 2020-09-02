@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-01 22:50                          #
+# Date           : 2020-09-02 00:07                          #
 # License        : MIT                                       #
-# Version        : 4.1.4                                     #
+# Version        : 4.2.0                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -65,6 +65,12 @@ while [ "$#" -gt 0 ]; do
   --travis)
     TRAVIS_BUILD="1"
     ;;
+  --log-file)
+    LOG_FILE=$2
+    ;;
+  --work-dir)
+    WORK_DIR=$2
+    ;;
   *) ;;
   esac
   shift
@@ -77,18 +83,23 @@ export DEBIAN_FRONTEND=noninteractive
 #############
 
 START=$(date +%s)
+OS_DISTRO="$(lsb_release -ds)"
+OS_ARCH="$(uname -m)"
 
-if test -f "$0"; then
+if [ -f "$0" ]; then
   INSTALLER_VER=$(grep -oP 'Version\s+:\s+\K([\d\.]+)' "$0")
   INSTALLER_LATEST_VER=$(wget -qO- https://1-2.dev/imei | grep -oP 'Version\s+:\s+\K([\d\.]+)')
 fi
 
-WORK_DIR=/usr/local/src/imei
-LOG_FILE=/var/log/install-imagemagick.log
-OS_DISTRO="$(lsb_release -ds)"
-OS_ARCH="$(uname -m)"
+if [ -z "$WORK_DIR" ]; then
+  WORK_DIR=/usr/local/src/imei
+fi
 
-if test -z "$IMAGEMAGICK_VER"; then
+if [ -z "$LOG_FILE" ]; then
+  LOG_FILE=/var/log/install-imagemagick.log
+fi
+
+if [ -z "$IMAGEMAGICK_VER" ]; then
   IMAGEMAGICK_VER=$(
     wget -qO- https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest |
       grep -oP '"tag_name": "\K.*?(?=")' |
@@ -96,7 +107,7 @@ if test -z "$IMAGEMAGICK_VER"; then
   )
 fi
 
-if test -z "$AOM_VER"; then
+if [ -z "$AOM_VER" ]; then
   AOM_VER=$(
     wget -qO- https://api.github.com/repos/jbeich/aom/tags |
       jq -r '.[0].name' |
@@ -104,7 +115,7 @@ if test -z "$AOM_VER"; then
   )
 fi
 
-if test -z "$LIBHEIF_VER"; then
+if [ -z "$LIBHEIF_VER" ]; then
   LIBHEIF_VER=$(
     wget -qO- https://api.github.com/repos/strukturag/libheif/releases/latest |
       grep -oP '"tag_name": "\K.*?(?=")' |
@@ -143,10 +154,14 @@ version() {
   echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'
 }
 
-finish() {
-  [ -z "$TRAVIS_BUILD" ] && {
+cleanup() {
+  if [ -d "$WORK_DIR" ]; then
     rm -rf "$WORK_DIR"
-  }
+  fi
+}
+
+finish() {
+  cleanup
 
   echo -e "${CBLUE} Execution time: $(displaytime $(($(date +%s) - START)))${CEND}.\n\n"
 }
@@ -155,16 +170,18 @@ finish() {
 # Init #
 ########
 
-# Call cleanup function on exit
-trap finish EXIT
+# Display execution time and clean up on exit
+trap finish 0 1 2 3 6 15
 
-# Remove log file
-if test -f "$LOG_FILE"; then
+# Clean up on execution
+cleanup
+
+if [ -f "$LOG_FILE" ]; then
   rm "$LOG_FILE"
 fi
 
 # Create working directory
-mkdir -p "$WORK_DIR"
+[ ! -d "$WORK_DIR" ] && mkdir -p "$WORK_DIR"
 
 # Check if working directory was created
 if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
@@ -173,19 +190,19 @@ if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
 fi
 
 # Make sure, that a version number for ImageMagick has been set
-if test -z "$IMAGEMAGICK_VER"; then
+if [ -z "$IMAGEMAGICK_VER" ]; then
   echo -e "${CRED}Unable to determine version number for ImageMagick${CEND}"
   exit 1
 fi
 
 # Make sure, that a version number for aom has been set
-if test -z "$AOM_VER"; then
+if [ -z "$AOM_VER" ]; then
   echo -e "${CRED}Unable to determine version number for aom${CEND}"
   exit 1
 fi
 
 # Make sure, that a version number for libheif has been set
-if test -z "$LIBHEIF_VER"; then
+if [ -z "$LIBHEIF_VER" ]; then
   echo -e "${CRED}Unable to determine version number for libheif${CEND}"
   exit 1
 fi
@@ -205,18 +222,17 @@ install_deps() {
   if {
     # Update package list
     [ -z "$TRAVIS_BUILD" ] && {
-      apt-get update -qq >/dev/null 2>&1
+      apt-get update -qq
     }
 
     # Allow installation of source files
     sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list
 
     # Satisfy build dependencies for imagemagick
-    apt build-dep -qq imagemagick -y >/dev/null 2>&1
+    apt-get build-dep -qq imagemagick -y
 
     # Install build dependencies
-    apt-get -o Dpkg::Options::="--force-confmiss" -o Dpkg::Options::="--force-confold" -y install \
-      git make cmake automake yasm g++ pkg-config libde265-dev libx265-dev
+    apt-get install git make cmake automake yasm g++ pkg-config libde265-dev libx265-dev -y
   } >>"$LOG_FILE" 2>&1; then
     echo -ne " Installing dependencies       [${CGREEN}OK${CEND}]\\r"
     echo -ne '\n'
@@ -352,8 +368,7 @@ finish_installation() {
     if [ -n "$VERIFY_INSTALLATION" ]; then
       echo -ne " Verifying installation        [${CGREEN}OK${CEND}]\\r"
       echo ""
-      echo -e " ${CGREEN}ImageMagick was compiled successfully!${CEND}"
-      echo -e "\n Installation log : $LOG_FILE\n"
+      echo -e " ${CGREEN}ImageMagick was compiled successfully!${CEND}\n"
     else
       echo -e " Verifying installation        [${CRED}FAILURE${CEND}]"
       echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
@@ -375,24 +390,21 @@ echo " Welcome to IMEI - ImageMagick Easy Install ${INSTALLER_VER}"
 echo " #################################################"
 echo ""
 
-if [ -z "$TRAVIS_BUILD" ] && test -n "$INSTALLER_VER" && [ "$(version "$INSTALLER_VER")" -lt "$(version "$INSTALLER_LATEST_VER")" ]; then
+if [ -z "$TRAVIS_BUILD" ] && [ -n "$INSTALLER_VER" ] && [ "$(version "$INSTALLER_VER")" -lt "$(version "$INSTALLER_LATEST_VER")" ]; then
   echo -e " ${CYELLOW}A newer installer version ($INSTALLER_LATEST_VER) is available!${CEND}"
   echo ""
 fi
 
 echo " Detected OS    : $OS_DISTRO"
 echo " Detected Arch  : $OS_ARCH"
-
-if [[ $NUM_CORES -lt 2 ]]; then
-  echo -e " Detected Cores : $NUM_CORES ${CYELLOW}(Slow compilation)${CEND}"
-else
-  echo -e " Detected Cores : $NUM_CORES ${CGREEN}(Fast compilation)${CEND}"
-fi
-
+echo " Detected Cores : $NUM_CORES"
 echo ""
-echo -e " Latest ImageMagick release : $IMAGEMAGICK_VER"
-echo -e " Latest aom release         : $AOM_VER"
-echo -e " Latest libheif release     : $LIBHEIF_VER"
+echo -e " ImageMagick release : $IMAGEMAGICK_VER"
+echo -e " aom release         : $AOM_VER"
+echo -e " libheif release     : $LIBHEIF_VER"
+echo ""
+echo -e " Work Dir : $WORK_DIR"
+echo -e " Log File : $LOG_FILE"
 echo ""
 
 echo " #####################"
@@ -400,6 +412,7 @@ echo " Installation Process"
 echo " #####################"
 echo ""
 
+# Run installer functions
 install_deps
 install_aom
 install_libheif
