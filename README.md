@@ -63,12 +63,6 @@ Every IMEI build will be automatically tested against the latest Ubuntu LTS Vers
 
 ### One-Step Automated Install
 
-**Default settings** :
-
-* ImageMagick: Latest
-* aom: Latest
-* libheif: Latest
-
 ```bash
 $ wget -qO - 1-2.dev/imei | bash
 ```
@@ -80,6 +74,24 @@ $ git clone https://github.com/SoftCreatR/imei
 $ cd imei
 $ sudo imei.sh
 ```
+
+#### Options available
+
+Currently available build options are
+
+* `--imagemagick-version` : Build the given ImageMagick version (e.g. `7.0.10-28`)
+* `--aom-version` : Build the given aom version (e.g. `2.0.0`)
+* `--libheif-version` : Build the given libheif version (e.g. `1.8.0`)
+* `--log-file` : Log everything to the file provided
+* `--work-dir` : Download, extract & build within the directory provided
+
+**Default options** :
+
+* ImageMagick: Latest
+* aom: Latest
+* libheif: Latest
+* Log File: `/var/log/install-imagemagick.log`
+* Work Dir: `/usr/local/src/imei`
 
 ---
 

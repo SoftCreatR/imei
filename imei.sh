@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-02 00:07                          #
+# Date           : 2020-09-02 12:47                          #
 # License        : MIT                                       #
-# Version        : 4.2.0                                     #
+# Version        : 4.2.1                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -148,6 +148,10 @@ displaytime() {
   ((D > 0 || H > 0 || M > 0)) && printf 'and '
 
   printf '%d seconds\n' $S
+}
+
+str_repeat() {
+ printf -v v "%-*s" "$1" ""; echo "${v// /$2}"
 }
 
 version() {
@@ -385,9 +389,12 @@ finish_installation() {
 
 clear
 
-echo " #################################################"
-echo " Welcome to IMEI - ImageMagick Easy Install ${INSTALLER_VER}"
-echo " #################################################"
+WELCOMETXT="Welcome to IMEI - ImageMagick Easy Install ${INSTALLER_VER}"
+WELCOMELEN=${#WELCOMETXT}
+
+echo " $(str_repeat "$WELCOMELEN" "#")"
+echo " $WELCOMETXT"
+echo " $(str_repeat "$WELCOMELEN" "#")"
 echo ""
 
 if [ -z "$TRAVIS_BUILD" ] && [ -n "$INSTALLER_VER" ] && [ "$(version "$INSTALLER_VER")" -lt "$(version "$INSTALLER_LATEST_VER")" ]; then

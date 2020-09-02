@@ -39,7 +39,7 @@ cache:
     - /usr/local/src
 
 script:
-  - sudo bash imei.sh --travis --log-file "build.log" || exit 1
+  - sudo bash imei.sh --travis --log-file "build.log" -- || exit 1
 
 after_failure:
   - sudo tail -5 build.log
