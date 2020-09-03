@@ -7,7 +7,7 @@
 # Author         : Sascha Greuel <hello@1-2.dev>             #
 # Date           : 2020-09-03 20:47                          #
 # License        : MIT                                       #
-# Version        : 1.0.0                                     #
+# Version        : 1.0.1                                     #
 ##############################################################
 
 ####################
@@ -58,7 +58,7 @@ done
 
 if [ -f "$0" ] && [ -z "$SKIP_VERSION_CHECK" ]; then
   CRON_VER=$(grep -oP 'Version\s+:\s+\K([\d\.]+)' "$0")
-  CRON_LATEST_VER=$(wget -qO- "https://1-2.dev/imc" | grep -oP 'Version\s+:\s+\K([\d\.]+)')
+  CRON_LATEST_VER=$(wget -qO- "https://1-2.dev/imei-cron" | grep -oP 'Version\s+:\s+\K([\d\.]+)')
 
   if [ -n "$CRON_VER" ] && [ "$(version "$CRON_VER")" -lt "$(version "$CRON_LATEST_VER")" ]; then
     if [ -n "$VERBOSE" ]; then
@@ -66,7 +66,7 @@ if [ -f "$0" ] && [ -z "$SKIP_VERSION_CHECK" ]; then
       echo ""
     fi
 
-    wget -O "$0" "https://1-2.dev/imc" >/dev/null 2>&1
+    wget -O "$0" "https://1-2.dev/imei-cron" >/dev/null 2>&1
 
     if [ -n "$VERBOSE" ]; then
       exec "$0" --verbose --skip-version-check
