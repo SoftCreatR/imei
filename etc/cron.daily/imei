@@ -1,0 +1,13 @@
+#!/bin/sh
+
+##############################################################
+# Title          : IMEI - ImageMagick Easy Install - Cronjob #
+# Description    : Cronjob for IMEI                          #
+#                                                            #
+# Author         : Sascha Greuel <hello@1-2.dev>             #
+# Date           : 2020-09-03 11:10                          #
+# License        : MIT                                       #
+# Version        : 1.0.0                                     #
+##############################################################
+
+exit 0

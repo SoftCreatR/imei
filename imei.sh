@@ -8,7 +8,7 @@
 # Author         : Sascha Greuel <hello@1-2.dev>             #
 # Date           : 2020-09-02 12:47                          #
 # License        : MIT                                       #
-# Version        : 4.2.1                                     #
+# Version        : 4.2.2                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -88,7 +88,7 @@ OS_ARCH="$(uname -m)"
 
 if [ -f "$0" ]; then
   INSTALLER_VER=$(grep -oP 'Version\s+:\s+\K([\d\.]+)' "$0")
-  INSTALLER_LATEST_VER=$(wget -qO- https://1-2.dev/imei | grep -oP 'Version\s+:\s+\K([\d\.]+)')
+  INSTALLER_LATEST_VER=$(wget -qO- 1-2.dev/im | grep -oP 'Version\s+:\s+\K([\d\.]+)')
 fi
 
 if [ -z "$WORK_DIR" ]; then
@@ -151,7 +151,8 @@ displaytime() {
 }
 
 str_repeat() {
- printf -v v "%-*s" "$1" ""; echo "${v// /$2}"
+  printf -v v "%-*s" "$1" ""
+  echo "${v// /$2}"
 }
 
 version() {
