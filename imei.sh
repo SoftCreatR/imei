@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-02 12:47                          #
+# Date           : 2020-09-03 20:47                          #
 # License        : MIT                                       #
-# Version        : 4.2.2                                     #
+# Version        : 4.3.0                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -62,14 +62,14 @@ while [ "$#" -gt 0 ]; do
   --libheif-version)
     LIBHEIF_VER=$2
     ;;
-  --travis)
-    TRAVIS_BUILD="1"
-    ;;
   --log-file)
     LOG_FILE=$2
     ;;
   --work-dir)
     WORK_DIR=$2
+    ;;
+  --travis)
+    TRAVIS_BUILD="1"
     ;;
   *) ;;
   esac
@@ -101,7 +101,7 @@ fi
 
 if [ -z "$IMAGEMAGICK_VER" ]; then
   IMAGEMAGICK_VER=$(
-    wget -qO- https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest |
+    wget -qO- "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" |
       grep -oP '"tag_name": "\K.*?(?=")' |
       sed 's/v//'
   )
@@ -109,7 +109,7 @@ fi
 
 if [ -z "$AOM_VER" ]; then
   AOM_VER=$(
-    wget -qO- https://api.github.com/repos/jbeich/aom/tags |
+    wget -qO- "https://api.github.com/repos/jbeich/aom/tags" |
       jq -r '.[0].name' |
       cut -c2-
   )
@@ -117,7 +117,7 @@ fi
 
 if [ -z "$LIBHEIF_VER" ]; then
   LIBHEIF_VER=$(
-    wget -qO- https://api.github.com/repos/strukturag/libheif/releases/latest |
+    wget -qO- "https://api.github.com/repos/strukturag/libheif/releases/latest" |
       grep -oP '"tag_name": "\K.*?(?=")' |
       sed 's/v//'
   )
@@ -165,18 +165,12 @@ cleanup() {
   fi
 }
 
-finish() {
-  cleanup
-
-  echo -e "${CBLUE} Execution time: $(displaytime $(($(date +%s) - START)))${CEND}.\n\n"
-}
-
 ########
 # Init #
 ########
 
 # Display execution time and clean up on exit
-trap finish 0 1 2 3 6 15
+trap cleanup 0 1 2 3 6 15
 
 # Clean up on execution
 cleanup
@@ -373,7 +367,9 @@ finish_installation() {
     if [ -n "$VERIFY_INSTALLATION" ]; then
       echo -ne " Verifying installation        [${CGREEN}OK${CEND}]\\r"
       echo ""
-      echo -e " ${CGREEN}ImageMagick was compiled successfully!${CEND}\n"
+      echo -e " ${CGREEN}ImageMagick was compiled successfully after $(displaytime $(($(date +%s) - START)))!${CEND}\n"
+
+      setup_cron
     else
       echo -e " Verifying installation        [${CRED}FAILURE${CEND}]"
       echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
@@ -384,18 +380,46 @@ finish_installation() {
   fi
 }
 
+setup_cron() {
+  if [ -n "$TRAVIS_BUILD" ] || [ -f /etc/cron.daily/imei ]; then
+    return
+  fi
+
+  echo -e '\n Do you want to setup IMEI auto-update cronjob ? (y/n)'
+
+  while [[ "$CRON_SETUP" != "y" && "$CRON_SETUP" != "n" ]]; do
+    read -rp " Select an option [y/n]: " CRON_SETUP
+  done
+
+  echo ""
+
+  if [ "$CRON_SETUP" = "y" ]; then
+    if {
+      wget -qc --show-progress "https://1-2.dev/imc" \
+        -O "/etc/cron.daily/imei" &&
+        chmod +x /etc/cron.daily/imei
+    } >>"$LOG_FILE" 2>&1; then
+      echo -e " Installing IMEI Cronjob       [${CGREEN}OK${CEND}]\n"
+    else
+      echo -e " Installing IMEI Cronjob       [${CRED}FAIL${CEND}]"
+      echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
+      exit 1
+    fi
+  fi
+}
+
 ######################
 # Install everything #
 ######################
 
 clear
 
-WELCOMETXT="Welcome to IMEI - ImageMagick Easy Install ${INSTALLER_VER}"
-WELCOMELEN=${#WELCOMETXT}
+WELCOME_TXT="Welcome to IMEI - ImageMagick Easy Install ${INSTALLER_VER}"
+WELCOME_LEN=${#WELCOME_TXT}
 
-echo " $(str_repeat "$WELCOMELEN" "#")"
-echo " $WELCOMETXT"
-echo " $(str_repeat "$WELCOMELEN" "#")"
+echo " $(str_repeat "$WELCOME_LEN" "#")"
+echo " $WELCOME_TXT"
+echo " $(str_repeat "$WELCOME_LEN" "#")"
 echo ""
 
 if [ -z "$TRAVIS_BUILD" ] && [ -n "$INSTALLER_VER" ] && [ "$(version "$INSTALLER_VER")" -lt "$(version "$INSTALLER_LATEST_VER")" ]; then

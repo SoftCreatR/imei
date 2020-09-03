@@ -34,6 +34,7 @@
 * Additional HEIF support
 * Additional HEIX support
 * Additional AVIF support
+* Automated updates via cronjob (optional)
 
 ---
 
@@ -97,7 +98,7 @@ Currently available build options are
 
 ## Roadmap
 
-* [ ] Add cronjob for automatic updates
+* [x] Add cronjob for automatic updates
 * [ ] Add ImageMagick modules choice
 * [ ] CentOS 8 compatibility
 
