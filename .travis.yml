@@ -8,10 +8,8 @@ jobs:
   include:
     - name: "Focal Fossa Test Build"
       dist: focal
-      
     - name: "Bionic Beaver Test Build"
       dist: bionic
-      
     - name: "Xenial Xerus Test Build"
       dist: xenial
 
