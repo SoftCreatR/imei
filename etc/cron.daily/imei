@@ -5,9 +5,9 @@
 # Description    : Cronjob for IMEI                          #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-03 20:47                          #
+# Date           : 2020-09-05 01:37                          #
 # License        : MIT                                       #
-# Version        : 1.0.1                                     #
+# Version        : 1.0.2                                     #
 ##############################################################
 
 ####################
@@ -83,7 +83,7 @@ fi
 #####################
 
 if command_exists identify; then
-  INSTALLED_IMAGEMAGICK_VER=$(identify | grep -oP "Version: ImageMagick \K([\d\.\-]+)")
+  INSTALLED_IMAGEMAGICK_VER=$(identify | grep -oP 'Version: ImageMagick \K([\d\.\-]+)')
   LATEST_IMAGEMAGICK_VER=$(
     wget -qO- "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" |
       grep -oP '"tag_name": "\K.*?(?=")' |
@@ -106,7 +106,7 @@ if command_exists identify; then
   fi
 
   if [ -L /usr/local/lib/libaom.so ]; then
-    INSTALLED_AOM_VER=$(readlink -f /usr/local/lib/libaom.so | xargs basename | grep -oP "libaom.so.\K([\d\.]+)")
+    INSTALLED_AOM_VER=$(readlink -f /usr/local/lib/libaom.so | xargs basename | grep -oP 'libaom.so.\K([\d\.]+)')
 
     if [ -n "$VERBOSE" ]; then
       echo "INSTALLED_AOM_VER: $INSTALLED_AOM_VER"
@@ -133,7 +133,7 @@ if command_exists identify; then
   fi
 
   if [ -L /usr/local/lib/libheif.so ]; then
-    INSTALLED_LIBHEIF_VER=$(readlink -f /usr/local/lib/libheif.so | xargs basename | grep -oP "libheif.so.\K([\d\.]+)")
+    INSTALLED_LIBHEIF_VER=$(readlink -f /usr/local/lib/libheif.so | xargs basename | grep -oP 'libheif.so.\K([\d\.]+)')
 
     if [ -n "$VERBOSE" ]; then
       echo "INSTALLED_LIBHEIF_VER: $INSTALLED_LIBHEIF_VER"
