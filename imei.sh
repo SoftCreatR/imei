@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-03 20:47                          #
+# Date           : 2020-09-04 14:58                          #
 # License        : MIT                                       #
-# Version        : 4.3.1                                     #
+# Version        : 4.3.2                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -251,7 +251,7 @@ install_aom() {
 
     {
       [ -n "$AOM_VER" ] &&
-        wget -qc --show-progress "https://github.com/jbeich/aom/archive/v$AOM_VER.tar.gz" \
+        wget -c --show-progress "https://github.com/jbeich/aom/archive/v$AOM_VER.tar.gz" \
           -O "aom-$AOM_VER.tar.gz" &&
         tar -xf "aom-$AOM_VER.tar.gz" &&
         mkdir "$WORK_DIR/build_aom" &&
@@ -284,7 +284,7 @@ install_libheif() {
 
     {
       [ -n "$LIBHEIF_VER" ] &&
-        wget -qc --show-progress "https://github.com/strukturag/libheif/releases/download/v$LIBHEIF_VER/libheif-$LIBHEIF_VER.tar.gz" &&
+        wget -c --show-progress "https://github.com/strukturag/libheif/releases/download/v$LIBHEIF_VER/libheif-$LIBHEIF_VER.tar.gz" &&
         tar -xf "libheif-$LIBHEIF_VER.tar.gz" &&
         cd "libheif-$LIBHEIF_VER" &&
         ./configure \
@@ -314,7 +314,7 @@ install_imagemagick() {
 
     {
       [ -n "$IMAGEMAGICK_VER" ] &&
-        wget -qc --show-progress "https://github.com/ImageMagick/ImageMagick/archive/$IMAGEMAGICK_VER.tar.gz" \
+        wget -c --show-progress "https://github.com/ImageMagick/ImageMagick/archive/$IMAGEMAGICK_VER.tar.gz" \
           -O "ImageMagick-$IMAGEMAGICK_VER.tar.gz" &&
         tar -xf "ImageMagick-$IMAGEMAGICK_VER.tar.gz" &&
         cd "ImageMagick-$IMAGEMAGICK_VER" &&
@@ -385,17 +385,26 @@ setup_cron() {
     return
   fi
 
-  echo -e '\n Do you want to setup IMEI auto-update cronjob ? (y/n)'
-
-  while [[ "$CRON_SETUP" != "y" && "$CRON_SETUP" != "n" ]]; do
-    read -rp " Select an option [y/n]: " CRON_SETUP
+  while true; do
+    read -rp " Do you want to setup IMEI auto-update cronjob? (y/n): " yn
+    case $yn in
+    [Yy]*)
+      CRON_SETUP="y"
+      break
+      ;;
+    [Nn]*)
+      CRON_SETUP="n"
+      break
+      ;;
+    *) echo -e " ${CYELLOW}Please answer yes or no.${CEND}\n" ;;
+    esac
   done
 
   echo ""
 
   if [ "$CRON_SETUP" = "y" ]; then
     if {
-      wget -qc --show-progress "https://1-2.dev/imc" \
+      wget -c --show-progress "https://1-2.dev/imei-cron" \
         -O "/etc/cron.daily/imei" &&
         chmod +x /etc/cron.daily/imei
     } >>"$LOG_FILE" 2>&1; then
