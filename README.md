@@ -6,7 +6,7 @@
 #### Automated ImageMagick compilation from sources for Debian/Ubuntu including advanced delegate support.
 
 [![Build Status](https://travis-ci.com/SoftCreatR/imei.svg?branch=main)](https://travis-ci.com/SoftCreatR/imei) ![Stars](https://img.shields.io/github/stars/SoftCreatR/imei.svg) ![Commits](https://img.shields.io/github/last-commit/SoftCreatR/imei/main.svg?style=flat)  
-![GitHub release](https://img.shields.io/github/release/SoftCreatR/imei?style=flat) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/325d797fcbbf44df9dbed8af3ba8e1f4)](http://app.codacy.com/manual/SoftCreatR/imei/dashboard?token=hIBh9xPtZzernpa) [![CodeFactor](https://www.codefactor.io/repository/github/softcreatr/imei/badge?s=5d18e033891edfd7ee145472db7d46b9a0ec3b11)](https://www.codefactor.io/repository/github/softcreatr/imei)
+![GitHub release](https://img.shields.io/github/release/SoftCreatR/imei?style=flat) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/325d797fcbbf44df9dbed8af3ba8e1f4)](http://app.codacy.com/manual/SoftCreatR/imei/dashboard?token=hIBh9xPtZzernpa) [![CodeFactor](https://www.codefactor.io/repository/github/softcreatr/imei/badge?s=5d18e033891edfd7ee145472db7d46b9a0ec3b11)](https://www.codefactor.io/repository/github/softcreatr/imei) ![Shellcheck](https://github.com/SoftCreatR/imei/workflows/Shellcheck/badge.svg)
 
 </div>
 

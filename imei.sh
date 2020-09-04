@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-04 14:58                          #
+# Date           : 2020-09-05 01:37                          #
 # License        : MIT                                       #
-# Version        : 4.3.2                                     #
+# Version        : 4.3.3                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -30,6 +30,7 @@ command_exists() {
 # Make sure, that we are on Debian or Ubuntu
 if ! command_exists apt-get; then
   echo "This script cannot run on any other system than Debian or Ubuntu"
+
   exit 1
 fi
 
@@ -185,24 +186,28 @@ fi
 # Check if working directory was created
 if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
   echo -e "${CRED}Could not create temp directory $WORK_DIR${CEND}"
+
   exit 1
 fi
 
 # Make sure, that a version number for ImageMagick has been set
 if [ -z "$IMAGEMAGICK_VER" ]; then
   echo -e "${CRED}Unable to determine version number for ImageMagick${CEND}"
+
   exit 1
 fi
 
 # Make sure, that a version number for aom has been set
 if [ -z "$AOM_VER" ]; then
   echo -e "${CRED}Unable to determine version number for aom${CEND}"
+
   exit 1
 fi
 
 # Make sure, that a version number for libheif has been set
 if [ -z "$LIBHEIF_VER" ]; then
   echo -e "${CRED}Unable to determine version number for libheif${CEND}"
+
   exit 1
 fi
 
@@ -234,10 +239,13 @@ install_deps() {
     apt-get install git make cmake automake yasm g++ pkg-config libde265-dev libx265-dev -y
   } >>"$LOG_FILE" 2>&1; then
     echo -ne " Installing dependencies       [${CGREEN}OK${CEND}]\\r"
-    echo -ne '\n'
+    echo ""
   else
-    echo -e " Installing dependencies       [${CRED}FAILURE${CEND}]"
-    echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
+    echo -ne " Installing dependencies       [${CRED}FAILURE${CEND}]\\r"
+    echo ""
+    echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
+    echo ""
+
     exit 1
   fi
 }
@@ -267,10 +275,13 @@ install_aom() {
     } >>"$LOG_FILE" 2>&1
   }; then
     echo -ne " Building aom                  [${CGREEN}OK${CEND}]\\r"
-    echo -ne '\n'
+    echo ""
   else
-    echo -e " Building aom                  [${CRED}FAILURE${CEND}]"
-    echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
+    echo -ne " Building aom                  [${CRED}FAILURE${CEND}]\\r"
+    echo ""
+    echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
+    echo ""
+
     exit 1
   fi
 }
@@ -297,10 +308,13 @@ install_libheif() {
     } >>"$LOG_FILE" 2>&1
   }; then
     echo -ne " Building libheif              [${CGREEN}OK${CEND}]\\r"
-    echo -ne '\n'
+    echo ""
   else
-    echo -e " Building libheif              [${CRED}FAILURE${CEND}]"
-    echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
+    echo -e " Building libheif              [${CRED}FAILURE${CEND}]\\r"
+    echo ""
+    echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
+    echo ""
+
     exit 1
   fi
 }
@@ -338,26 +352,18 @@ install_imagemagick() {
     } >>"$LOG_FILE" 2>&1
   }; then
     echo -ne " Building ImageMagick          [${CGREEN}OK${CEND}]\\r"
-    echo -ne '\n'
+    echo ""
   else
-    echo -e " Building ImageMagick          [${CRED}FAILURE${CEND}]"
-    echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
+    echo -e " Building ImageMagick          [${CRED}FAILURE${CEND}]\\r"
+    echo ""
+    echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
+    echo ""
+
     exit 1
   fi
 }
 
 finish_installation() {
-  #echo -ne ' Performing final steps        [..]\r'
-
-  # This may fail due to strange errors. Log it, but ignore any failure.
-  #{
-  #  echo -e 'Package: *imagemagick*\nPin: release *\nPin-Priority: -1' >/etc/apt/preferences.d/imagemagick.pref
-  #  apt-mark hold "*imagemagick*"
-  #} >>"$LOG_FILE" 2>&1
-
-  #echo -ne " Performing final steps        [${CGREEN}OK${CEND}]\\r"
-  #echo -ne '\n'
-
   echo -ne ' Verifying installation        [..]\r'
 
   # Check if ImageMagick version matches
@@ -367,16 +373,21 @@ finish_installation() {
     if [ -n "$VERIFY_INSTALLATION" ]; then
       echo -ne " Verifying installation        [${CGREEN}OK${CEND}]\\r"
       echo ""
-      echo -e " ${CGREEN}ImageMagick was compiled successfully after $(displaytime $(($(date +%s) - START)))!${CEND}\n"
+      echo -e " ${CGREEN}ImageMagick was compiled successfully after $(displaytime $(($(date +%s) - START)))!${CEND}"
+      echo ""
 
       setup_cron
     else
-      echo -e " Verifying installation        [${CRED}FAILURE${CEND}]"
-      echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
+      echo -ne " Verifying installation        [${CRED}FAILURE${CEND}]\\r"
+      echo ""
+      echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
+      echo ""
     fi
   else
-    echo -e " Verifying installation        [${CRED}FAILURE${CEND}]"
-    echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
+    echo -ne " Verifying installation        [${CRED}FAILURE${CEND}]\\r"
+    echo ""
+    echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
+    echo ""
   fi
 }
 
@@ -387,6 +398,7 @@ setup_cron() {
 
   while true; do
     read -rp " Do you want to setup IMEI auto-update cronjob? (y/n): " yn
+
     case $yn in
     [Yy]*)
       CRON_SETUP="y"
@@ -396,7 +408,7 @@ setup_cron() {
       CRON_SETUP="n"
       break
       ;;
-    *) echo -e " ${CYELLOW}Please answer yes or no.${CEND}\n" ;;
+    *) echo -e " ${CYELLOW}Please answer yes or no.${CEND}"; echo "" ;;
     esac
   done
 
@@ -408,10 +420,14 @@ setup_cron() {
         -O "/etc/cron.daily/imei" &&
         chmod +x /etc/cron.daily/imei
     } >>"$LOG_FILE" 2>&1; then
-      echo -e " Installing IMEI Cronjob       [${CGREEN}OK${CEND}]\n"
+      echo -e " Installing IMEI Cronjob       [${CGREEN}OK${CEND}]"
+      echo ""
     else
       echo -e " Installing IMEI Cronjob       [${CRED}FAIL${CEND}]"
-      echo -e "\n ${CBLUE}Please check $LOG_FILE for details.${CEND}\n"
+      echo ""
+      echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
+      echo ""
+      
       exit 1
     fi
   fi
@@ -440,12 +456,12 @@ echo " Detected OS    : $OS_DISTRO"
 echo " Detected Arch  : $OS_ARCH"
 echo " Detected Cores : $NUM_CORES"
 echo ""
-echo -e " ImageMagick release : $IMAGEMAGICK_VER"
-echo -e " aom release         : $AOM_VER"
-echo -e " libheif release     : $LIBHEIF_VER"
+echo " ImageMagick release : $IMAGEMAGICK_VER"
+echo " aom release         : $AOM_VER"
+echo " libheif release     : $LIBHEIF_VER"
 echo ""
-echo -e " Work Dir : $WORK_DIR"
-echo -e " Log File : $LOG_FILE"
+echo " Work Dir : $WORK_DIR"
+echo " Log File : $LOG_FILE"
 echo ""
 
 echo " #####################"

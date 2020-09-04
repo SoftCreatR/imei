@@ -1,0 +1,26 @@
+---
+name: Shellcheck
+
+on:
+  push:
+    branches:
+      - '*'
+    paths:
+      - '**.sh'
+      - 'etc/cron.daily/imei'
+  pull_request:
+    branches:
+      - '*'
+    paths:
+      - '**.sh'
+      - 'etc/cron.daily/imei'
+
+jobs:
+  ShellCheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Shellcheck
+        run: sudo apt-get install -y shellcheck
+      - name: DoShellcheck
+        run: shellcheck -V  && shellcheck imei.sh etc/cron.daily/imei && echo "shellcheck OK"
