@@ -5,8 +5,11 @@
 # IMEI - ImageMagick Easy Install
 #### Automated ImageMagick compilation from sources for Debian/Ubuntu including advanced delegate support.
 
-[![Build Status](https://travis-ci.com/SoftCreatR/imei.svg?branch=main)](https://travis-ci.com/SoftCreatR/imei) ![Stars](https://img.shields.io/github/stars/SoftCreatR/imei.svg) ![Commits](https://img.shields.io/github/last-commit/SoftCreatR/imei/main.svg?style=flat)  
-![GitHub release](https://img.shields.io/github/release/SoftCreatR/imei?style=flat) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/325d797fcbbf44df9dbed8af3ba8e1f4)](http://app.codacy.com/manual/SoftCreatR/imei/dashboard?token=hIBh9xPtZzernpa) [![CodeFactor](https://www.codefactor.io/repository/github/softcreatr/imei/badge?s=5d18e033891edfd7ee145472db7d46b9a0ec3b11)](https://www.codefactor.io/repository/github/softcreatr/imei) ![Shellcheck](https://github.com/SoftCreatR/imei/workflows/Shellcheck/badge.svg)
+[![Travis (.com)](https://img.shields.io/travis/com/SoftCreatR/imei?style=flat-square)](https://travis-ci.com/SoftCreatR/imei) [![Shellcheck](https://img.shields.io/github/workflow/status/SoftCreatR/imei/Shellcheck?label=Shellcheck&style=flat-square)](https://github.com/SoftCreatR/imei/actions?query=workflow%3AShellcheck)
+
+[![Commits](https://img.shields.io/github/last-commit/SoftCreatR/imei?style=flat-square)](https://github.com/SoftCreatR/imei/commits/main) [![GitHub release](https://img.shields.io/github/release/SoftCreatR/imei?style=flat-square)](https://github.com/SoftCreatR/imei/releases) [![GitHub license](https://img.shields.io/github/license/SoftCreatR/imei?style=flat-square&color=lightgray)](https://github.com/SoftCreatR/imei/blob/main/LICENSE)
+
+[![Codacy grade](https://img.shields.io/codacy/grade/325d797fcbbf44df9dbed8af3ba8e1f4?style=flat-square)](http://app.codacy.com/manual/SoftCreatR/imei/dashboard?token=hIBh9xPtZzernpa) [![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/SoftCreatR/imei?style=flat-square)](https://www.codefactor.io/repository/github/softcreatr/imei)
 
 </div>
 
