@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-05 01:37                          #
+# Date           : 2020-09-06 19:15                          #
 # License        : MIT                                       #
-# Version        : 4.3.3                                     #
+# Version        : 4.3.4                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -397,7 +397,7 @@ setup_cron() {
   fi
 
   while true; do
-    read -rp " Do you want to setup IMEI auto-update cronjob? (y/n): " yn
+    read -rp " Do you want to setup IMEI auto-update cronjob? (y/n): " yn </dev/tty
 
     case $yn in
     [Yy]*)
@@ -405,10 +405,12 @@ setup_cron() {
       break
       ;;
     [Nn]*)
-      CRON_SETUP="n"
-      break
+      return
       ;;
-    *) echo -e " ${CYELLOW}Please answer yes or no.${CEND}"; echo "" ;;
+    *)
+      echo -e " ${CYELLOW}Please answer yes or no.${CEND}"
+      echo ""
+      ;;
     esac
   done
 
@@ -427,7 +429,7 @@ setup_cron() {
       echo ""
       echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
       echo ""
-      
+
       exit 1
     fi
   fi
