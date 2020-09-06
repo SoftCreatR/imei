@@ -68,7 +68,7 @@ Every IMEI build will be automatically tested against the latest Ubuntu LTS Vers
 ### One-Step Automated Install
 
 ```bash
-$ wget -qO - 1-2.dev/imei | bash
+$ bash <(wget -qO - 1-2.dev/imei || curl -sL 1-2.dev/imei)
 ```
 
 ### Alternative Install Method
