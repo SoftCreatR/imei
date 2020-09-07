@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-06 19:15                          #
+# Date           : 2020-09-07 17:01                          #
 # License        : MIT                                       #
-# Version        : 4.3.4                                     #
+# Version        : 4.4.0                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -69,8 +69,11 @@ while [ "$#" -gt 0 ]; do
   --work-dir)
     WORK_DIR=$2
     ;;
+  --force)
+    FORCE="yes"
+    ;;
   --travis)
-    TRAVIS_BUILD="1"
+    TRAVIS_BUILD="yes"
     ;;
   *) ;;
   esac
@@ -87,41 +90,12 @@ START=$(date +%s)
 OS_DISTRO="$(lsb_release -ds)"
 OS_ARCH="$(uname -m)"
 
-if [ -f "$0" ]; then
-  INSTALLER_VER=$(grep -oP 'Version\s+:\s+\K([\d\.]+)' "$0")
-  INSTALLER_LATEST_VER=$(wget -qO- "https://1-2.dev/imei" | grep -oP 'Version\s+:\s+\K([\d\.]+)')
-fi
-
 if [ -z "$WORK_DIR" ]; then
   WORK_DIR=/usr/local/src/imei
 fi
 
 if [ -z "$LOG_FILE" ]; then
   LOG_FILE=/var/log/install-imagemagick.log
-fi
-
-if [ -z "$IMAGEMAGICK_VER" ]; then
-  IMAGEMAGICK_VER=$(
-    wget -qO- "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" |
-      grep -oP '"tag_name": "\K.*?(?=")' |
-      sed 's/v//'
-  )
-fi
-
-if [ -z "$AOM_VER" ]; then
-  AOM_VER=$(
-    wget -qO- "https://api.github.com/repos/jbeich/aom/tags" |
-      jq -r '.[0].name' |
-      cut -c2-
-  )
-fi
-
-if [ -z "$LIBHEIF_VER" ]; then
-  LIBHEIF_VER=$(
-    wget -qO- "https://api.github.com/repos/strukturag/libheif/releases/latest" |
-      grep -oP '"tag_name": "\K.*?(?=")' |
-      sed 's/v//'
-  )
 fi
 
 # Colors
@@ -190,6 +164,39 @@ if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
   exit 1
 fi
 
+##################
+# Version checks #
+##################
+
+if [ -f "$0" ]; then
+  INSTALLER_VER=$(grep -oP 'Version\s+:\s+\K([\d\.]+)' "$0")
+  INSTALLER_LATEST_VER=$(wget -qO- "https://1-2.dev/imei" | grep -oP 'Version\s+:\s+\K([\d\.]+)')
+fi
+
+if [ -z "$IMAGEMAGICK_VER" ]; then
+  IMAGEMAGICK_VER=$(
+    wget -qO- "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" |
+      grep -oP '"tag_name": "\K.*?(?=")' |
+      sed 's/v//'
+  )
+fi
+
+if [ -z "$AOM_VER" ]; then
+  AOM_VER=$(
+    wget -qO- "https://api.github.com/repos/jbeich/aom/tags" |
+      jq -r '.[0].name' |
+      cut -c2-
+  )
+fi
+
+if [ -z "$LIBHEIF_VER" ]; then
+  LIBHEIF_VER=$(
+    wget -qO- "https://api.github.com/repos/strukturag/libheif/releases/latest" |
+      grep -oP '"tag_name": "\K.*?(?=")' |
+      sed 's/v//'
+  )
+fi
+
 # Make sure, that a version number for ImageMagick has been set
 if [ -z "$IMAGEMAGICK_VER" ]; then
   echo -e "${CRED}Unable to determine version number for ImageMagick${CEND}"
@@ -209,6 +216,18 @@ if [ -z "$LIBHEIF_VER" ]; then
   echo -e "${CRED}Unable to determine version number for libheif${CEND}"
 
   exit 1
+fi
+
+if command_exists identify; then
+  INSTALLED_IMAGEMAGICK_VER=$(identify -version | grep -oP 'Version: ImageMagick \K([\d\.\-]+)')
+
+  if [ -L /usr/local/lib/libaom.so ]; then
+    INSTALLED_AOM_VER=$(readlink -f /usr/local/lib/libaom.so | xargs basename | grep -oP 'libaom.so.\K([\d\.]+)')
+  fi
+
+  if [ -L /usr/local/lib/libheif.so ]; then
+    INSTALLED_LIBHEIF_VER=$(readlink -f /usr/local/lib/libheif.so | xargs basename | grep -oP 'libheif.so.\K([\d\.]+)')
+  fi
 fi
 
 #######################
@@ -257,6 +276,13 @@ install_aom() {
   if {
     echo -ne ' Building aom                  [..]\r'
 
+    if [ -z "$FORCE" ] && [ -n "$INSTALLED_AOM_VER" ] && [ "$(version "$INSTALLED_AOM_VER")" -ge "$(version "$AOM_VER")" ]; then
+      echo -ne " Building aom                  [${CYELLOW}SKIPPED${CEND}]\\r"
+      echo ""
+
+      return
+    fi
+
     {
       [ -n "$AOM_VER" ] &&
         wget -c --show-progress "https://github.com/jbeich/aom/archive/v$AOM_VER.tar.gz" \
@@ -293,6 +319,13 @@ install_libheif() {
   if {
     echo -ne ' Building libheif              [..]\r'
 
+    if [ -z "$FORCE" ] && [ -n "$INSTALLED_LIBHEIF_VER" ] && [ "$(version "$INSTALLED_LIBHEIF_VER")" -ge "$(version "$LIBHEIF_VER")" ]; then
+      echo -ne " Building libheif              [${CYELLOW}SKIPPED${CEND}]\\r"
+      echo ""
+
+      return
+    fi
+
     {
       [ -n "$LIBHEIF_VER" ] &&
         wget -c --show-progress "https://github.com/strukturag/libheif/releases/download/v$LIBHEIF_VER/libheif-$LIBHEIF_VER.tar.gz" &&
@@ -325,6 +358,13 @@ install_imagemagick() {
 
   if {
     echo -ne ' Building ImageMagick          [..]\r'
+
+    if [ -z "$FORCE" ] && [ -n "$INSTALLED_IMAGEMAGICK_VER" ] && [ "$(version "$(echo "$INSTALLED_IMAGEMAGICK_VER" | sed 's/-//g')")" -ge "$(version "$(echo "$IMAGEMAGICK_VER" | sed 's/-//g')")" ]; then
+      echo -ne " Building ImageMagick          [${CYELLOW}SKIPPED${CEND}]\\r"
+      echo ""
+
+      return
+    fi
 
     {
       [ -n "$IMAGEMAGICK_VER" ] &&
@@ -373,7 +413,7 @@ finish_installation() {
     if [ -n "$VERIFY_INSTALLATION" ]; then
       echo -ne " Verifying installation        [${CGREEN}OK${CEND}]\\r"
       echo ""
-      echo -e " ${CGREEN}ImageMagick was compiled successfully after $(displaytime $(($(date +%s) - START)))!${CEND}"
+      echo -e " ${CGREEN}Process has been finished successfully after $(displaytime $(($(date +%s) - START)))!${CEND}"
       echo ""
 
       setup_cron
@@ -458,12 +498,11 @@ echo " Detected OS    : $OS_DISTRO"
 echo " Detected Arch  : $OS_ARCH"
 echo " Detected Cores : $NUM_CORES"
 echo ""
-echo " ImageMagick release : $IMAGEMAGICK_VER"
-echo " aom release         : $AOM_VER"
-echo " libheif release     : $LIBHEIF_VER"
-echo ""
 echo " Work Dir : $WORK_DIR"
 echo " Log File : $LOG_FILE"
+echo ""
+echo " Force Build  : ${FORCE_BUILD:-"no"}"
+echo " Travis Build : ${TRAVIS_BUILD:-"no"}"
 echo ""
 
 echo " #####################"
