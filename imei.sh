@@ -300,6 +300,8 @@ install_aom() {
         ldconfig
     } >>"$LOG_FILE" 2>&1
   }; then
+    UPDATE_LIBHEIF="yes"
+
     echo -ne " Building aom                  [${CGREEN}OK${CEND}]\\r"
     echo ""
   else
@@ -319,7 +321,7 @@ install_libheif() {
   if {
     echo -ne ' Building libheif              [..]\r'
 
-    if [ -z "$FORCE" ] && [ -n "$INSTALLED_LIBHEIF_VER" ] && [ "$(version "$INSTALLED_LIBHEIF_VER")" -ge "$(version "$LIBHEIF_VER")" ]; then
+    if [ -z "$FORCE" ] && [ -z "$UPDATE_LIBHEIF" ] && [ -n "$INSTALLED_LIBHEIF_VER" ] && [ "$(version "$INSTALLED_LIBHEIF_VER")" -ge "$(version "$LIBHEIF_VER")" ]; then
       echo -ne " Building libheif              [${CYELLOW}SKIPPED${CEND}]\\r"
       echo ""
 
@@ -340,6 +342,8 @@ install_libheif() {
         ldconfig
     } >>"$LOG_FILE" 2>&1
   }; then
+    UPDATE_IMAGEMAGICK="yes"
+
     echo -ne " Building libheif              [${CGREEN}OK${CEND}]\\r"
     echo ""
   else
@@ -359,7 +363,7 @@ install_imagemagick() {
   if {
     echo -ne ' Building ImageMagick          [..]\r'
 
-    if [ -z "$FORCE" ] && [ -n "$INSTALLED_IMAGEMAGICK_VER" ] && [ "$(version "${INSTALLED_IMAGEMAGICK_VER//-/}")" -ge "$(version "${IMAGEMAGICK_VER//-/}")" ]; then
+    if [ -z "$FORCE" ] && [ -z "$UPDATE_IMAGEMAGICK" ] && [ -n "$INSTALLED_IMAGEMAGICK_VER" ] && [ "$(version "${INSTALLED_IMAGEMAGICK_VER//-/}")" -ge "$(version "${IMAGEMAGICK_VER//-/}")" ]; then
       echo -ne " Building ImageMagick          [${CYELLOW}SKIPPED${CEND}]\\r"
       echo ""
 
