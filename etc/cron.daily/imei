@@ -5,9 +5,9 @@
 # Description    : Cronjob for IMEI                          #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-05 01:37                          #
+# Date           : 2020-09-07 15:58                          #
 # License        : MIT                                       #
-# Version        : 1.0.2                                     #
+# Version        : 1.0.3                                     #
 ##############################################################
 
 ####################
@@ -83,7 +83,7 @@ fi
 #####################
 
 if command_exists identify; then
-  INSTALLED_IMAGEMAGICK_VER=$(identify | grep -oP 'Version: ImageMagick \K([\d\.\-]+)')
+  INSTALLED_IMAGEMAGICK_VER=$(identify -version | grep -oP 'Version: ImageMagick \K([\d\.\-]+)')
   LATEST_IMAGEMAGICK_VER=$(
     wget -qO- "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" |
       grep -oP '"tag_name": "\K.*?(?=")' |
