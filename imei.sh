@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-07 17:01                          #
+# Date           : 2020-09-07 17:14                          #
 # License        : MIT                                       #
-# Version        : 4.4.0                                     #
+# Version        : 4.4.1                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -359,7 +359,7 @@ install_imagemagick() {
   if {
     echo -ne ' Building ImageMagick          [..]\r'
 
-    if [ -z "$FORCE" ] && [ -n "$INSTALLED_IMAGEMAGICK_VER" ] && [ "$(version "$(echo "$INSTALLED_IMAGEMAGICK_VER" | sed 's/-//g')")" -ge "$(version "$(echo "$IMAGEMAGICK_VER" | sed 's/-//g')")" ]; then
+    if [ -z "$FORCE" ] && [ -n "$INSTALLED_IMAGEMAGICK_VER" ] && [ "$(version "${INSTALLED_IMAGEMAGICK_VER//-/}")" -ge "$(version "${IMAGEMAGICK_VER//-/}")" ]; then
       echo -ne " Building ImageMagick          [${CYELLOW}SKIPPED${CEND}]\\r"
       echo ""
 
