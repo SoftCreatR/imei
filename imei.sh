@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-07 17:14                          #
+# Date           : 2020-09-08 20:15                          #
 # License        : MIT                                       #
-# Version        : 4.4.1                                     #
+# Version        : 4.4.2                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -384,7 +384,6 @@ install_imagemagick() {
           --prefix=/usr \
           --without-magick-plus-plus \
           --without-perl \
-          --disable-shared \
           --disable-dependency-tracking \
           --disable-docs \
           --with-jemalloc=yes \
