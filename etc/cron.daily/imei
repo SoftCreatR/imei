@@ -5,9 +5,9 @@
 # Description    : Cronjob for IMEI                          #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-07 15:58                          #
+# Date           : 2020-09-12 00:52                          #
 # License        : MIT                                       #
-# Version        : 1.0.3                                     #
+# Version        : 1.1.0                                     #
 ##############################################################
 
 ####################
@@ -86,9 +86,16 @@ if command_exists identify; then
   INSTALLED_IMAGEMAGICK_VER=$(identify -version | grep -oP 'Version: ImageMagick \K([\d\.\-]+)')
   LATEST_IMAGEMAGICK_VER=$(
     wget -qO- "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" |
-      grep -oP '"tag_name": "\K.*?(?=")' |
-      sed 's/v//'
+      jq -r '.tag_name'
   )
+
+  # Fallback
+  if [ -z "$LATEST_IMAGEMAGICK_VER" ]; then
+    LATEST_IMAGEMAGICK_VER=$(
+      wget -qO- "https://1-2.dev/imei?versions" |
+        jq -r '.imagemagick'
+    )
+  fi
 
   if [ -n "$VERBOSE" ]; then
     if [ -z "$INSTALLED_IMAGEMAGICK_VER" ]; then
@@ -123,6 +130,14 @@ if command_exists identify; then
       cut -c2-
   )
 
+  # Fallback
+  if [ -z "$LATEST_AOM_VER" ]; then
+    LATEST_AOM_VER=$(
+      wget -qO- "https://1-2.dev/imei?versions" |
+        jq -r '.aom'
+    )
+  fi
+
   if [ -n "$VERBOSE" ]; then
     if [ -z "$LATEST_AOM_VER" ]; then
       echo "LATEST_AOM_VER: Unknown"
@@ -146,9 +161,17 @@ if command_exists identify; then
 
   LATEST_LIBHEIF_VER=$(
     wget -qO- "https://api.github.com/repos/strukturag/libheif/releases/latest" |
-      grep -oP '"tag_name": "\K.*?(?=")' |
-      sed 's/v//'
+      jq -r '.tag_name' |
+      cut -c2-
   )
+
+  # Fallback
+  if [ -z "$LATEST_LIBHEIF_VER" ]; then
+    LATEST_LIBHEIF_VER=$(
+      wget -qO- "https://1-2.dev/imei?versions" |
+        jq -r '.libheif'
+    )
+  fi
 
   if [ -n "$VERBOSE" ]; then
     if [ -z "$LATEST_LIBHEIF_VER" ]; then

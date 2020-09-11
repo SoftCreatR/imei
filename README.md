@@ -92,9 +92,9 @@ Currently available build options are
 
 **Default options** :
 
-* ImageMagick: Latest
-* aom: Latest
-* libheif: Latest
+* [![ImageMagick Version](https://img.shields.io/badge/dynamic/json?color=green&label=ImageMagick&query=imagemagick&url=https%3A%2F%2F1-2.dev%2Fimei%3Fversions)](https://github.com/ImageMagick/ImageMagick/releases)
+* [![aom Version](https://img.shields.io/badge/dynamic/json?color=green&label=aom&query=aom&url=https%3A%2F%2F1-2.dev%2Fimei%3Fversions)](https://github.com/jbeich/aom/releases)
+* [![libheif Version](https://img.shields.io/badge/dynamic/json?color=green&label=libheif&query=libheif&url=https%3A%2F%2F1-2.dev%2Fimei%3Fversions)](https://github.com/strukturag/libheif/releases)
 * Log File: `/var/log/install-imagemagick.log`
 * Work Dir: `/usr/local/src/imei`
 * Force Build: No
