@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-08 20:15                          #
+# Date           : 2020-09-12 00:52                          #
 # License        : MIT                                       #
-# Version        : 4.4.2                                     #
+# Version        : 4.5.0                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -176,9 +176,16 @@ fi
 if [ -z "$IMAGEMAGICK_VER" ]; then
   IMAGEMAGICK_VER=$(
     wget -qO- "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" |
-      grep -oP '"tag_name": "\K.*?(?=")' |
-      sed 's/v//'
+      jq -r '.tag_name'
   )
+
+  # Fallback
+  if [ -z "$IMAGEMAGICK_VER" ]; then
+    IMAGEMAGICK_VER=$(
+      wget -qO- "https://1-2.dev/imei?versions" |
+        jq -r '.imagemagick'
+    )
+  fi
 fi
 
 if [ -z "$AOM_VER" ]; then
@@ -187,14 +194,30 @@ if [ -z "$AOM_VER" ]; then
       jq -r '.[0].name' |
       cut -c2-
   )
+
+  # Fallback
+  if [ -z "$AOM_VER" ]; then
+    AOM_VER=$(
+      wget -qO- "https://1-2.dev/imei?versions" |
+        jq -r '.aom'
+    )
+  fi
 fi
 
 if [ -z "$LIBHEIF_VER" ]; then
   LIBHEIF_VER=$(
     wget -qO- "https://api.github.com/repos/strukturag/libheif/releases/latest" |
-      grep -oP '"tag_name": "\K.*?(?=")' |
-      sed 's/v//'
+      jq -r '.tag_name' |
+      cut -c2-
   )
+
+  # Fallback
+  if [ -z "$LIBHEIF_VER" ]; then
+    LIBHEIF_VER=$(
+      wget -qO- "https://1-2.dev/imei?versions" |
+        jq -r '.libheif'
+    )
+  fi
 fi
 
 # Make sure, that a version number for ImageMagick has been set
