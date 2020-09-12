@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-12 00:52                          #
+# Date           : 2020-09-12 04:00                          #
 # License        : MIT                                       #
-# Version        : 4.5.0                                     #
+# Version        : 4.5.1                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -173,9 +173,19 @@ if [ -f "$0" ]; then
   INSTALLER_LATEST_VER=$(wget -qO- "https://1-2.dev/imei" | grep -oP 'Version\s+:\s+\K([\d\.]+)')
 fi
 
+# Set GITHUB_TOKEN as environment variable for
+# authenticated requests against the GitHub API
+if [ -n "$GITHUB_TOKEN" ]; then
+  GITHUB_USE_AUTH="yes"
+  GITHUB_AUTH="--header='Authorization: token $GITHUB_TOKEN'"
+else
+  GITHUB_USE_AUTH="no"
+  GITHUB_AUTH=""
+fi
+
 if [ -z "$IMAGEMAGICK_VER" ]; then
   IMAGEMAGICK_VER=$(
-    wget -qO- "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" |
+    wget "$GITHUB_AUTH" -qO- "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" |
       jq -r '.tag_name'
   )
 
@@ -190,7 +200,7 @@ fi
 
 if [ -z "$AOM_VER" ]; then
   AOM_VER=$(
-    wget -qO- "https://api.github.com/repos/jbeich/aom/tags" |
+    wget "$GITHUB_AUTH" -qO- "https://api.github.com/repos/jbeich/aom/tags" |
       jq -r '.[0].name' |
       cut -c2-
   )
@@ -206,7 +216,7 @@ fi
 
 if [ -z "$LIBHEIF_VER" ]; then
   LIBHEIF_VER=$(
-    wget -qO- "https://api.github.com/repos/strukturag/libheif/releases/latest" |
+    wget "$GITHUB_AUTH" -qO- "https://api.github.com/repos/strukturag/libheif/releases/latest" |
       jq -r '.tag_name' |
       cut -c2-
   )
@@ -527,8 +537,9 @@ echo ""
 echo " Work Dir : $WORK_DIR"
 echo " Log File : $LOG_FILE"
 echo ""
-echo " Force Build  : ${FORCE_BUILD:-"no"}"
-echo " Travis Build : ${TRAVIS_BUILD:-"no"}"
+echo " Force Build                : ${FORCE_BUILD:-"no"}"
+echo " Travis Build               : ${TRAVIS_BUILD:-"no"}"
+echo " Authenticated API requests : $GITHUB_USE_AUTH"
 echo ""
 
 echo " #####################"

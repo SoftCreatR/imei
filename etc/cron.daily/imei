@@ -5,9 +5,9 @@
 # Description    : Cronjob for IMEI                          #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-12 00:52                          #
+# Date           : 2020-09-12 04:00                          #
 # License        : MIT                                       #
-# Version        : 1.1.0                                     #
+# Version        : 1.1.1                                     #
 ##############################################################
 
 ####################
@@ -82,10 +82,16 @@ fi
 # Version retrieval #
 #####################
 
+if [ -n "$GITHUB_TOKEN" ]; then
+  GITHUB_AUTH="--header='Authorization: token $GITHUB_TOKEN'"
+else
+  GITHUB_AUTH=""
+fi
+
 if command_exists identify; then
   INSTALLED_IMAGEMAGICK_VER=$(identify -version | grep -oP 'Version: ImageMagick \K([\d\.\-]+)')
   LATEST_IMAGEMAGICK_VER=$(
-    wget -qO- "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" |
+    wget "$GITHUB_AUTH" -qO- "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" |
       jq -r '.tag_name'
   )
 
@@ -125,7 +131,7 @@ if command_exists identify; then
   fi
 
   LATEST_AOM_VER=$(
-    wget -qO- "https://api.github.com/repos/jbeich/aom/tags" |
+    wget "$GITHUB_AUTH" -qO- "https://api.github.com/repos/jbeich/aom/tags" |
       jq -r '.[0].name' |
       cut -c2-
   )
@@ -160,7 +166,7 @@ if command_exists identify; then
   fi
 
   LATEST_LIBHEIF_VER=$(
-    wget -qO- "https://api.github.com/repos/strukturag/libheif/releases/latest" |
+    wget "$GITHUB_AUTH" -qO- "https://api.github.com/repos/strukturag/libheif/releases/latest" |
       jq -r '.tag_name' |
       cut -c2-
   )
