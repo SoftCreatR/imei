@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-12 04:00                          #
+# Date           : 2020-09-18 00:59                          #
 # License        : MIT                                       #
-# Version        : 4.5.1                                     #
+# Version        : 4.5.2                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -170,7 +170,7 @@ fi
 
 if [ -f "$0" ]; then
   INSTALLER_VER=$(grep -oP 'Version\s+:\s+\K([\d\.]+)' "$0")
-  INSTALLER_LATEST_VER=$(wget -qO- "https://1-2.dev/imei" | grep -oP 'Version\s+:\s+\K([\d\.]+)')
+  INSTALLER_LATEST_VER=$(wget -qO- "https://1-2.dev/imei?uc" | grep -oP 'Version\s+:\s+\K([\d\.]+)')
 fi
 
 # Set GITHUB_TOKEN as environment variable for
