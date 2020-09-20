@@ -1,0 +1,6 @@
+title: IMEI
+description: Automated ImageMagick compilation from sources for Debian/Ubuntu including advanced delegate support.
+logo: /imei-logo.png
+show_downloads: true
+theme: jekyll-theme-hacker
+markdown: GFM

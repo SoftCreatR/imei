@@ -1,7 +1,5 @@
 <div align=center>
 
-![Logo](https://raw.githubusercontent.com/SoftCreatR/imei/main/imei-logo.png)
-
 # IMEI - ImageMagick Easy Install
 #### Automated ImageMagick compilation from sources for Debian/Ubuntu including advanced delegate support.
 
@@ -68,15 +66,15 @@ Every IMEI build will be automatically tested against the latest Ubuntu LTS Vers
 ### One-Step Automated Install
 
 ```bash
-$ bash <(wget -qO - 1-2.dev/imei || curl -sL 1-2.dev/imei)
+bash <(wget -qO - 1-2.dev/imei || curl -sL 1-2.dev/imei)
 ```
 
 ### Alternative Install Method
 
 ```bash
-$ git clone https://github.com/SoftCreatR/imei
-$ cd imei
-$ sudo imei.sh
+git clone https://github.com/SoftCreatR/imei
+cd imei
+sudo imei.sh
 ```
 
 #### Options available
