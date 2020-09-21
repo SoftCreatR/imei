@@ -3,7 +3,7 @@
 # IMEI - ImageMagick Easy Install
 #### Automated ImageMagick compilation from sources for Debian/Ubuntu including advanced delegate support.
 
-[![Travis (.com)](https://img.shields.io/travis/com/SoftCreatR/imei?style=flat-square)](https://travis-ci.com/SoftCreatR/imei) [![Shellcheck](https://img.shields.io/github/workflow/status/SoftCreatR/imei/Shellcheck?label=Shellcheck&style=flat-square)](https://github.com/SoftCreatR/imei/actions?query=workflow%3AShellcheck)
+[![Build](https://img.shields.io/github/workflow/status/SoftCreatR/imei/TestBuild?label=Build&style=flat-square)](https://github.com/SoftCreatR/imei/actions?query=workflow%3ATestBuild) [![Shellcheck](https://img.shields.io/github/workflow/status/SoftCreatR/imei/Shellcheck?label=Shellcheck&style=flat-square)](https://github.com/SoftCreatR/imei/actions?query=workflow%3AShellcheck)
 
 [![Commits](https://img.shields.io/github/last-commit/SoftCreatR/imei?style=flat-square)](https://github.com/SoftCreatR/imei/commits/main) [![GitHub release](https://img.shields.io/github/release/SoftCreatR/imei?style=flat-square)](https://github.com/SoftCreatR/imei/releases) [![GitHub license](https://img.shields.io/github/license/SoftCreatR/imei?style=flat-square&color=lightgray)](https://github.com/SoftCreatR/imei/blob/main/LICENSE) ![Installs](https://img.shields.io/badge/dynamic/json?style=flat-square&color=blue&label=Installs&query=value&url=https%3A%2F%2Fapi.countapi.xyz%2Fget%2Fsoftcreatr%2Fimei) [![GitHub file size in bytes](https://img.shields.io/github/size/SoftCreatR/imei/imei.sh?style=flat-square)](https://github.com/SoftCreatR/imei/blob/main/imei.sh)
 
