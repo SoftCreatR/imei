@@ -1,0 +1,30 @@
+---
+name: Test Build
+
+on:
+  push:
+    paths:
+      - 'imei.sh'
+  pull_request:
+    paths:
+      - 'imei.sh'
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+        
+      - name: Install Dependencies
+        run: sudo apt-get install wget jq cmake yasm libde265-dev libx265-dev
+      
+      - name: Build
+        run: sudo GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} bash imei.sh --travis --log-file "build.log" -- && echo "Test build OK"
+          
+      - name: On failure
+        if: ${{ failure() }}
+        run: sudo tail -5 build.log

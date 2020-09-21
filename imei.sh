@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-18 00:59                          #
+# Date           : 2020-09-21 05:41                          #
 # License        : MIT                                       #
-# Version        : 4.5.2                                     #
+# Version        : 4.5.3                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -515,11 +515,12 @@ setup_cron() {
 # Install everything #
 ######################
 
-clear
+echo -ne "\ec"
 
 WELCOME_TXT="Welcome to IMEI - ImageMagick Easy Install ${INSTALLER_VER}"
 WELCOME_LEN=${#WELCOME_TXT}
 
+echo ""
 echo " $(str_repeat "$WELCOME_LEN" "#")"
 echo " $WELCOME_TXT"
 echo " $(str_repeat "$WELCOME_LEN" "#")"
