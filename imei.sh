@@ -8,7 +8,7 @@
 # Author         : Sascha Greuel <hello@1-2.dev>             #
 # Date           : 2020-09-21 05:41                          #
 # License        : MIT                                       #
-# Version        : 4.5.3                                     #
+# Version        : 4.5.4                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -419,9 +419,9 @@ install_imagemagick() {
           --without-perl \
           --disable-dependency-tracking \
           --disable-docs \
-          --with-jemalloc=yes \
-          --with-tcmalloc=yes \
-          --with-umem=yes \
+          --with-jemalloc=no \
+          --with-tcmalloc=no \
+          --with-umem=no \
           --with-heic=yes &&
         make install &&
         ldconfig
