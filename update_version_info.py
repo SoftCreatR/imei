@@ -30,7 +30,23 @@ def get_versions():
 
 
 if __name__ == '__main__':
+    # Update README
+    readme_path = root / 'README.md'
+    readme = readme_path.open().read()
     versions = get_versions()
+    replacement = "\n* ImageMagick version: `" + versions['imagemagick'] + "`\n"
+    replacement += "* libaom version: `" + versions['libaom'] + "`\n"
+    replacement += "* libheif version: `" + versions['libheif'] + "`"
 
+    r = re.compile(
+        r'<!-- versions start -->.*<!-- versions end -->'.format(),
+        re.DOTALL,
+    )
+
+    replacement = '<!-- versions start -->{}<!-- versions end -->'.format(replacement)
+
+    readme_path.open('w').write(r.sub(replacement, readme))
+
+    # Update Versions
     for key, value in versions.items():
         file = open('versions/' + key + '.version', 'w+').write(value)

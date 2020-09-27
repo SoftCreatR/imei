@@ -90,10 +90,7 @@ Currently available build options are
 
 **Default options** :
 
-<!-- versions start -->
-* ImageMagick version: `7.0.10-30`
-* libaom version: `2.0.0`
-* libheif version: `1.9.1`<!-- versions end -->
+<!-- versions start --><!-- versions end -->
 * Log File: `/var/log/install-imagemagick.log`
 * Work Dir: `/usr/local/src/imei`
 * Force Build: No
