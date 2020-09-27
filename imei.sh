@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-21 05:41                          #
+# Date           : 2020-09-27 19:25                          #
 # License        : MIT                                       #
-# Version        : 4.5.4                                     #
+# Version        : 4.6.0                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -40,7 +40,7 @@ if ! command_exists lsb_release; then
 fi
 
 # Check if required packages are installed or install them
-required_packages="wget jq"
+required_packages="wget"
 
 for package in $required_packages; do
   if ! command_exists "$package"; then
@@ -170,64 +170,19 @@ fi
 
 if [ -f "$0" ]; then
   INSTALLER_VER=$(grep -oP 'Version\s+:\s+\K([\d\.]+)' "$0")
-  INSTALLER_LATEST_VER=$(wget -qO- "https://1-2.dev/imei?uc" | grep -oP 'Version\s+:\s+\K([\d\.]+)')
-fi
-
-# Set GITHUB_TOKEN as environment variable for
-# authenticated requests against the GitHub API
-if [ -n "$GITHUB_TOKEN" ]; then
-  GITHUB_USE_AUTH="yes"
-  GITHUB_AUTH="--header='Authorization: token $GITHUB_TOKEN'"
-else
-  GITHUB_USE_AUTH="no"
-  GITHUB_AUTH=""
+  INSTALLER_LATEST_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh" | grep -oP 'Version\s+:\s+\K([\d\.]+)')
 fi
 
 if [ -z "$IMAGEMAGICK_VER" ]; then
-  IMAGEMAGICK_VER=$(
-    wget "$GITHUB_AUTH" -qO- "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" |
-      jq -r '.tag_name'
-  )
-
-  # Fallback
-  if [ -z "$IMAGEMAGICK_VER" ]; then
-    IMAGEMAGICK_VER=$(
-      wget -qO- "https://1-2.dev/imei?versions" |
-        jq -r '.imagemagick'
-    )
-  fi
+  IMAGEMAGICK_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.version")
 fi
 
 if [ -z "$AOM_VER" ]; then
-  AOM_VER=$(
-    wget "$GITHUB_AUTH" -qO- "https://api.github.com/repos/jbeich/aom/tags" |
-      jq -r '.[0].name' |
-      cut -c2-
-  )
-
-  # Fallback
-  if [ -z "$AOM_VER" ]; then
-    AOM_VER=$(
-      wget -qO- "https://1-2.dev/imei?versions" |
-        jq -r '.aom'
-    )
-  fi
+  AOM_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libaom.version")
 fi
 
 if [ -z "$LIBHEIF_VER" ]; then
-  LIBHEIF_VER=$(
-    wget "$GITHUB_AUTH" -qO- "https://api.github.com/repos/strukturag/libheif/releases/latest" |
-      jq -r '.tag_name' |
-      cut -c2-
-  )
-
-  # Fallback
-  if [ -z "$LIBHEIF_VER" ]; then
-    LIBHEIF_VER=$(
-      wget -qO- "https://1-2.dev/imei?versions" |
-        jq -r '.libheif'
-    )
-  fi
+  LIBHEIF_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libheif.version")
 fi
 
 # Make sure, that a version number for ImageMagick has been set
@@ -251,8 +206,8 @@ if [ -z "$LIBHEIF_VER" ]; then
   exit 1
 fi
 
-if command_exists identify; then
-  INSTALLED_IMAGEMAGICK_VER=$(identify -version | grep -oP 'Version: ImageMagick \K([\d\.\-]+)')
+if command_exists magick; then
+  INSTALLED_IMAGEMAGICK_VER=$(magick -version | grep -oP 'Version: ImageMagick \K([\d\.\-]+)')
 
   if [ -L /usr/local/lib/libaom.so ]; then
     INSTALLED_AOM_VER=$(readlink -f /usr/local/lib/libaom.so | xargs basename | grep -oP 'libaom.so.\K([\d\.]+)')
@@ -443,8 +398,8 @@ finish_installation() {
   echo -ne ' Verifying installation        [..]\r'
 
   # Check if ImageMagick version matches
-  if command_exists identify; then
-    VERIFY_INSTALLATION=$(identify -version | grep -oP "$IMAGEMAGICK_VER")
+  if command_exists magick; then
+    VERIFY_INSTALLATION=$(magick -version | grep -oP "$IMAGEMAGICK_VER")
 
     if [ -n "$VERIFY_INSTALLATION" ]; then
       echo -ne " Verifying installation        [${CGREEN}OK${CEND}]\\r"
@@ -494,7 +449,7 @@ setup_cron() {
 
   if [ "$CRON_SETUP" = "y" ]; then
     if {
-      wget -c --show-progress "https://1-2.dev/imei-cron" \
+      wget -c --show-progress "https://raw.githubusercontent.com/SoftCreatR/imei/main/etc/cron.daily/imei" \
         -O "/etc/cron.daily/imei" &&
         chmod +x /etc/cron.daily/imei
     } >>"$LOG_FILE" 2>&1; then

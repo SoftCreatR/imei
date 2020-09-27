@@ -5,9 +5,9 @@
 # Description    : Cronjob for IMEI                          #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-12 04:00                          #
+# Date           : 2020-09-27 19:27                          #
 # License        : MIT                                       #
-# Version        : 1.1.1                                     #
+# Version        : 1.2.0                                     #
 ##############################################################
 
 ####################
@@ -27,7 +27,7 @@ command_exists() {
 ######################
 
 # Check if required packages are installed or install them
-required_packages="wget jq"
+required_packages="wget"
 
 for package in $required_packages; do
   if ! command_exists "$package"; then
@@ -58,7 +58,7 @@ done
 
 if [ -f "$0" ] && [ -z "$SKIP_VERSION_CHECK" ]; then
   CRON_VER=$(grep -oP 'Version\s+:\s+\K([\d\.]+)' "$0")
-  CRON_LATEST_VER=$(wget -qO- "https://1-2.dev/imei-cron" | grep -oP 'Version\s+:\s+\K([\d\.]+)')
+  CRON_LATEST_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/etc/cron.daily/imei" | grep -oP 'Version\s+:\s+\K([\d\.]+)')
 
   if [ -n "$CRON_VER" ] && [ "$(version "$CRON_VER")" -lt "$(version "$CRON_LATEST_VER")" ]; then
     if [ -n "$VERBOSE" ]; then
@@ -66,7 +66,7 @@ if [ -f "$0" ] && [ -z "$SKIP_VERSION_CHECK" ]; then
       echo ""
     fi
 
-    wget -O "$0" "https://1-2.dev/imei-cron" >/dev/null 2>&1
+    wget -O "$0" "https://raw.githubusercontent.com/SoftCreatR/imei/main/etc/cron.daily/imei" >/dev/null 2>&1
 
     if [ -n "$VERBOSE" ]; then
       exec "$0" --verbose --skip-version-check
@@ -82,26 +82,9 @@ fi
 # Version retrieval #
 #####################
 
-if [ -n "$GITHUB_TOKEN" ]; then
-  GITHUB_AUTH="--header='Authorization: token $GITHUB_TOKEN'"
-else
-  GITHUB_AUTH=""
-fi
-
-if command_exists identify; then
-  INSTALLED_IMAGEMAGICK_VER=$(identify -version | grep -oP 'Version: ImageMagick \K([\d\.\-]+)')
-  LATEST_IMAGEMAGICK_VER=$(
-    wget "$GITHUB_AUTH" -qO- "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" |
-      jq -r '.tag_name'
-  )
-
-  # Fallback
-  if [ -z "$LATEST_IMAGEMAGICK_VER" ]; then
-    LATEST_IMAGEMAGICK_VER=$(
-      wget -qO- "https://1-2.dev/imei?versions" |
-        jq -r '.imagemagick'
-    )
-  fi
+if command_exists magick; then
+  INSTALLED_IMAGEMAGICK_VER=$(magick -version | grep -oP 'Version: ImageMagick \K([\d\.\-]+)')
+  LATEST_IMAGEMAGICK_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.version")
 
   if [ -n "$VERBOSE" ]; then
     if [ -z "$INSTALLED_IMAGEMAGICK_VER" ]; then
@@ -130,19 +113,7 @@ if command_exists identify; then
     fi
   fi
 
-  LATEST_AOM_VER=$(
-    wget "$GITHUB_AUTH" -qO- "https://api.github.com/repos/jbeich/aom/tags" |
-      jq -r '.[0].name' |
-      cut -c2-
-  )
-
-  # Fallback
-  if [ -z "$LATEST_AOM_VER" ]; then
-    LATEST_AOM_VER=$(
-      wget -qO- "https://1-2.dev/imei?versions" |
-        jq -r '.aom'
-    )
-  fi
+  LATEST_AOM_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libaom.version")
 
   if [ -n "$VERBOSE" ]; then
     if [ -z "$LATEST_AOM_VER" ]; then
@@ -165,19 +136,7 @@ if command_exists identify; then
     fi
   fi
 
-  LATEST_LIBHEIF_VER=$(
-    wget "$GITHUB_AUTH" -qO- "https://api.github.com/repos/strukturag/libheif/releases/latest" |
-      jq -r '.tag_name' |
-      cut -c2-
-  )
-
-  # Fallback
-  if [ -z "$LATEST_LIBHEIF_VER" ]; then
-    LATEST_LIBHEIF_VER=$(
-      wget -qO- "https://1-2.dev/imei?versions" |
-        jq -r '.libheif'
-    )
-  fi
+  LATEST_LIBHEIF_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libheif.version")
 
   if [ -n "$VERBOSE" ]; then
     if [ -z "$LATEST_LIBHEIF_VER" ]; then
@@ -206,14 +165,14 @@ if [ -z "$INSTALLED_AOM_VER" ] || [ "$(version "$INSTALLED_AOM_VER")" -lt "$(ver
   UPDATE=true
 fi
 
-if [ -z "$INSTALLED_LIBHEIF_VER" ] || [ "$(version "$LATEST_LIBHEIF_VER")" -lt "$(version "$LATEST_LIBHEIF_VER")" ]; then
+if [ -z "$INSTALLED_LIBHEIF_VER" ] || [ "$(version "$INSTALLED_LIBHEIF_VER")" -lt "$(version "$LATEST_LIBHEIF_VER")" ]; then
   UPDATE=true
 fi
 
 if [ "$UPDATE" = true ]; then
   TMP_FILE=$(mktemp)
 
-  wget -O "$TMP_FILE" "https://1-2.dev/imei" >/dev/null 2>&1
+  wget -O "$TMP_FILE" "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh" >/dev/null 2>&1
   chmod +x "$TMP_FILE"
 
   exec "$TMP_FILE" --imagemagick-version "$LATEST_IMAGEMAGICK_VER" --aom-version "$LATEST_AOM_VER" --libheif-version "$LATEST_LIBHEIF_VER"
