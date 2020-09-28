@@ -495,7 +495,6 @@ echo " Log File : $LOG_FILE"
 echo ""
 echo " Force Build                : ${FORCE:-"no"}"
 echo " Travis Build               : ${TRAVIS_BUILD:-"no"}"
-echo " Authenticated API requests : $GITHUB_USE_AUTH"
 echo ""
 
 echo " #####################"
