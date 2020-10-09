@@ -4,3 +4,4 @@ logo: /imei-logo.png
 show_downloads: true
 theme: jekyll-theme-hacker
 markdown: GFM
+include: [ 'LICENSE.md' ]
