@@ -5,9 +5,9 @@
 # Description    : Cronjob for IMEI                          #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-27 19:27                          #
+# Date           : 2020-10-09 11:20                          #
 # License        : MIT                                       #
-# Version        : 1.2.0                                     #
+# Version        : 1.2.1                                     #
 ##############################################################
 
 ####################
@@ -98,6 +98,7 @@ if command_exists magick; then
     else
       echo "LATEST_IMAGEMAGICK_VER: $LATEST_IMAGEMAGICK_VER"
     fi
+
     echo ""
   fi
 
@@ -121,6 +122,7 @@ if command_exists magick; then
     else
       echo "LATEST_AOM_VER: $LATEST_AOM_VER"
     fi
+
     echo ""
   fi
 
@@ -144,10 +146,14 @@ if command_exists magick; then
     else
       echo "LATEST_LIBHEIF_VER: $LATEST_LIBHEIF_VER"
     fi
+
     echo ""
   fi
 else
-  echo "ImageMagick is not installed"
+  if [ -n "$VERBOSE" ]; then
+    echo "ImageMagick is not installed"
+  fi
+
   exit 1
 fi
 
@@ -177,8 +183,10 @@ if [ "$UPDATE" = true ]; then
 
   exec "$TMP_FILE" --imagemagick-version "$LATEST_IMAGEMAGICK_VER" --aom-version "$LATEST_AOM_VER" --libheif-version "$LATEST_LIBHEIF_VER"
 else
-  echo "Everything is up to date."
-  echo ""
+  if [ -n "$VERBOSE" ]; then
+    echo "Everything is up to date."
+    echo ""
+  fi
 fi
 
 exit 0

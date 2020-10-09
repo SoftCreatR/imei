@@ -1,13 +1,40 @@
+"""
+Copyright (c) 2020 1-2.dev
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
 import os
-import pathlib
 import re
+from typing import Dict
 
 import requests
 
-root = pathlib.Path(__file__).parent.resolve()
+__author__ = "Sascha Greuel"
+__copyright__ = "Copyright 2020, Sascha Greuel"
+__license__ = "MIT"
+__maintainer__ = "Sascha Greuel"
+__email__ = "hello@1-2.dev"
+__status__ = "Production"
+
+root = os.getcwd() + os.path.sep
 
 
-def get_versions():
+def get_versions() -> Dict[str, str]:
+    """ Returns a list of version numbers for imagemagick, libaom & libheif """
     if "GITHUB_TOKEN" in os.environ:
         headers = {"Authorization": "Bearer " + os.environ['GITHUB_TOKEN']}
     else:
@@ -30,9 +57,8 @@ def get_versions():
 
 
 if __name__ == '__main__':
-    # Update README
-    readme_path = root / 'README.md'
-    readme = readme_path.open().read()
+    readme_path = root + "README.md"
+    readme = open(readme_path, "r").read()
     versions = get_versions()
     replacement = "\n* ImageMagick version: `" + versions['imagemagick'] + "`\n"
     replacement += "* libaom version: `" + versions['libaom'] + "`\n"
@@ -45,8 +71,8 @@ if __name__ == '__main__':
 
     replacement = '<!-- versions start -->{}<!-- versions end -->'.format(replacement)
 
-    readme_path.open('w').write(r.sub(replacement, readme))
+    open(readme_path, "w").write(r.sub(replacement, readme))
 
-    # Update Versions
+    # Update version files
     for key, value in versions.items():
-        file = open('versions/' + key + '.version', 'w+').write(value)
+        file = open(root + 'versions' + os.path.sep + key + '.version', 'w+').write(value)
