@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-09-27 19:25                          #
+# Date           : 2020-10-09 11:25                          #
 # License        : MIT                                       #
-# Version        : 4.6.0                                     #
+# Version        : 4.6.1                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -424,6 +424,16 @@ finish_installation() {
 
 setup_cron() {
   if [ -n "$TRAVIS_BUILD" ] || [ -f /etc/cron.daily/imei ]; then
+
+    if [ -f /etc/cron.daily/imei ]; then
+      # Update Cronjob
+      {
+        wget -c --show-progress "https://raw.githubusercontent.com/SoftCreatR/imei/main/etc/cron.daily/imei" \
+        -O "/etc/cron.daily/imei" &&
+        chmod +x /etc/cron.daily/imei
+        } >>"$LOG_FILE" 2>&1
+    fi
+
     return
   fi
 
