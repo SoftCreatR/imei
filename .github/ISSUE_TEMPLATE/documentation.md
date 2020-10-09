@@ -1,12 +1,12 @@
 ---
-name: 🚀 Feature
-about: Submit a proposal for a new feature
-labels: "feature"
+name: 📚 Documentation
+about: Report an issue related to documentation
+labels: "documentation"
 ---
 
-## 🚀 Feature
+## 📚 Documentation
 
-(A clear and concise description of what the feature is.)
+(A clear and concise description of what the issue is.)
 
 ## Have you spent some time to check if this issue has been raised before?
 
@@ -15,7 +15,3 @@ labels: "feature"
 ### Have you read the [Code of Conduct](https://github.com/SoftCreatR/imei/blob/main/CODE_OF_CONDUCT.md)?
 
 [ ] I have read the Code of Conduct
-
-## Pitch
-
-(Please explain why this feature should be implemented and how it would be used. Add examples, if applicable.)
