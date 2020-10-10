@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-10-09 11:25                          #
+# Date           : 2020-10-10 10:33                          #
 # License        : MIT                                       #
-# Version        : 4.6.1                                     #
+# Version        : 4.6.2                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -71,6 +71,9 @@ while [ "$#" -gt 0 ]; do
     ;;
   --force)
     FORCE="yes"
+    ;;
+  --no-cron)
+    CRON_SETUP="n"
     ;;
   --travis)
     TRAVIS_BUILD="yes"
@@ -423,7 +426,7 @@ finish_installation() {
 }
 
 setup_cron() {
-  if [ -n "$TRAVIS_BUILD" ] || [ -f /etc/cron.daily/imei ]; then
+  if [ -n "$TRAVIS_BUILD" ] || [ "$CRON_SETUP" = "n" ] || [ -f /etc/cron.daily/imei ]; then
 
     if [ -f /etc/cron.daily/imei ]; then
       # Update Cronjob

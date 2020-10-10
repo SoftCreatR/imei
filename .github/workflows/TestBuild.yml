@@ -16,15 +16,19 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - uses: fauguste/auto-cancellation-running-action@0.1.4
+        with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Git checkout
         uses: actions/checkout@v2
-        
+
       - name: Install Dependencies
         run: sudo apt-get install wget cmake yasm libde265-dev libx265-dev
-      
+
       - name: Build
         run: sudo bash imei.sh --travis --log-file "build.log" -- && echo "Test build OK"
-          
+
       - name: On failure
         if: ${{ failure() }}
         run: sudo tail -5 build.log
