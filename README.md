@@ -87,6 +87,7 @@ Currently available build options are
 * `--log-file` : Log everything to the file provided
 * `--work-dir` : Download, extract & build within the directory provided
 * `--force-build` : Force building of components, even if they are already installed in a newer or the latest version
+* `--no-cron` : Disable asking for cronjob creation (useful for CI where TTY isn't available)
 
 **Default options** :
 
