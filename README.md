@@ -74,7 +74,7 @@ bash <(wget -qO - 1-2.dev/imei || curl -sL 1-2.dev/imei)
 ```bash
 git clone https://github.com/SoftCreatR/imei
 cd imei
-sudo imei.sh
+sudo ./imei.sh
 ```
 
 #### Options available
@@ -86,7 +86,7 @@ Currently available build options are
 * `--libheif-version` : Build the given libheif version (e.g. `1.8.0`)
 * `--log-file` : Log everything to the file provided
 * `--work-dir` : Download, extract & build within the directory provided
-* `--force-build` : Force building of components, even if they are already installed in a newer or the latest version
+* `--force` : Force building of components, even if they are already installed in a newer or the latest version
 * `--no-cron` : Disable asking for cronjob creation (useful for CI where TTY isn't available)
 
 **Default options** :
