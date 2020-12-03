@@ -1,18 +1,26 @@
 ---
-name: TestBuild
+name: Test
 
 on:
-  push:
-    paths:
-      - 'imei.sh'
   pull_request:
     paths:
       - 'imei.sh'
-  schedule:
-    - cron: '0 0 * * 0'
 
 jobs:
+  ShellCheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Run Shellcheck
+        uses: azohra/shell-linter@v0.4.0
+        with:
+          path: "imei.sh"
+
   TestBuild:
+    needs: ShellCheck
     runs-on: ubuntu-latest
     
     steps:
@@ -21,13 +29,13 @@ jobs:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Git checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Install Dependencies
         run: sudo apt-get install wget cmake yasm libde265-dev libx265-dev
 
       - name: Build
-        run: sudo bash imei.sh --travis --log-file "build.log" -- && echo "Test build OK"
+        run: sudo bash imei.sh --ci --no-sig-verify --log-file "build.log" -- && echo "Test build OK"
 
       - name: On failure
         if: ${{ failure() }}

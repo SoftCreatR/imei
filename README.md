@@ -31,17 +31,16 @@
 ## Features
 
 * Compiles the latest ImageMagick release
-* Installs ImageMagick or replaces ImageMagick package previously installed
+* Installs ImageMagick or updates ImageMagick package previously installed (via IMEI)
 * Additional HEIF support
 * Additional HEIX support
 * Additional AVIF support
-* Automated updates via cronjob (optional)
 
 ---
 
 ## Compatibility
 
-Every IMEI build will be automatically tested against the latest Ubuntu LTS Versions (16.04 and newer) using Travis CI. Compatibility with other operating systems (such as Debian 10) is tested manually.
+Every IMEI build will be automatically tested against the latest Ubuntu LTS Versions (16.04 and newer) using GitHub Actions. Compatibility with other operating systems (such as Debian 10) is tested manually.
 
 ### Operating System
 
@@ -66,7 +65,7 @@ Every IMEI build will be automatically tested against the latest Ubuntu LTS Vers
 ### One-Step Automated Install
 
 ```bash
-bash <(wget -qO - 1-2.dev/imei/imei.sh || curl -sL 1-2.dev/imei/imei.sh)
+bash <(wget -qO - 1-2.dev/imei/imei.sh)
 ```
 
 ### Alternative Install Method
@@ -75,6 +74,26 @@ bash <(wget -qO - 1-2.dev/imei/imei.sh || curl -sL 1-2.dev/imei/imei.sh)
 git clone https://github.com/SoftCreatR/imei
 cd imei
 sudo ./imei.sh
+```
+
+### Verify installer integrity
+
+Though the installer performs a self check upon startup, you can also perform it manually.
+To do so, `openssl` is required:
+
+```bash
+wget 1-2.dev/imei/imei.sh && \                                         # Download IMEI
+wget 1-2.dev/imei/imei.sh.sig && \                                     # Download signature file
+wget 1-2.dev/imei/public.pem && \                                      # Download public key
+openssl dgst -sha512 -verify public.pem -signature imei.sh.sig imei.sh # Verify
+```
+
+### Alternative integrity check
+
+```bash
+git clone https://github.com/SoftCreatR/imei
+cd imei
+openssl dgst -sha512 -verify public.pem -signature imei.sh.sig imei.sh
 ```
 
 #### Options available
@@ -86,8 +105,9 @@ Currently available build options are
 * `--libheif-version` : Build the given libheif version (e.g. `1.8.0`)
 * `--log-file` : Log everything to the file provided
 * `--work-dir` : Download, extract & build within the directory provided
+* `--build-dir` : Build target directory
 * `--force` : Force building of components, even if they are already installed in a newer or the latest version
-* `--no-cron` : Disable asking for cronjob creation (useful for CI where TTY isn't available)
+* `--no-sig-verify` : Disable signature verification on startup
 
 **Default options** :
 
@@ -97,15 +117,15 @@ Currently available build options are
 * libheif version: `1.9.1`<!-- versions end -->
 * Log File: `/var/log/install-imagemagick.log`
 * Work Dir: `/usr/local/src/imei`
-* Force Build: No
+* Build Dir: `/usr/local`
 
 ---
 
 ## Roadmap
 
-* [x] Add cronjob for automatic updates
+* [x] Verify installer signatures
 * [ ] Add ImageMagick modules choice
-* [ ] CentOS 8 compatibility
+* [ ] CentOS compatibility
 
 ## Contributing
 
@@ -115,4 +135,4 @@ If you'd like to contribute, please fork the repository and make changes as you'
 
 ## License
 
-[MIT](LICENSE.md) © [1-2.dev](https://1-2.dev)
+[ISC](LICENSE.md) © [1-2.dev](https://1-2.dev)

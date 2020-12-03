@@ -12,6 +12,7 @@
 
 # Generated files
 .idea/**/contentModel.xml
+*.log
 
 # Sensitive or high-churn files
 .idea/**/dataSources/
@@ -21,6 +22,7 @@
 .idea/**/dynamic.xml
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
+private.pem
 
 # Gradle
 .idea/**/gradle.xml
