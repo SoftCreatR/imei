@@ -3,6 +3,7 @@
 # IMEI - ImageMagick Easy Install
 #### Automated ImageMagick compilation from sources for Debian/Ubuntu including advanced delegate support.
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/ae9170348e6540a29258b2ce2066e108)](https://app.codacy.com/gh/SoftCreatR/imei?utm_source=github.com&utm_medium=referral&utm_content=SoftCreatR/imei&utm_campaign=Badge_Grade)
 [![Build](https://img.shields.io/github/workflow/status/SoftCreatR/imei/TestBuild?label=Build&style=flat-square)](https://github.com/SoftCreatR/imei/actions?query=workflow%3ATestBuild) [![Shellcheck](https://img.shields.io/github/workflow/status/SoftCreatR/imei/Shellcheck?label=Shellcheck&style=flat-square)](https://github.com/SoftCreatR/imei/actions?query=workflow%3AShellcheck)
 
 [![Commits](https://img.shields.io/github/last-commit/SoftCreatR/imei?style=flat-square)](https://github.com/SoftCreatR/imei/commits/main) [![GitHub release](https://img.shields.io/github/release/SoftCreatR/imei?style=flat-square)](https://github.com/SoftCreatR/imei/releases) [![GitHub license](https://img.shields.io/github/license/SoftCreatR/imei?style=flat-square&color=lightgray)](LICENSE.md) ![Installs](https://img.shields.io/badge/dynamic/json?style=flat-square&color=blue&label=Installs&query=value&url=https%3A%2F%2Fapi.countapi.xyz%2Fget%2Fsoftcreatr%2Fimei) [![GitHub file size in bytes](https://img.shields.io/github/size/SoftCreatR/imei/imei.sh?style=flat-square)](https://github.com/SoftCreatR/imei/blob/main/imei.sh)
