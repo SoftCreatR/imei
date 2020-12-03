@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-10-10 10:33                          #
-# License        : MIT                                       #
-# Version        : 4.6.2                                     #
+# Date           : 2020-12-03 22:43                          #
+# License        : ISC                                       #
+# Version        : 5.0.0                                     #
 #                                                            #
 # Usage          : bash imei.sh                              #
 ##############################################################
@@ -69,14 +69,17 @@ while [ "$#" -gt 0 ]; do
   --work-dir)
     WORK_DIR=$2
     ;;
+  --build-dir)
+    BUILD_DIR=$2
+    ;;
   --force)
     FORCE="yes"
     ;;
-  --no-cron)
-    CRON_SETUP="n"
+  --ci)
+    CI_BUILD="yes"
     ;;
-  --travis)
-    TRAVIS_BUILD="yes"
+  --no-sig-verify)
+    VERIFY_SIGNATURE="n"
     ;;
   *) ;;
   esac
@@ -95,6 +98,10 @@ OS_ARCH="$(uname -m)"
 
 if [ -z "$WORK_DIR" ]; then
   WORK_DIR=/usr/local/src/imei
+fi
+
+if [ -z "$BUILD_DIR" ]; then
+  BUILD_DIR=/usr/local
 fi
 
 if [ -z "$LOG_FILE" ]; then
@@ -167,6 +174,43 @@ if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
   exit 1
 fi
 
+###################
+# Integrity check #
+###################
+
+if [ -z "$VERIFY_SIGNATURE" ]; then
+  # Install OpenSSL, if it's not already installed
+  if ! command_exists openssl; then
+    apt-get install -qq openssl >/dev/null 2>&1
+  fi
+  
+  SIGNATURE_FILE="/tmp/imei.sh.sig"
+  PUBLICKEY_FILE="/tmp/imei.pem"
+
+  if {
+    wget -c --show-progress "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh.sig" \
+      -O "$SIGNATURE_FILE"
+      
+    if [ -f "$PUBLICKEY_FILE" ]; then
+      wget -c --show-progress "https://raw.githubusercontent.com/SoftCreatR/imei/main/public.pem" \
+        -O "$PUBLICKEY_FILE"
+    fi
+    
+    openssl dgst -sha512 -verify "$PUBLICKEY_FILE" -signature "$SIGNATURE_FILE" "$0"
+  } >>"$LOG_FILE" 2>&1; then
+    # All good!
+    echo -ne "\ec"
+  else
+    echo -ne "\ec"
+    
+    echo -e " ${CRED}Signature verification failed!${CEND}"
+    echo ""
+    echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
+
+    exit 1
+  fi
+fi
+
 ##################
 # Version checks #
 ##################
@@ -212,12 +256,12 @@ fi
 if command_exists magick; then
   INSTALLED_IMAGEMAGICK_VER=$(magick -version | grep -oP 'Version: ImageMagick \K([\d\.\-]+)')
 
-  if [ -L /usr/local/lib/libaom.so ]; then
-    INSTALLED_AOM_VER=$(readlink -f /usr/local/lib/libaom.so | xargs basename | grep -oP 'libaom.so.\K([\d\.]+)')
+  if [ -L "$BUILD_DIR/lib/libaom.so" ]; then
+    INSTALLED_AOM_VER=$(readlink -f "$BUILD_DIR/lib/libaom.so" | xargs basename | grep -oP 'libaom.so.\K([\d\.]+)')
   fi
 
-  if [ -L /usr/local/lib/libheif.so ]; then
-    INSTALLED_LIBHEIF_VER=$(readlink -f /usr/local/lib/libheif.so | xargs basename | grep -oP 'libheif.so.\K([\d\.]+)')
+  if [ -L "$BUILD_DIR/lib/libheif.so" ]; then
+    INSTALLED_LIBHEIF_VER=$(readlink -f "$BUILD_DIR/lib/libheif.so" | xargs basename | grep -oP 'libheif.so.\K([\d\.]+)')
   fi
 fi
 
@@ -235,7 +279,7 @@ install_deps() {
 
   if {
     # Update package list
-    if [ -z "$TRAVIS_BUILD" ]; then
+    if [ -z "$CI_BUILD" ]; then
       apt-get update -qq
     fi
 
@@ -372,7 +416,7 @@ install_imagemagick() {
           CFLAGS="-O3 -march=native" \
           CXX=g++ \
           CXXFLAGS="-O3 -march=native" \
-          --prefix=/usr \
+          --prefix="$BUILD_DIR" \
           --without-magick-plus-plus \
           --without-perl \
           --disable-dependency-tracking \
@@ -401,82 +445,19 @@ finish_installation() {
   echo -ne ' Verifying installation        [..]\r'
 
   # Check if ImageMagick version matches
-  if command_exists magick; then
-    VERIFY_INSTALLATION=$(magick -version | grep -oP "$IMAGEMAGICK_VER")
+  VERIFY_INSTALLATION=$("$BUILD_DIR/bin/magick" -version | grep -oP "$IMAGEMAGICK_VER")
 
-    if [ -n "$VERIFY_INSTALLATION" ]; then
-      echo -ne " Verifying installation        [${CGREEN}OK${CEND}]\\r"
-      echo ""
-      echo -e " ${CGREEN}Process has been finished successfully after $(displaytime $(($(date +%s) - START)))!${CEND}"
-      echo ""
-
-      setup_cron
-    else
-      echo -ne " Verifying installation        [${CRED}FAILURE${CEND}]\\r"
-      echo ""
-      echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
-      echo ""
-    fi
+  if [ -n "$VERIFY_INSTALLATION" ]; then
+    echo -ne " Verifying installation        [${CGREEN}OK${CEND}]\\r"
+    echo ""
+    echo -e " ${CGREEN}Process has been finished successfully after $(displaytime $(($(date +%s) - START)))!${CEND}"
+    echo ""
   else
     echo -ne " Verifying installation        [${CRED}FAILURE${CEND}]\\r"
     echo ""
     echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
     echo ""
-  fi
-}
-
-setup_cron() {
-  if [ -n "$TRAVIS_BUILD" ] || [ "$CRON_SETUP" = "n" ] || [ -f /etc/cron.daily/imei ]; then
-
-    if [ -f /etc/cron.daily/imei ]; then
-      # Update Cronjob
-      {
-        wget -c --show-progress "https://raw.githubusercontent.com/SoftCreatR/imei/main/etc/cron.daily/imei" \
-        -O "/etc/cron.daily/imei" &&
-        chmod +x /etc/cron.daily/imei
-        } >>"$LOG_FILE" 2>&1
-    fi
-
-    return
-  fi
-
-  while true; do
-    read -rp " Do you want to setup IMEI auto-update cronjob? (y/n): " yn </dev/tty
-
-    case $yn in
-    [Yy]*)
-      CRON_SETUP="y"
-      break
-      ;;
-    [Nn]*)
-      return
-      ;;
-    *)
-      echo -e " ${CYELLOW}Please answer yes or no.${CEND}"
-      echo ""
-      ;;
-    esac
-  done
-
-  echo ""
-
-  if [ "$CRON_SETUP" = "y" ]; then
-    if {
-      wget -c --show-progress "https://raw.githubusercontent.com/SoftCreatR/imei/main/etc/cron.daily/imei" \
-        -O "/etc/cron.daily/imei" &&
-        chmod +x /etc/cron.daily/imei
-    } >>"$LOG_FILE" 2>&1; then
-      echo -e " Installing IMEI Cronjob       [${CGREEN}OK${CEND}]"
-      echo ""
-    else
-      echo -e " Installing IMEI Cronjob       [${CRED}FAIL${CEND}]"
-      echo ""
-      echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
-      echo ""
-
-      exit 1
-    fi
-  fi
+fi
 }
 
 ######################
@@ -494,7 +475,7 @@ echo " $WELCOME_TXT"
 echo " $(str_repeat "$WELCOME_LEN" "#")"
 echo ""
 
-if [ -z "$TRAVIS_BUILD" ] && [ -n "$INSTALLER_VER" ] && [ "$(version "$INSTALLER_VER")" -lt "$(version "$INSTALLER_LATEST_VER")" ]; then
+if [ -z "$CI_BUILD" ] && [ -n "$INSTALLER_VER" ] && [ "$(version "$INSTALLER_VER")" -lt "$(version "$INSTALLER_LATEST_VER")" ]; then
   echo -e " ${CYELLOW}A newer installer version ($INSTALLER_LATEST_VER) is available!${CEND}"
   echo ""
 fi
@@ -503,11 +484,12 @@ echo " Detected OS    : $OS_DISTRO"
 echo " Detected Arch  : $OS_ARCH"
 echo " Detected Cores : $NUM_CORES"
 echo ""
-echo " Work Dir : $WORK_DIR"
-echo " Log File : $LOG_FILE"
+echo " Work Dir       : $WORK_DIR"
+echo " Build Dir      : $BUILD_DIR"
+echo " Log File       : $LOG_FILE"
 echo ""
-echo " Force Build                : ${FORCE:-"no"}"
-echo " Travis Build               : ${TRAVIS_BUILD:-"no"}"
+echo " Force Build    : ${FORCE:-"no"}"
+echo " CI Build       : ${CI_BUILD:-"no"}"
 echo ""
 
 echo " #####################"

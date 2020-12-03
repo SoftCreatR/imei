@@ -1,0 +1,74 @@
+---
+name: Main
+
+on:
+  push:
+    paths:
+      - 'imei.sh'
+  workflow_dispatch:
+
+jobs:
+  ShellCheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Run Shellcheck
+        uses: azohra/shell-linter@v0.4.0
+        with:
+          path: "imei.sh"
+
+  TestBuild:
+    needs: ShellCheck
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: fauguste/auto-cancellation-running-action@0.1.4
+        with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Git checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Install Dependencies
+        run: sudo apt-get install wget cmake yasm libde265-dev libx265-dev
+
+      - name: Build
+        run: sudo bash imei.sh --ci --no-sig-verify --log-file "build.log" -- && echo "Test build OK"
+
+      - name: On failure
+        if: ${{ failure() }}
+        run: sudo tail -5 build.log
+
+  Sign:
+    needs: TestBuild
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Install Dependencies
+        run: sudo apt-get install openssl
+
+      - name: Sign release
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+        run: |-
+          echo "$PRIVATE_KEY" > private.pem
+          openssl dgst -sha512 -sign private.pem -out imei.sh.sig imei.sh
+
+      - name: Verify release
+        run: |-
+          openssl dgst -sha512 -verify public.pem -signature imei.sh.sig imei.sh
+
+      - name: Commit and push on changes
+        run: |-
+          git add .
+          git diff
+          git config --global user.email "33604303+magickwizard@users.noreply.github.com"
+          git config --global user.name "magickwizard"
+          git commit -m "Updated signature" -a || echo "No changes to commit"
+          git push
