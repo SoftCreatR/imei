@@ -22,7 +22,7 @@
 <a href="#contributing"> Contributing</a> •
 <a href="#license"> License</a>
 
-![Screenshot](https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.png)
+![Screenshot](imei.png)
 
 </div>
 
