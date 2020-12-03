@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Git checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -30,7 +30,7 @@ jobs:
         run: |-
           git add .
           git diff
-          git config --global user.email "readme-bot@1-2.dev"
-          git config --global user.name "Versions Bot"
-          git commit -m "Updated Version Information" -a || echo "No changes to commit"
+          git config --global user.email "33604303+magickwizard@users.noreply.github.com"
+          git config --global user.name "magickwizard"
+          git commit -m "Updated version information" -a || echo "No changes to commit"
           git push
