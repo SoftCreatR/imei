@@ -6,11 +6,11 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-12-03 22:43                          #
+# Date           : 2020-12-13 07:55                          #
 # License        : ISC                                       #
-# Version        : 5.0.0                                     #
+# Version        : 5.1.0                                     #
 #                                                            #
-# Usage          : bash imei.sh                              #
+# Usage          : bash ./imei.sh                            #
 ##############################################################
 
 ######################
@@ -183,26 +183,26 @@ if [ -z "$VERIFY_SIGNATURE" ]; then
   if ! command_exists openssl; then
     apt-get install -qq openssl >/dev/null 2>&1
   fi
-  
+
   SIGNATURE_FILE="/tmp/imei.sh.sig"
-  PUBLICKEY_FILE="/tmp/imei.pem"
+  PUBLIC_KEY_FILE="/tmp/imei.pem"
 
   if {
     wget -c --show-progress "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh.sig" \
       -O "$SIGNATURE_FILE"
-      
-    if [ -f "$PUBLICKEY_FILE" ]; then
+
+    if [ -f "$PUBLIC_KEY_FILE" ]; then
       wget -c --show-progress "https://raw.githubusercontent.com/SoftCreatR/imei/main/public.pem" \
-        -O "$PUBLICKEY_FILE"
+        -O "$PUBLIC_KEY_FILE"
     fi
-    
-    openssl dgst -sha512 -verify "$PUBLICKEY_FILE" -signature "$SIGNATURE_FILE" "$0"
+
+    openssl dgst -sha512 -verify "$PUBLIC_KEY_FILE" -signature "$SIGNATURE_FILE" "$0"
   } >>"$LOG_FILE" 2>&1; then
     # All good!
     echo -ne "\ec"
   else
     echo -ne "\ec"
-    
+
     echo -e " ${CRED}Signature verification failed!${CEND}"
     echo ""
     echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
@@ -222,14 +222,17 @@ fi
 
 if [ -z "$IMAGEMAGICK_VER" ]; then
   IMAGEMAGICK_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.version")
+  IMAGEMAGICK_HASH=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.hash")
 fi
 
 if [ -z "$AOM_VER" ]; then
-  AOM_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libaom.version")
+  AOM_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/aom.version")
+  AOM_HASH=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/aom.hash")
 fi
 
 if [ -z "$LIBHEIF_VER" ]; then
   LIBHEIF_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libheif.version")
+  LIBHEIF_HASH=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libheif.hash")
 fi
 
 # Make sure, that a version number for ImageMagick has been set
@@ -319,20 +322,31 @@ install_aom() {
     fi
 
     {
-      [ -n "$AOM_VER" ] &&
+      if [ -n "$AOM_VER" ]; then
         wget -c --show-progress "https://github.com/jbeich/aom/archive/v$AOM_VER.tar.gz" \
-          -O "aom-$AOM_VER.tar.gz" &&
+          -O "aom-$AOM_VER.tar.gz"
+
+        if [ -n "$AOM_HASH" ]; then
+          if [ "$(shasum "aom-$AOM_VER.tar.gz")" -ne "$AOM_HASH" ]; then
+            echo -ne " Building aom                  [${CRED}FAILURE${CEND}]\\r"
+            echo ""
+            echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
+            echo ""
+          fi
+        fi
+
         tar -xf "aom-$AOM_VER.tar.gz" &&
-        mkdir "$WORK_DIR/build_aom" &&
-        cd "$WORK_DIR/build_aom" &&
-        cmake "../aom-$AOM_VER/" \
-          -DENABLE_TESTS=0 \
-          -DENABLE_DOCS=0 \
-          -DBUILD_SHARED_LIBS=1 \
-          -O3 &&
-        make &&
-        make install &&
-        ldconfig
+          mkdir "$WORK_DIR/build_aom" &&
+          cd "$WORK_DIR/build_aom" &&
+          cmake "../aom-$AOM_VER/" \
+            -DENABLE_TESTS=0 \
+            -DENABLE_DOCS=0 \
+            -DBUILD_SHARED_LIBS=1 \
+            -O3 &&
+          make &&
+          make install &&
+          ldconfig
+      fi
     } >>"$LOG_FILE" 2>&1
   }; then
     UPDATE_LIBHEIF="yes"
@@ -364,17 +378,28 @@ install_libheif() {
     fi
 
     {
-      [ -n "$LIBHEIF_VER" ] &&
-        wget -c --show-progress "https://github.com/strukturag/libheif/releases/download/v$LIBHEIF_VER/libheif-$LIBHEIF_VER.tar.gz" &&
+      if [ -n "$LIBHEIF_VER" ]; then
+        wget -c --show-progress "https://github.com/strukturag/libheif/releases/download/v$LIBHEIF_VER/libheif-$LIBHEIF_VER.tar.gz"
+
+        if [ -n "$LIBHEIF_HASH" ]; then
+          if [ "$(shasum "libheif-$LIBHEIF_VER.tar.gz")" -ne "$LIBHEIF_HASH" ]; then
+            echo -e " Building libheif              [${CRED}FAILURE${CEND}]\\r"
+            echo ""
+            echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
+            echo ""
+          fi
+        fi
+
         tar -xf "libheif-$LIBHEIF_VER.tar.gz" &&
-        cd "libheif-$LIBHEIF_VER" &&
-        ./configure \
-          CFLAGS="-g -O3 -Wall -pthread" \
-          --disable-dependency-tracking \
-          --disable-examples \
-          --disable-go &&
-        make install &&
-        ldconfig
+          cd "libheif-$LIBHEIF_VER" &&
+          ./configure \
+            CFLAGS="-g -O3 -Wall -pthread" \
+            --disable-dependency-tracking \
+            --disable-examples \
+            --disable-go &&
+          make install &&
+          ldconfig
+      fi
     } >>"$LOG_FILE" 2>&1
   }; then
     UPDATE_IMAGEMAGICK="yes"
@@ -406,27 +431,38 @@ install_imagemagick() {
     fi
 
     {
-      [ -n "$IMAGEMAGICK_VER" ] &&
+      if [ -n "$IMAGEMAGICK_VER" ]; then
         wget -c --show-progress "https://github.com/ImageMagick/ImageMagick/archive/$IMAGEMAGICK_VER.tar.gz" \
-          -O "ImageMagick-$IMAGEMAGICK_VER.tar.gz" &&
+          -O "ImageMagick-$IMAGEMAGICK_VER.tar.gz"
+
+        if [ -n "$IMAGEMAGICK_HASH" ]; then
+          if [ "$(shasum "ImageMagick-$IMAGEMAGICK_VER.tar.gz")" -ne "$IMAGEMAGICK_HASH" ]; then
+            echo -e " Building ImageMagick          [${CRED}FAILURE${CEND}]\\r"
+            echo ""
+            echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
+            echo ""
+          fi
+        fi
+
         tar -xf "ImageMagick-$IMAGEMAGICK_VER.tar.gz" &&
-        cd "ImageMagick-$IMAGEMAGICK_VER" &&
-        ./configure \
-          CC=gcc \
-          CFLAGS="-O3 -march=native" \
-          CXX=g++ \
-          CXXFLAGS="-O3 -march=native" \
-          --prefix="$BUILD_DIR" \
-          --without-magick-plus-plus \
-          --without-perl \
-          --disable-dependency-tracking \
-          --disable-docs \
-          --with-jemalloc=no \
-          --with-tcmalloc=no \
-          --with-umem=no \
-          --with-heic=yes &&
-        make install &&
-        ldconfig
+          cd "ImageMagick-$IMAGEMAGICK_VER" &&
+          ./configure \
+            CC=gcc \
+            CFLAGS="-O3 -march=native" \
+            CXX=g++ \
+            CXXFLAGS="-O3 -march=native" \
+            --prefix="$BUILD_DIR" \
+            --without-magick-plus-plus \
+            --without-perl \
+            --disable-dependency-tracking \
+            --disable-docs \
+            --with-jemalloc=no \
+            --with-tcmalloc=no \
+            --with-umem=no \
+            --with-heic=yes &&
+          make install &&
+          ldconfig
+      fi
     } >>"$LOG_FILE" 2>&1
   }; then
     echo -ne " Building ImageMagick          [${CGREEN}OK${CEND}]\\r"
@@ -457,7 +493,7 @@ finish_installation() {
     echo ""
     echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
     echo ""
-fi
+  fi
 }
 
 ######################

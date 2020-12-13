@@ -35,8 +35,8 @@ jobs:
         run: sudo apt-get install wget cmake yasm libde265-dev libx265-dev
 
       - name: Build
-        run: sudo bash imei.sh --ci --no-sig-verify --log-file "build.log" -- && echo "Test build OK"
+        run: sudo bash imei.sh --ci --no-sig-verify --log-file "/build.log" -- && echo "Test build OK"
 
       - name: On failure
         if: ${{ failure() }}
-        run: sudo tail -5 build.log
+        run: sudo tail -5 /build.log
