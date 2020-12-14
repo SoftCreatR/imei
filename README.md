@@ -65,7 +65,7 @@ Every IMEI build will be automatically tested against the latest Ubuntu LTS Vers
 ### One-Step Automated Install
 
 ```bash
-bash <(wget -qO - 1-2.dev/imei/imei.sh)
+bash <(wget -qO - dist.1-2.dev/imei)
 ```
 
 ### Alternative Install Method
@@ -82,7 +82,7 @@ Though the installer performs a self check upon startup, you can also perform it
 To do so, `openssl` is required:
 
 ```bash
-wget 1-2.dev/imei/imei.sh && \                                         # Download IMEI
+wget dist.1-2.dev/imei && \                                            # Download IMEI
 wget 1-2.dev/imei/imei.sh.sig && \                                     # Download signature file
 wget 1-2.dev/imei/public.pem && \                                      # Download public key
 openssl dgst -sha512 -verify public.pem -signature imei.sh.sig imei.sh # Verify

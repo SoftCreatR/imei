@@ -8,7 +8,7 @@
 # Author         : Sascha Greuel <hello@1-2.dev>             #
 # Date           : 2020-12-13 07:55                          #
 # License        : ISC                                       #
-# Version        : 5.1.0                                     #
+# Version        : 5.1.1                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -95,7 +95,9 @@ export DEBIAN_FRONTEND=noninteractive
 START=$(date +%s)
 OS_DISTRO="$(lsb_release -ds)"
 OS_ARCH="$(uname -m)"
-
+SIGNATURE_FILE="/tmp/imei.sh.sig"
+PUBLIC_KEY_FILE="/tmp/imei.pem"
+  
 if [ -z "$WORK_DIR" ]; then
   WORK_DIR=/usr/local/src/imei
 fi
@@ -179,28 +181,38 @@ fi
 ###################
 
 if [ -z "$VERIFY_SIGNATURE" ]; then
+  sigCleanup() {
+    if [ -f "$SIGNATURE_FILE" ]; then
+      rm "$SIGNATURE_FILE"
+    fi
+
+    if [ -f "$PUBLIC_KEY_FILE" ]; then
+      rm "$PUBLIC_KEY_FILE"
+    fi
+  }
+
   # Install OpenSSL, if it's not already installed
   if ! command_exists openssl; then
     apt-get install -qq openssl >/dev/null 2>&1
   fi
 
-  SIGNATURE_FILE="/tmp/imei.sh.sig"
-  PUBLIC_KEY_FILE="/tmp/imei.pem"
-
   if {
     wget -c --show-progress "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh.sig" \
       -O "$SIGNATURE_FILE"
 
-    if [ -f "$PUBLIC_KEY_FILE" ]; then
+    if [ ! -f "$PUBLIC_KEY_FILE" ]; then
       wget -c --show-progress "https://raw.githubusercontent.com/SoftCreatR/imei/main/public.pem" \
         -O "$PUBLIC_KEY_FILE"
     fi
 
     openssl dgst -sha512 -verify "$PUBLIC_KEY_FILE" -signature "$SIGNATURE_FILE" "$0"
   } >>"$LOG_FILE" 2>&1; then
-    # All good!
+    sigCleanup
+    
     echo -ne "\ec"
   else
+    sigCleanup
+    
     echo -ne "\ec"
 
     echo -e " ${CRED}Signature verification failed!${CEND}"

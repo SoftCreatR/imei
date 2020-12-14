@@ -41,7 +41,12 @@ jobs:
         run: sudo apt-get install wget cmake yasm libde265-dev libx265-dev
 
       - name: Build
-        run: sudo bash imei.sh --ci --no-sig-verify --log-file "/build.log" -- && echo "Test build OK"
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+        run: |-
+          echo "$PRIVATE_KEY" > /tmp/private.pem
+          openssl dgst -sha512 -sign /tmp/private.pem -out /tmp/imei.sh.sig imei.sh
+          sudo bash imei.sh --ci --log-file "/build.log" -- && echo "Test build OK"
 
       - name: On failure
         if: ${{ failure() }}
@@ -64,6 +69,7 @@ jobs:
         run: |-
           echo "$PRIVATE_KEY" > private.pem
           openssl dgst -sha512 -sign private.pem -out imei.sh.sig imei.sh
+          rm private.pem
 
       - name: Verify release
         run: |-
