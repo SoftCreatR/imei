@@ -112,7 +112,7 @@ Currently available build options are
 **Default options** :
 
 <!-- versions start -->
-* ImageMagick version: `7.0.10-48`
+* ImageMagick version: `7.0.10-50`
 * libaom version: `2.0.1`
 * libheif version: `1.10.0`<!-- versions end -->
 * Log File: `/var/log/install-imagemagick.log`
