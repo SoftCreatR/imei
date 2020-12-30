@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-12-13 07:55                          #
+# Date           : 2020-12-30 06:01                          #
 # License        : ISC                                       #
-# Version        : 5.1.1                                     #
+# Version        : 5.1.2                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -180,7 +180,7 @@ fi
 # Integrity check #
 ###################
 
-if [ -z "$VERIFY_SIGNATURE" ]; then
+if [ -z "$VERIFY_SIGNATURE" ] && [ -f "$0" ]; then
   sigCleanup() {
     if [ -f "$SIGNATURE_FILE" ]; then
       rm "$SIGNATURE_FILE"
