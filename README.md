@@ -114,7 +114,7 @@ Currently available build options are
 <!-- versions start -->
 * ImageMagick version: `7.0.10-61`
 * libaom version: `2.0.1`
-* libheif version: `1.10.0`<!-- versions end -->
+* libheif version: `1.11.0`<!-- versions end -->
 * Log File: `/var/log/install-imagemagick.log`
 * Work Dir: `/usr/local/src/imei`
 * Build Dir: `/usr/local`
