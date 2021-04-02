@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-12-30 06:01                          #
+# Date           : 2020-04-02 23:29                          #
 # License        : ISC                                       #
-# Version        : 5.1.2                                     #
+# Version        : 5.2.0                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -30,7 +30,6 @@ command_exists() {
 # Make sure, that we are on Debian or Ubuntu
 if ! command_exists apt-get; then
   echo "This script cannot run on any other system than Debian or Ubuntu"
-
   exit 1
 fi
 
@@ -38,15 +37,6 @@ fi
 if ! command_exists lsb_release; then
   apt-get install -qq lsb-release >/dev/null 2>&1
 fi
-
-# Check if required packages are installed or install them
-required_packages="wget"
-
-for package in $required_packages; do
-  if ! command_exists "$package"; then
-    apt-get install -qq "$package" >/dev/null 2>&1
-  fi
-done
 
 ####################
 # Script arguments #
@@ -79,7 +69,7 @@ while [ "$#" -gt 0 ]; do
     CI_BUILD="yes"
     ;;
   --no-sig-verify)
-    VERIFY_SIGNATURE="n"
+    VERIFY_SIGNATURE="${CYELLOW}disabled${CEND}"
     ;;
   *) ;;
   esac
@@ -97,6 +87,7 @@ OS_DISTRO="$(lsb_release -ds)"
 OS_ARCH="$(uname -m)"
 SIGNATURE_FILE="/tmp/imei.sh.sig"
 PUBLIC_KEY_FILE="/tmp/imei.pem"
+FILE_BASE="https://codeload.github.com"
   
 if [ -z "$WORK_DIR" ]; then
   WORK_DIR=/usr/local/src/imei
@@ -150,6 +141,34 @@ cleanup() {
   if [ -d "$WORK_DIR" ]; then
     rm -rf "$WORK_DIR"
   fi
+  return 0
+}
+
+getClient()
+{
+  if command -v curl &>/dev/null; then
+    CLIENT="curl"
+  elif command -v wget &>/dev/null; then
+    CLIENT="wget"
+  elif command -v http &>/dev/null; then
+    CLIENT="httpie"
+  else
+    echo -e "${CRED}This tool requires either curl, wget or httpie to be installed.{CEND}" >&2
+    return 1
+  fi
+}
+
+httpGet()
+{
+  if [[ -n "${GITHUB_TOKEN}" ]]; then
+    AUTHORIZATION='{"Authorization": "Bearer '"$GITHUB_TOKEN"'}"}'
+  fi
+
+  case "$CLIENT" in
+    curl) curl -A curl -s -H "$AUTHORIZATION" "$@" ;;
+    wget) wget -qO- --header="$AUTHORIZATION" "$@" ;;
+    httpie) http -b GET "$@" "$AUTHORIZATION" ;;
+  esac
 }
 
 ########
@@ -172,8 +191,11 @@ fi
 # Check if working directory was created
 if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
   echo -e "${CRED}Could not create temp directory $WORK_DIR${CEND}"
-
   exit 1
+fi
+
+if [ -z "$CLIENT" ]; then
+  getClient || exit 1
 fi
 
 ###################
@@ -197,12 +219,10 @@ if [ -z "$VERIFY_SIGNATURE" ] && [ -f "$0" ]; then
   fi
 
   if {
-    wget -c --show-progress "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh.sig" \
-      -O "$SIGNATURE_FILE"
+    httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh.sig" > "$SIGNATURE_FILE"
 
     if [ ! -f "$PUBLIC_KEY_FILE" ]; then
-      wget -c --show-progress "https://raw.githubusercontent.com/SoftCreatR/imei/main/public.pem" \
-        -O "$PUBLIC_KEY_FILE"
+      httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/public.pem" > "$PUBLIC_KEY_FILE"
     fi
 
     openssl dgst -sha512 -verify "$PUBLIC_KEY_FILE" -signature "$SIGNATURE_FILE" "$0"
@@ -218,7 +238,6 @@ if [ -z "$VERIFY_SIGNATURE" ] && [ -f "$0" ]; then
     echo -e " ${CRED}Signature verification failed!${CEND}"
     echo ""
     echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
-
     exit 1
   fi
 fi
@@ -229,22 +248,22 @@ fi
 
 if [ -f "$0" ]; then
   INSTALLER_VER=$(grep -oP 'Version\s+:\s+\K([\d\.]+)' "$0")
-  INSTALLER_LATEST_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh" | grep -oP 'Version\s+:\s+\K([\d\.]+)')
+  INSTALLER_LATEST_VER=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh" | grep -oP 'Version\s+:\s+\K([\d\.]+)')
 fi
 
 if [ -z "$IMAGEMAGICK_VER" ]; then
-  IMAGEMAGICK_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.version")
-  IMAGEMAGICK_HASH=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.hash")
+  IMAGEMAGICK_VER=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.version")
+  IMAGEMAGICK_HASH=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.hash")
 fi
 
 if [ -z "$AOM_VER" ]; then
-  AOM_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/aom.version")
-  AOM_HASH=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/aom.hash")
+  AOM_VER=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/aom.version")
+  AOM_HASH=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/aom.hash")
 fi
 
 if [ -z "$LIBHEIF_VER" ]; then
-  LIBHEIF_VER=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libheif.version")
-  LIBHEIF_HASH=$(wget -qO- "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libheif.hash")
+  LIBHEIF_VER=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libheif.version")
+  LIBHEIF_HASH=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libheif.hash")
 fi
 
 # Make sure, that a version number for ImageMagick has been set
@@ -305,7 +324,7 @@ install_deps() {
     apt-get build-dep -qq imagemagick -y
 
     # Install build dependencies
-    apt-get install git make cmake automake yasm g++ pkg-config libde265-dev libx265-dev -y
+    apt-get install git make cmake automake libtool yasm g++ pkg-config libde265-dev libx265-dev -y
   } >>"$LOG_FILE" 2>&1; then
     echo -ne " Installing dependencies       [${CGREEN}OK${CEND}]\\r"
     echo ""
@@ -335,26 +354,28 @@ install_aom() {
 
     {
       if [ -n "$AOM_VER" ]; then
-        wget -c --show-progress "https://github.com/jbeich/aom/archive/v$AOM_VER.tar.gz" \
-          -O "aom-$AOM_VER.tar.gz"
+        httpGet "$FILE_BASE/jbeich/aom/tar.gz/v$AOM_VER" > "aom-$AOM_VER.tar.gz"
 
         if [ -n "$AOM_HASH" ]; then
-          if [ "$(shasum "aom-$AOM_VER.tar.gz")" -ne "$AOM_HASH" ]; then
+          if [ "$(sha1sum "aom-$AOM_VER.tar.gz" | cut -b-40)" != "$AOM_HASH" ]; then
             echo -ne " Building aom                  [${CRED}FAILURE${CEND}]\\r"
             echo ""
             echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
             echo ""
           fi
         fi
+        
+        # see https://github.com/SoftCreatR/imei/issues/9
+        CMAKE_FLAGS="-DBUILD_SHARED_LIBS=1"
+
+        if [[ "${OS_DISTRO,,}" == *"raspbian"* ]]; then
+          CMAKE_FLAGS+=' -DCMAKE_C_FLAGS="-mfloat-abi=hard -march=armv7-a -marm -mfpu=neon"'
+        fi
 
         tar -xf "aom-$AOM_VER.tar.gz" &&
           mkdir "$WORK_DIR/build_aom" &&
           cd "$WORK_DIR/build_aom" &&
-          cmake "../aom-$AOM_VER/" \
-            -DENABLE_TESTS=0 \
-            -DENABLE_DOCS=0 \
-            -DBUILD_SHARED_LIBS=1 \
-            -O3 &&
+          cmake "../aom-$AOM_VER/" "$CMAKE_FLAGS" &&
           make &&
           make install &&
           ldconfig
@@ -391,10 +412,10 @@ install_libheif() {
 
     {
       if [ -n "$LIBHEIF_VER" ]; then
-        wget -c --show-progress "https://github.com/strukturag/libheif/releases/download/v$LIBHEIF_VER/libheif-$LIBHEIF_VER.tar.gz"
+        httpGet "$FILE_BASE/strukturag/libheif/tar.gz/v$LIBHEIF_VER" > "libheif-$LIBHEIF_VER.tar.gz"
 
         if [ -n "$LIBHEIF_HASH" ]; then
-          if [ "$(shasum "libheif-$LIBHEIF_VER.tar.gz")" -ne "$LIBHEIF_HASH" ]; then
+          if [ "$(sha1sum "libheif-$LIBHEIF_VER.tar.gz" | cut -b-40)" != "$LIBHEIF_HASH" ]; then
             echo -e " Building libheif              [${CRED}FAILURE${CEND}]\\r"
             echo ""
             echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
@@ -404,11 +425,8 @@ install_libheif() {
 
         tar -xf "libheif-$LIBHEIF_VER.tar.gz" &&
           cd "libheif-$LIBHEIF_VER" &&
-          ./configure \
-            CFLAGS="-g -O3 -Wall -pthread" \
-            --disable-dependency-tracking \
-            --disable-examples \
-            --disable-go &&
+          ./autogen.sh &&
+          ./configure &&
           make install &&
           ldconfig
       fi
@@ -444,11 +462,10 @@ install_imagemagick() {
 
     {
       if [ -n "$IMAGEMAGICK_VER" ]; then
-        wget -c --show-progress "https://github.com/ImageMagick/ImageMagick/archive/$IMAGEMAGICK_VER.tar.gz" \
-          -O "ImageMagick-$IMAGEMAGICK_VER.tar.gz"
+        httpGet "$FILE_BASE/ImageMagick/ImageMagick/tar.gz/$IMAGEMAGICK_VER" > "ImageMagick-$IMAGEMAGICK_VER.tar.gz"
 
         if [ -n "$IMAGEMAGICK_HASH" ]; then
-          if [ "$(shasum "ImageMagick-$IMAGEMAGICK_VER.tar.gz")" -ne "$IMAGEMAGICK_HASH" ]; then
+          if [ "$(sha1sum "ImageMagick-$IMAGEMAGICK_VER.tar.gz" | cut -b-40)" != "$IMAGEMAGICK_HASH" ]; then
             echo -e " Building ImageMagick          [${CRED}FAILURE${CEND}]\\r"
             echo ""
             echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
@@ -464,13 +481,6 @@ install_imagemagick() {
             CXX=g++ \
             CXXFLAGS="-O3 -march=native" \
             --prefix="$BUILD_DIR" \
-            --without-magick-plus-plus \
-            --without-perl \
-            --disable-dependency-tracking \
-            --disable-docs \
-            --with-jemalloc=no \
-            --with-tcmalloc=no \
-            --with-umem=no \
             --with-heic=yes &&
           make install &&
           ldconfig
@@ -528,16 +538,19 @@ if [ -z "$CI_BUILD" ] && [ -n "$INSTALLER_VER" ] && [ "$(version "$INSTALLER_VER
   echo ""
 fi
 
-echo " Detected OS    : $OS_DISTRO"
-echo " Detected Arch  : $OS_ARCH"
-echo " Detected Cores : $NUM_CORES"
+echo " Detected OS     : $OS_DISTRO"
+echo " Detected Arch   : $OS_ARCH"
+echo " Detected Cores  : $NUM_CORES"
 echo ""
-echo " Work Dir       : $WORK_DIR"
-echo " Build Dir      : $BUILD_DIR"
-echo " Log File       : $LOG_FILE"
+echo " Used web client : $CLIENT"
 echo ""
-echo " Force Build    : ${FORCE:-"no"}"
-echo " CI Build       : ${CI_BUILD:-"no"}"
+echo " Work Dir        : $WORK_DIR"
+echo " Build Dir       : $BUILD_DIR"
+echo " Log File        : $LOG_FILE"
+echo ""
+echo " Force Build     : ${FORCE:-"no"}"
+echo " CI Build        : ${CI_BUILD:-"no"}"
+echo " Signature Check : ${VERIFY_SIGNATURE:-"yes"}"
 echo ""
 
 echo " #####################"

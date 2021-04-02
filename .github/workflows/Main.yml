@@ -50,7 +50,7 @@ jobs:
 
       - name: On failure
         if: ${{ failure() }}
-        run: sudo tail -5 /build.log
+        run: sudo tail -25 /build.log
 
   Sign:
     needs: TestBuild
