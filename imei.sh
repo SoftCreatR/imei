@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-04-02 23:29                          #
+# Date           : 2020-04-03 15:27                          #
 # License        : ISC                                       #
-# Version        : 5.2.0                                     #
+# Version        : 5.2.1                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -35,7 +35,7 @@ fi
 
 # Checking if lsb_release is installed or install it
 if ! command_exists lsb_release; then
-  apt-get install -qq lsb-release >/dev/null 2>&1
+  apt-get update && apt-get install -qq lsb-release >/dev/null 2>&1
 fi
 
 ####################
@@ -153,7 +153,7 @@ getClient()
   elif command -v http &>/dev/null; then
     CLIENT="httpie"
   else
-    echo -e "${CRED}This tool requires either curl, wget or httpie to be installed.{CEND}" >&2
+    echo -e "${CRED}This tool requires either curl, wget or httpie to be installed.${CEND}" >&2
     return 1
   fi
 }
@@ -215,7 +215,7 @@ if [ -z "$VERIFY_SIGNATURE" ] && [ -f "$0" ]; then
 
   # Install OpenSSL, if it's not already installed
   if ! command_exists openssl; then
-    apt-get install -qq openssl >/dev/null 2>&1
+    apt-get update && apt-get install -qq openssl >/dev/null 2>&1
   fi
 
   if {
