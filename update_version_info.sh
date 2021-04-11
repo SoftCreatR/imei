@@ -113,8 +113,8 @@ else
 fi
 
 # Update README file
-REPLACEMENT="\n* ImageMagick version: \`$LIBAOM_VER\`\n"
-REPLACEMENT+="* libaom version: \`$IMAGEMAGICK_VER\`\n"
+REPLACEMENT="\n* ImageMagick version: \`$IMAGEMAGICK_VER\`\n"
+REPLACEMENT+="* libaom version: \`$LIBAOM_VER\`\n"
 REPLACEMENT+="* libheif version: \`$LIBHEIF_VER\`"
 sed -En '1h;1!H;${g;s/(<!-- versions start -->)(.*)(<!-- versions end -->)/\1'"$REPLACEMENT"'\3/;p;}' -i "$WORKDIR/README.md"
 
