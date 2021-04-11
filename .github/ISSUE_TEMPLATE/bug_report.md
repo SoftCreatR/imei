@@ -1,44 +1,50 @@
----
 name: 🐛 Bug Report
-about: Submit a bug report to help us improve
+description: Submit a bug report to help us improve
 labels: "bug"
----
-
-## 🐛 Bug Report
-
-(A clear and concise description of what the bug is)
-
-## Have you spent some time to check if this issue has been raised before?
-
-(Have you googled for a similar issue or checked our older issues for a similar bug)
-
-## To Reproduce
-
-(Write your steps here:)
-
-## Expected behavior
-
-<!--
-  How did you expect your project to behave?
-  It’s fine if you’re not sure your understanding is correct.
-  Write down what you thought would happen.
--->
-
-(Write what you thought would happen.)
-
-## Actual Behavior
-
-<!--
-  Did something go wrong?
-  Is something broken, or not behaving as you expected?
-  Describe this section in detail, and attach screenshots if possible.
-  Don't only say "it doesn't work"!
--->
-
-(Write what happened. Add screenshots, if applicable.)
-
-## Your Environment
-
-<!-- Include as many relevant details about the environment you experienced the bug in -->
-
-(Write Environment, Operating system and version etc.)
+body:
+- type: checkboxes
+  attributes:
+    label: Prerequisites
+    options:
+    - label: I have written a descriptive issue title
+      required: true
+    - label: I have searched [open](https://github.com/SoftCreatR/imei/issues) and [closed](https://github.com/SoftCreatR/imei/issues?q=is%3Aissue+is%3Aclosed) issues to ensure it has not already been reported
+      required: true
+    - label: I have verified that I am using the latest version of IMEI
+- type: input
+  attributes:
+    label: IMEI version
+    placeholder: X.X-X
+  validations:
+    required: true
+- type: dropdown
+  attributes:
+    label: Operating system
+    options:
+      - Linux
+      - Windows
+      - MacOS
+      - Other (enter below)
+  validations:
+    required: true
+- type: input
+  attributes:
+    label: Operating system, version and so on
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Description
+    description: A description of the bug
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Steps to Reproduce
+    description: List of steps, sample code, failing test or link to a project that reproduces the behavior. Make sure you place a stack trace inside a code (```) block to avoid linking unrelated issues.
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Images
+    description: Please upload images that can be used to reproduce issues in the area below. If the file type is not supported the file can be zipped and then uploaded instead.
