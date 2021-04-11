@@ -1,6 +1,5 @@
 name: 🐛 Bug Report
 description: Submit a bug report to help us improve
-labels: "bug"
 body:
 - type: checkboxes
   attributes:
