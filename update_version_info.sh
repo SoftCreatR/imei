@@ -137,7 +137,7 @@ fi
 REPLACEMENT="\n* ImageMagick version: \`$IMAGEMAGICK_VER\`\n"
 REPLACEMENT+="* libaom version: \`$LIBAOM_VER\`\n"
 REPLACEMENT+="* libheif version: \`$LIBHEIF_VER\`\n"
-REPLACEMENT+="* JPEG XL version: \`$JXL_VER\`"
+REPLACEMENT+="* libjxl version: \`$JXL_VER\`"
 sed -En '1h;1!H;${g;s/(<!-- versions start -->)(.*)(<!-- versions end -->)/\1'"$REPLACEMENT"'\3/;p;}' -i "$WORKDIR/README.md"
 
 exit 0
