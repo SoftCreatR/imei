@@ -7,8 +7,9 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 WORKDIR=$(dirname "$0")
-API_BASE="https://api.github.com/repos"
-FILE_BASE="https://codeload.github.com"
+GH_API_BASE="https://api.github.com/repos"
+GH_FILE_BASE="https://codeload.github.com"
+GL_API_BASE="https://gitlab.com/api/v4/projects"
 CLIENT=""
 AUTHORIZATION=""
 
@@ -53,7 +54,7 @@ fi
 ###
 
 # Get version information for latest stable ImageMagick and write it to file
-IMAGEMAGICK_VER=$(httpGet "$API_BASE/ImageMagick/ImageMagick/tags" | jq -r '[.[] | select(.name|test("^[0-9]+.[0-9]+.[0-9]+(-[0-9]+)?$")) | .name] | join("\n")' | sort -rV | head -1)
+IMAGEMAGICK_VER=$(httpGet "$GH_API_BASE/ImageMagick/ImageMagick/tags" | jq -r '[.[] | select(.name|test("^[0-9]+.[0-9]+.[0-9]+(-[0-9]+)?$")) | .name] | join("\n")' | sort -rV | head -1)
 
 if [ -n "$IMAGEMAGICK_VER" ]; then
   echo "$IMAGEMAGICK_VER" > "$WORKDIR/versions/imagemagick.version"
@@ -63,7 +64,7 @@ else
 fi
 
 # Download ImageMagick tarball, calculate it's hash and write it to file
-IMAGEMAGICK_HASH=$(httpGet "$FILE_BASE/ImageMagick/ImageMagick/tar.gz/$IMAGEMAGICK_VER" | sha1sum | cut -b-40)
+IMAGEMAGICK_HASH=$(httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick/tar.gz/$IMAGEMAGICK_VER" | sha1sum | cut -b-40)
 
 if [ -n "$IMAGEMAGICK_HASH" ]; then
  echo "$IMAGEMAGICK_HASH" > "$WORKDIR/versions/imagemagick.hash"
@@ -73,7 +74,7 @@ else
 fi
 
 # Get version information for latest stable aom and write it to file
-LIBAOM_VER=$(httpGet "$API_BASE/jbeich/aom/tags" | jq -r '[.[] | select(.name|test("^v[0-9]+.[0-9]+.[0-9]+$")) | .name[1:]] | join("\n")' | sort -rV | head -1)
+LIBAOM_VER=$(httpGet "$GH_API_BASE/jbeich/aom/tags" | jq -r '[.[] | select(.name|test("^v[0-9]+.[0-9]+.[0-9]+$")) | .name[1:]] | join("\n")' | sort -rV | head -1)
 
 if [ -n "$LIBAOM_VER" ]; then
   echo "$LIBAOM_VER" > "$WORKDIR/versions/aom.version"
@@ -83,7 +84,7 @@ else
 fi
 
 # Download aom tarball, calculate it's hash and write it to file
-LIBAOM_HASH=$(httpGet "$FILE_BASE/jbeich/aom/tar.gz/v$LIBAOM_VER" | sha1sum | cut -b-40)
+LIBAOM_HASH=$(httpGet "$GH_FILE_BASE/jbeich/aom/tar.gz/v$LIBAOM_VER" | sha1sum | cut -b-40)
 
 if [ -n "$LIBAOM_HASH" ]; then
  echo "$LIBAOM_HASH" > "$WORKDIR/versions/aom.hash"
@@ -93,7 +94,7 @@ else
 fi
 
 # Get version information for libheif and write it to file
-LIBHEIF_VER=$(httpGet "$API_BASE/strukturag/libheif/tags" | jq -r '[.[] | select(.name|test("^v[0-9]+.[0-9]+.[0-9]+$")) | .name[1:]] | join("\n")' | sort -rV | head -1)
+LIBHEIF_VER=$(httpGet "$GH_API_BASE/strukturag/libheif/tags" | jq -r '[.[] | select(.name|test("^v[0-9]+.[0-9]+.[0-9]+$")) | .name[1:]] | join("\n")' | sort -rV | head -1)
 
 if [ -n "$LIBHEIF_VER" ]; then
   echo "$LIBHEIF_VER" > "$WORKDIR/versions/libheif.version"
@@ -103,7 +104,7 @@ else
 fi
 
 # Download libheif tarball, calculate it's hash and write it to file
-LIBHEIF_HASH=$(httpGet "$FILE_BASE/strukturag/libheif/tar.gz/v$LIBHEIF_VER" | sha1sum | cut -b-40)
+LIBHEIF_HASH=$(httpGet "$GH_FILE_BASE/strukturag/libheif/tar.gz/v$LIBHEIF_VER" | sha1sum | cut -b-40)
 
 if [ -n "$LIBHEIF_HASH" ]; then
  echo "$LIBHEIF_HASH" > "$WORKDIR/versions/libheif.hash"
@@ -112,10 +113,31 @@ else
   exit 1
 fi
 
+# Get version information for JPEG XL and write it to file
+JXL_VER=$(httpGet "$GL_API_BASE/15769887/repository/tags" | jq -r '[.[] | select(.name|test("^v[0-9]+.[0-9]+.[0-9]+$")) | .name[1:]] | join("\n")' | sort -rV | head -1)
+
+if [ -n "$JXL_VER" ]; then
+  echo "$JXL_VER" > "$WORKDIR/versions/jpeg-xl.version"
+else
+  echo "Error: Failed to get version information for JPEG XL."
+  exit 1
+fi
+
+# Download JPEG XL tarball, calculate it's hash and write it to file
+JXL_HASH=$(httpGet "https://gitlab.com/wg1/jpeg-xl/-/archive/v$JXL_VER/jpeg-xl-v$JXL_VER.tar" | sha1sum | cut -b-40)
+
+if [ -n "$JXL_HASH" ]; then
+ echo "$JXL_HASH" > "$WORKDIR/versions/jpeg-xl.hash"
+else
+  echo "Error: Failed to get hash information for JPEG XL $LIBHEIF_VER tarball."
+  exit 1
+fi
+
 # Update README file
 REPLACEMENT="\n* ImageMagick version: \`$IMAGEMAGICK_VER\`\n"
 REPLACEMENT+="* libaom version: \`$LIBAOM_VER\`\n"
-REPLACEMENT+="* libheif version: \`$LIBHEIF_VER\`"
+REPLACEMENT+="* libheif version: \`$LIBHEIF_VER\`\n"
+REPLACEMENT+="* JPEG XL version: \`$JXL_VER\`"
 sed -En '1h;1!H;${g;s/(<!-- versions start -->)(.*)(<!-- versions end -->)/\1'"$REPLACEMENT"'\3/;p;}' -i "$WORKDIR/README.md"
 
 exit 0
