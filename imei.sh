@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-04-03 15:27                          #
+# Date           : 2020-04-11 22:34                          #
 # License        : ISC                                       #
-# Version        : 5.2.1                                     #
+# Version        : 6.0.0                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -44,14 +44,32 @@ fi
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
-  --imagemagick-version)
+  --force)
+    FORCE="yes"
+    ;;
+  --imagemagick-version|--im-version)
     IMAGEMAGICK_VER=$2
+    ;;
+  --skip-aom)
+    SKIP_AOM="yes"
     ;;
   --aom-version)
     AOM_VER=$2
     ;;
-  --libheif-version)
+  --skip-libheif|--skip-heif)
+    SKIP_LIBHEIF="yes"
+    ;;
+  --libheif-version|--heif-version)
     LIBHEIF_VER=$2
+    ;;
+  --skip-jpeg-xl|--skip-jxl)
+    SKIP_JXL="yes"
+    ;;
+  --jpeg-xl-version|--jxl-version)
+    JXL_VER=$2
+    ;;
+  --skip-dependencies|--skip-deps)
+    SKIP_DEPS="yes"
     ;;
   --log-file)
     LOG_FILE=$2
@@ -61,9 +79,6 @@ while [ "$#" -gt 0 ]; do
     ;;
   --build-dir)
     BUILD_DIR=$2
-    ;;
-  --force)
-    FORCE="yes"
     ;;
   --ci)
     CI_BUILD="yes"
@@ -82,13 +97,6 @@ export DEBIAN_FRONTEND=noninteractive
 # Variables #
 #############
 
-START=$(date +%s)
-OS_DISTRO="$(lsb_release -ds)"
-OS_ARCH="$(uname -m)"
-SIGNATURE_FILE="/tmp/imei.sh.sig"
-PUBLIC_KEY_FILE="/tmp/imei.pem"
-FILE_BASE="https://codeload.github.com"
-  
 if [ -z "$WORK_DIR" ]; then
   WORK_DIR=/usr/local/src/imei
 fi
@@ -98,8 +106,17 @@ if [ -z "$BUILD_DIR" ]; then
 fi
 
 if [ -z "$LOG_FILE" ]; then
-  LOG_FILE=/var/log/install-imagemagick.log
+  LOG_FILE=/var/log/imei.log
 fi
+
+START=$(date +%s)
+OS_DISTRO="$(lsb_release -ds)"
+OS_SHORT_CODENAME="$(lsb_release -sc)"
+OS_ARCH="$(uname -m)"
+SIGNATURE_FILE="/tmp/imei.sh.sig"
+PUBLIC_KEY_FILE="/tmp/imei.pem"
+GH_FILE_BASE="https://codeload.github.com"
+SOURCE_LIST="/etc/apt/sources.list.d/imei.list"
 
 # Colors
 CSI='\033['
@@ -141,11 +158,15 @@ cleanup() {
   if [ -d "$WORK_DIR" ]; then
     rm -rf "$WORK_DIR"
   fi
+
+  if [ -f "$SOURCE_LIST" ]; then
+    rm "$SOURCE_LIST"
+  fi
+
   return 0
 }
 
-getClient()
-{
+getClient() {
   if command -v curl &>/dev/null; then
     CLIENT="curl"
   elif command -v wget &>/dev/null; then
@@ -158,16 +179,15 @@ getClient()
   fi
 }
 
-httpGet()
-{
+httpGet() {
   if [[ -n "${GITHUB_TOKEN}" ]]; then
     AUTHORIZATION='{"Authorization": "Bearer '"$GITHUB_TOKEN"'}"}'
   fi
 
   case "$CLIENT" in
-    curl) curl -A curl -s -H "$AUTHORIZATION" "$@" ;;
-    wget) wget -qO- --header="$AUTHORIZATION" "$@" ;;
-    httpie) http -b GET "$@" "$AUTHORIZATION" ;;
+  curl) curl -A curl -s -H "$AUTHORIZATION" "$@" ;;
+  wget) wget -qO- --header="$AUTHORIZATION" "$@" ;;
+  httpie) http -b GET "$@" "$AUTHORIZATION" ;;
   esac
 }
 
@@ -219,20 +239,20 @@ if [ -z "$VERIFY_SIGNATURE" ] && [ -f "$0" ]; then
   fi
 
   if {
-    httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh.sig" > "$SIGNATURE_FILE"
+    httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh.sig" >"$SIGNATURE_FILE"
 
     if [ ! -f "$PUBLIC_KEY_FILE" ]; then
-      httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/public.pem" > "$PUBLIC_KEY_FILE"
+      httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/public.pem" >"$PUBLIC_KEY_FILE"
     fi
 
     openssl dgst -sha512 -verify "$PUBLIC_KEY_FILE" -signature "$SIGNATURE_FILE" "$0"
   } >>"$LOG_FILE" 2>&1; then
     sigCleanup
-    
+
     echo -ne "\ec"
   else
     sigCleanup
-    
+
     echo -ne "\ec"
 
     echo -e " ${CRED}Signature verification failed!${CEND}"
@@ -266,6 +286,11 @@ if [ -z "$LIBHEIF_VER" ]; then
   LIBHEIF_HASH=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libheif.hash")
 fi
 
+if [ -z "$JXL_VER" ]; then
+  JXL_VER=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/jpeg-xl.version")
+  JXL_HASH=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/jpeg-xl.hash")
+fi
+
 # Make sure, that a version number for ImageMagick has been set
 if [ -z "$IMAGEMAGICK_VER" ]; then
   echo -e "${CRED}Unable to determine version number for ImageMagick${CEND}"
@@ -287,16 +312,27 @@ if [ -z "$LIBHEIF_VER" ]; then
   exit 1
 fi
 
+# Make sure, that a version number for JPEG XL has been set
+if [ -z "$JXL_VER" ]; then
+  echo -e "${CRED}Unable to determine version number for JPEG XL${CEND}"
+
+  exit 1
+fi
+
 if command_exists magick; then
   INSTALLED_IMAGEMAGICK_VER=$(magick -version | grep -oP 'Version: ImageMagick \K([\d\.\-]+)')
+fi
 
-  if [ -L "$BUILD_DIR/lib/libaom.so" ]; then
-    INSTALLED_AOM_VER=$(readlink -f "$BUILD_DIR/lib/libaom.so" | xargs basename | grep -oP 'libaom.so.\K([\d\.]+)')
-  fi
+if [ -L "$BUILD_DIR/lib/libaom.so" ]; then
+  INSTALLED_AOM_VER=$(readlink -f "$BUILD_DIR/lib/libaom.so" | xargs basename | grep -oP 'libaom.so.\K([\d\.]+)')
+fi
 
-  if [ -L "$BUILD_DIR/lib/libheif.so" ]; then
-    INSTALLED_LIBHEIF_VER=$(readlink -f "$BUILD_DIR/lib/libheif.so" | xargs basename | grep -oP 'libheif.so.\K([\d\.]+)')
-  fi
+if [ -L "$BUILD_DIR/lib/libheif.so" ]; then
+  INSTALLED_LIBHEIF_VER=$(readlink -f "$BUILD_DIR/lib/libheif.so" | xargs basename | grep -oP 'libheif.so.\K([\d\.]+)')
+fi
+
+if [ -L "$BUILD_DIR/lib/libjxl.so" ]; then
+  INSTALLED_JXL_VER=$(readlink -f "$BUILD_DIR/lib/libjxl.so" | xargs basename | grep -oP 'libjxl.so.\K([\d\.]+)')
 fi
 
 #######################
@@ -305,26 +341,56 @@ fi
 
 # Speed up the compilation process
 NUM_CORES=$(nproc || echo 1)
-export MAKEFLAGS="-j$((NUM_CORES + 1)) -l${NUM_CORES}"
+export CC=gcc CXX=g++ MAKEFLAGS=-j"$((NUM_CORES + 1))" -l"${NUM_CORES}"
 
 # Build dependencies
 install_deps() {
   echo -ne ' Installing dependencies       [..]\r'
 
+  if [ -n "$SKIP_DEPS" ]; then
+    echo -ne " Installing dependencies       [${CYELLOW}SKIPPED${CEND}]\\r"
+    echo ""
+
+    return
+  fi
+
   if {
-    # Update package list
-    if [ -z "$CI_BUILD" ]; then
-      apt-get update -qq
+    if [ -f "$SOURCE_LIST" ]; then
+      rm "$SOURCE_LIST"
     fi
 
     # Allow installation of source files
-    sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list
+    {
+      if [[ "${OS_DISTRO,,}" == *"ubuntu"* ]]; then
+        echo 'deb http://archive.ubuntu.com/ubuntu '"$OS_SHORT_CODENAME"' main restricted'
+        echo 'deb-src http://archive.ubuntu.com/ubuntu '"$OS_SHORT_CODENAME"' main restricted universe multiverse'
+      elif [[ "${OS_DISTRO,,}" == *"debian"* ]]; then
+        echo 'deb http://deb.debian.org/debian '"$OS_SHORT_CODENAME"' main contrib non-free'
+        echo 'deb-src http://deb.debian.org/debian '"$OS_SHORT_CODENAME"' main contrib non-free'
+      elif [[ "${OS_DISTRO,,}" == *"raspbian"* ]]; then
+        echo 'deb http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"' main contrib non-free'
+        echo 'deb-src http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"' main contrib non-free'
+      else
+        SKIP_BUILD_DEP="yes"
+      fi
+    } >>"$SOURCE_LIST"
 
-    # Satisfy build dependencies for imagemagick
-    apt-get build-dep -qq imagemagick -y
+    # Update package list and satisfy build dependencies for imagemagick
+    if [ -n "$SKIP_BUILD_DEP" ]; then
+      apt-get update -qq &&
+      apt-get build-dep -qq imagemagick -y
+    elif [ -z "$CI_BUILD" ]; then
+      apt-get update -qq
+    fi
 
-    # Install build dependencies
-    apt-get install git make cmake automake libtool yasm g++ pkg-config libde265-dev libx265-dev -y
+    # Install other build dependencies
+    PKG_LIST=(git make cmake automake libtool yasm g++ pkg-config perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libtiff-dev libraw-dev ghostscript gsfonts ffmpeg bzip2 libpango1.0-dev libdjvulibre-dev libfftw3-dev)
+
+    if [[ "${OS_SHORT_CODENAME,,}" != *"stretch"* ]]; then
+      PKG_LIST+=(libraqm-dev libraqm0)
+    fi
+
+    apt-get install -y "${PKG_LIST[@]}"
   } >>"$LOG_FILE" 2>&1; then
     echo -ne " Installing dependencies       [${CGREEN}OK${CEND}]\\r"
     echo ""
@@ -345,7 +411,14 @@ install_aom() {
   if {
     echo -ne ' Building aom                  [..]\r'
 
-    if [ -z "$FORCE" ] && [ -n "$INSTALLED_AOM_VER" ] && [ "$(version "$INSTALLED_AOM_VER")" -ge "$(version "$AOM_VER")" ]; then
+    if [ -z "$SKIP_AOM" ]; then
+      if [ -z "$FORCE" ] && [ -n "$INSTALLED_AOM_VER" ] && [ "$(version "$INSTALLED_AOM_VER")" -ge "$(version "$AOM_VER")" ]; then
+        echo -ne " Building aom                  [${CYELLOW}SKIPPED${CEND}]\\r"
+        echo ""
+
+        return
+      fi
+    else
       echo -ne " Building aom                  [${CYELLOW}SKIPPED${CEND}]\\r"
       echo ""
 
@@ -354,7 +427,7 @@ install_aom() {
 
     {
       if [ -n "$AOM_VER" ]; then
-        httpGet "$FILE_BASE/jbeich/aom/tar.gz/v$AOM_VER" > "aom-$AOM_VER.tar.gz"
+        httpGet "$GH_FILE_BASE/jbeich/aom/tar.gz/v$AOM_VER" >"aom-$AOM_VER.tar.gz"
 
         if [ -n "$AOM_HASH" ]; then
           if [ "$(sha1sum "aom-$AOM_VER.tar.gz" | cut -b-40)" != "$AOM_HASH" ]; then
@@ -364,7 +437,7 @@ install_aom() {
             echo ""
           fi
         fi
-        
+
         # see https://github.com/SoftCreatR/imei/issues/9
         CMAKE_FLAGS="-DBUILD_SHARED_LIBS=1"
 
@@ -403,7 +476,14 @@ install_libheif() {
   if {
     echo -ne ' Building libheif              [..]\r'
 
-    if [ -z "$FORCE" ] && [ -z "$UPDATE_LIBHEIF" ] && [ -n "$INSTALLED_LIBHEIF_VER" ] && [ "$(version "$INSTALLED_LIBHEIF_VER")" -ge "$(version "$LIBHEIF_VER")" ]; then
+    if [ -z "$SKIP_LIBHEIF" ]; then
+      if [ -z "$FORCE" ] && [ -z "$UPDATE_LIBHEIF" ] && [ -n "$INSTALLED_LIBHEIF_VER" ] && [ "$(version "$INSTALLED_LIBHEIF_VER")" -ge "$(version "$LIBHEIF_VER")" ]; then
+        echo -ne " Building libheif              [${CYELLOW}SKIPPED${CEND}]\\r"
+        echo ""
+
+        return
+      fi
+    else
       echo -ne " Building libheif              [${CYELLOW}SKIPPED${CEND}]\\r"
       echo ""
 
@@ -412,7 +492,7 @@ install_libheif() {
 
     {
       if [ -n "$LIBHEIF_VER" ]; then
-        httpGet "$FILE_BASE/strukturag/libheif/tar.gz/v$LIBHEIF_VER" > "libheif-$LIBHEIF_VER.tar.gz"
+        httpGet "$GH_FILE_BASE/strukturag/libheif/tar.gz/v$LIBHEIF_VER" > "libheif-$LIBHEIF_VER.tar.gz"
 
         if [ -n "$LIBHEIF_HASH" ]; then
           if [ "$(sha1sum "libheif-$LIBHEIF_VER.tar.gz" | cut -b-40)" != "$LIBHEIF_HASH" ]; then
@@ -427,6 +507,7 @@ install_libheif() {
           cd "libheif-$LIBHEIF_VER" &&
           ./autogen.sh &&
           ./configure &&
+          make &&
           make install &&
           ldconfig
       fi
@@ -446,6 +527,74 @@ install_libheif() {
   fi
 }
 
+# Build JPEG XL
+install_jxl() {
+  cd "$WORK_DIR" || exit 1
+
+  if {
+    echo -ne ' Building jpegxl               [..]\r'
+
+    CMAKE_VERSION=$(cmake --version | head -n1 | cut -d" " -f3)
+    if [ "$(version "$CMAKE_VERSION")" -lt "$(version 3.10)" ]; then
+        echo -ne " Building jpegxl               [${CYELLOW}SKIPPED (CMAKE version not sufficient)${CEND}]\\r"
+        echo ""
+
+        return
+    fi
+
+    if [ -z "$SKIP_JXL" ]; then
+      if [ -z "$FORCE" ] && [ -z "$UPDATE_LIBHEIF" ] && [ -n "$INSTALLED_JXL_VER" ] && [ "$(version "$INSTALLED_JXL_VER")" -ge "$(version "$JXL_VER")" ]; then
+        echo -ne " Building jpegxl               [${CYELLOW}SKIPPED${CEND}]\\r"
+        echo ""
+
+        return
+      fi
+    else
+      echo -ne " Building jpegxl               [${CYELLOW}SKIPPED${CEND}]\\r"
+      echo ""
+
+      return
+    fi
+
+    {
+      if [ -n "$JXL_VER" ]; then
+        httpGet "https://gitlab.com/wg1/jpeg-xl/-/archive/v$JXL_VER/jpeg-xl-v$JXL_VER.tar" > "jpeg-xl-v$JXL_VER.tar"
+
+        if [ -n "$JXL_HASH" ]; then
+          if [ "$(sha1sum "jpeg-xl-v$JXL_VER.tar" | cut -b-40)" != "$JXL_HASH" ]; then
+            echo -e " Building jpegxl               [${CRED}FAILURE${CEND}]\\r"
+            echo ""
+            echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
+            echo ""
+          fi
+        fi
+
+        tar -xf "jpeg-xl-v$JXL_VER.tar" &&
+          cd "jpeg-xl-v$JXL_VER" &&
+          ./deps.sh &&
+          mkdir "build" &&
+          cd "build" &&
+          cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF ..
+          make &&
+          make install &&
+          ldconfig
+      fi
+    } >>"$LOG_FILE" 2>&1
+  }; then
+    UPDATE_IMAGEMAGICK="yes"
+
+    echo -ne " Building jpegxl               [${CGREEN}OK${CEND}]\\r"
+    echo ""
+  else
+    echo -e " Building jpegxl               [${CRED}FAILURE${CEND}]\\r"
+    echo ""
+    echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
+    echo ""
+
+    exit 1
+  fi
+}
+
 # Build ImageMagick
 install_imagemagick() {
   cd "$WORK_DIR" || exit 1
@@ -454,7 +603,7 @@ install_imagemagick() {
     echo -ne ' Building ImageMagick          [..]\r'
 
     if [ -z "$FORCE" ] && [ -z "$UPDATE_IMAGEMAGICK" ] && [ -n "$INSTALLED_IMAGEMAGICK_VER" ] && [ "$(version "${INSTALLED_IMAGEMAGICK_VER//-/}")" -ge "$(version "${IMAGEMAGICK_VER//-/}")" ]; then
-      echo -ne " Building ImageMagick          [${CYELLOW}SKIPPED${CEND}]\\r"
+      echo -ne " Building ImageMagick          [${CYELLOW}SKIPPED (Latest version $INSTALLED_IMAGEMAGICK_VER is already installed)${CEND}]\\r"
       echo ""
 
       return
@@ -462,7 +611,7 @@ install_imagemagick() {
 
     {
       if [ -n "$IMAGEMAGICK_VER" ]; then
-        httpGet "$FILE_BASE/ImageMagick/ImageMagick/tar.gz/$IMAGEMAGICK_VER" > "ImageMagick-$IMAGEMAGICK_VER.tar.gz"
+        httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick/tar.gz/$IMAGEMAGICK_VER" >"ImageMagick-$IMAGEMAGICK_VER.tar.gz"
 
         if [ -n "$IMAGEMAGICK_HASH" ]; then
           if [ "$(sha1sum "ImageMagick-$IMAGEMAGICK_VER.tar.gz" | cut -b-40)" != "$IMAGEMAGICK_HASH" ]; then
@@ -476,12 +625,61 @@ install_imagemagick() {
         tar -xf "ImageMagick-$IMAGEMAGICK_VER.tar.gz" &&
           cd "ImageMagick-$IMAGEMAGICK_VER" &&
           ./configure \
-            CC=gcc \
             CFLAGS="-O3 -march=native" \
-            CXX=g++ \
             CXXFLAGS="-O3 -march=native" \
-            --prefix="$BUILD_DIR" \
-            --with-heic=yes &&
+            --disable-static \
+            --enable-shared \
+            --enable-openmp \
+            --enable-opencl \
+            --enable-cipher \
+            --enable-hdri \
+            --enable-docs \
+            --with-threads \
+            --with-modules \
+            --with-quantum-depth="32" \
+            --with-magick-plus-plus \
+            --with-perl \
+            --without-jemalloc \
+            --without-umem \
+            --without-autotrace \
+            --with-bzlib \
+            --with-x \
+            --with-zlib \
+            --with-zstd \
+            --without-dps \
+            --with-fftw \
+            --without-flif \
+            --without-fpx \
+            --with-djvu \
+            --with-fontconfig \
+            --with-freetype \
+            --with-raqm \
+            --without-gslib \
+            --without-gvc \
+            --with-heic \
+            --with-jbig \
+            --with-jpeg \
+            --with-jxl=yes \
+            --with-lcms \
+            --with-openjp2 \
+            --with-lqr \
+            --with-lzma \
+            --with-openexr \
+            --with-mpeg2 \
+            --with-pango \
+            --with-png \
+            --with-raw \
+            --with-rsvg \
+            --with-tiff \
+            --with-webp \
+            --with-wmf \
+            --with-xml \
+            --with-dejavu-font-dir='/usr/share/fonts/truetype/ttf-dejavu' \
+            --with-gs-font-dir='/usr/share/fonts/type1/gsfonts' \
+            --with-urw-base35-font-dir='/usr/share/fonts/type1/urw-base35' \
+            --with-fontpath='/usr/share/fonts/type1' \
+            PSDelegate='/usr/bin/gs' &&
+          make &&
           make install &&
           ldconfig
       fi
@@ -503,7 +701,9 @@ finish_installation() {
   echo -ne ' Verifying installation        [..]\r'
 
   # Check if ImageMagick version matches
-  VERIFY_INSTALLATION=$("$BUILD_DIR/bin/magick" -version | grep -oP "$IMAGEMAGICK_VER")
+  {
+    VERIFY_INSTALLATION=$("$BUILD_DIR/bin/magick" -version | grep -oP "$IMAGEMAGICK_VER")
+  } >>"$LOG_FILE" 2>&1
 
   if [ -n "$VERIFY_INSTALLATION" ]; then
     echo -ne " Verifying installation        [${CGREEN}OK${CEND}]\\r"
@@ -562,6 +762,7 @@ echo ""
 install_deps
 install_aom
 install_libheif
+install_jxl
 install_imagemagick
 finish_installation
 

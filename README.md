@@ -18,7 +18,6 @@
 <a href="#features"> Features<a> •
 <a href="#compatibility"> Compatibility</a> •
 <a href="#usage"> Usage</a> •
-<a href="#roadmap"> Roadmap</a> •
 <a href="#contributing"> Contributing</a> •
 <a href="#license"> License</a>
 
@@ -35,6 +34,7 @@
 * Additional HEIF support
 * Additional HEIX support
 * Additional AVIF support
+* Additional JPEG XL support
 
 ---
 
@@ -46,6 +46,8 @@ Every IMEI build will be automatically tested against the latest Ubuntu LTS Vers
 
 #### Recommended
 
+* Ubuntu 21.04 (__Hirsute__ Hippo)
+* Ubuntu 20.10 (__Groovy__ Gorilla)
 * Ubuntu 20.04 LTS (__Focal__ Fossa)
 * Ubuntu 18.04 LTS (__Bionic__ Beaver)
 * Debian 10 (__Buster__)
@@ -58,6 +60,10 @@ Every IMEI build will be automatically tested against the latest Ubuntu LTS Vers
 * Debian 9 (__Stretch__)
 * Raspbian 9 (__Stretch__)
 
+#### Known issues
+
+* For JPEG XL, CMake 3.10 or newer is required. On older systems (e.g. Debian 9), the maintainers version isn't sufficient. In this case, JPEG XL compilation will be skipped
+
 ---
 
 ## Usage
@@ -65,7 +71,7 @@ Every IMEI build will be automatically tested against the latest Ubuntu LTS Vers
 ### One-Step Automated Install
 
 ```bash
-bash <(wget -qO - dist.1-2.dev/imei)
+bash <(wget -qO - dist.1-2.dev/imei.sh) --no-sig-verify
 ```
 
 ### Alternative Install Method
@@ -100,9 +106,14 @@ openssl dgst -sha512 -verify public.pem -signature imei.sh.sig imei.sh
 
 Currently available build options are
 
-* `--imagemagick-version` : Build the given ImageMagick version (e.g. `7.0.10-28`)
+* `--skip-dependencies` / `--skip-deps` : Skip installation of dependencies
+* `--imagemagick-version` / `--im-version` : Build the given ImageMagick version (e.g. `7.0.10-28`)
 * `--aom-version` : Build the given aom version (e.g. `2.0.0`)
-* `--libheif-version` : Build the given libheif version (e.g. `1.8.0`)
+* `--skip-aom` : Skip building aom
+* `--libheif-version` / `--heif-version` : Build the given libheif version (e.g. `1.8.0`)
+* `--skip-libheif` / `--skip-heif` : Skip building libheif
+* `--jpeg-xl-version` / `--jxl-version` : Build the given JPEG XL version (e.g. `0.3.3`)
+* `--skip-jpeg-xl` / `--skip-jxl` : Skip building JPEG XL
 * `--log-file` : Log everything to the file provided
 * `--work-dir` : Download, extract & build within the directory provided
 * `--build-dir` : Build target directory
@@ -115,18 +126,12 @@ Currently available build options are
 * ImageMagick version: `7.0.11-6`
 * libaom version: `3.0.0`
 * libheif version: `1.11.0`
-* JPEG XL version: `0.3.7`<!-- versions end -->
-* Log File: `/var/log/install-imagemagick.log`
+* libjxl version: `0.3.7`<!-- versions end -->
+* Log File: `/var/log/imei.log`
 * Work Dir: `/usr/local/src/imei`
 * Build Dir: `/usr/local`
 
 ---
-
-## Roadmap
-
-* [x] Verify installer signatures
-* [ ] Add ImageMagick modules choice
-* [ ] CentOS compatibility
 
 ## Contributing
 

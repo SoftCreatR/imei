@@ -5,6 +5,8 @@ on:
   pull_request:
     paths:
       - 'imei.sh'
+      - 'versions/*.*'
+    workflow_dispatch:
 
 jobs:
   ShellCheck:
@@ -31,11 +33,10 @@ jobs:
       - name: Git checkout
         uses: actions/checkout@v2.3.4
 
-      - name: Install Dependencies
-        run: sudo apt-get install wget cmake yasm libde265-dev libx265-dev
-
       - name: Build
-        run: sudo bash imei.sh --ci --no-sig-verify --log-file "/build.log" -- && echo "Test build OK"
+        run: |
+          sudo bash imei.sh --ci --no-sig-verify --log-file "/build.log"
+          [[ "$(magick -version)" == *"heic"* ]] && [[ "$(magick -version)" == *"jxl"* ]] && echo "Test build OK" || exit 1
 
       - name: On failure
         if: ${{ failure() }}

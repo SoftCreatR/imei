@@ -2,6 +2,9 @@
 name: UpdateVersionInfo
 
 on:
+  push:
+    paths:
+      - 'update_version_info.sh'
   schedule:
     - cron: '0 * * * *'
   workflow_dispatch:
