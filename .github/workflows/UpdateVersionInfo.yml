@@ -6,7 +6,7 @@ on:
     paths:
       - 'update_version_info.sh'
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 jobs:
