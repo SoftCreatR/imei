@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-04-11 22:34                          #
+# Date           : 2020-04-12 09:29                          #
 # License        : ISC                                       #
-# Version        : 6.0.0                                     #
+# Version        : 6.0.1                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -341,7 +341,7 @@ fi
 
 # Speed up the compilation process
 NUM_CORES=$(nproc || echo 1)
-export CC=gcc CXX=g++ MAKEFLAGS=-j"$((NUM_CORES + 1))" -l"${NUM_CORES}"
+export CC=gcc CXX=g++ MAKEFLAGS="-j$((NUM_CORES + 1)) -l${NUM_CORES}"
 
 # Build dependencies
 install_deps() {
@@ -603,7 +603,7 @@ install_imagemagick() {
     echo -ne ' Building ImageMagick          [..]\r'
 
     if [ -z "$FORCE" ] && [ -z "$UPDATE_IMAGEMAGICK" ] && [ -n "$INSTALLED_IMAGEMAGICK_VER" ] && [ "$(version "${INSTALLED_IMAGEMAGICK_VER//-/}")" -ge "$(version "${IMAGEMAGICK_VER//-/}")" ]; then
-      echo -ne " Building ImageMagick          [${CYELLOW}SKIPPED (Latest version $INSTALLED_IMAGEMAGICK_VER is already installed)${CEND}]\\r"
+      echo -ne " Building ImageMagick          [${CYELLOW}SKIPPED${CEND}]\\r"
       echo ""
 
       return
