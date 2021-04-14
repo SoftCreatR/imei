@@ -123,7 +123,7 @@ Currently available build options are
 **Default options** :
 
 <!-- versions start -->
-* ImageMagick version: `7.0.11-6`
+* ImageMagick version: `7.0.11-7`
 * libaom version: `3.0.0`
 * libheif version: `1.11.0`
 * libjxl version: `0.3.7`<!-- versions end -->
