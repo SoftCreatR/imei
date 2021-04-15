@@ -8,7 +8,7 @@
 # Author         : Sascha Greuel <hello@1-2.dev>             #
 # Date           : 2020-04-12 09:29                          #
 # License        : ISC                                       #
-# Version        : 6.0.1                                     #
+# Version        : 6.0.2                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -83,7 +83,7 @@ while [ "$#" -gt 0 ]; do
   --ci)
     CI_BUILD="yes"
     ;;
-  --no-sig-verify)
+  --no-sig-verify|--dev)
     VERIFY_SIGNATURE="${CYELLOW}disabled${CEND}"
     ;;
   *) ;;
@@ -384,7 +384,7 @@ install_deps() {
     fi
 
     # Install other build dependencies
-    PKG_LIST=(git make cmake automake libtool yasm g++ pkg-config perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libtiff-dev libraw-dev ghostscript gsfonts ffmpeg bzip2 libpango1.0-dev libdjvulibre-dev libfftw3-dev)
+    PKG_LIST=(git make cmake automake libtool yasm g++ pkg-config perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev libjemalloc-dev)
 
     if [[ "${OS_SHORT_CODENAME,,}" != *"stretch"* ]]; then
       PKG_LIST+=(libraqm-dev libraqm0)
@@ -639,7 +639,8 @@ install_imagemagick() {
             --with-quantum-depth="32" \
             --with-magick-plus-plus \
             --with-perl \
-            --without-jemalloc \
+            --with-jemalloc \
+            --without-tcmalloc \
             --without-umem \
             --without-autotrace \
             --with-bzlib \
@@ -654,8 +655,8 @@ install_imagemagick() {
             --with-fontconfig \
             --with-freetype \
             --with-raqm \
-            --without-gslib \
-            --without-gvc \
+            --with-gslib \
+            --with-gvc \
             --with-heic \
             --with-jbig \
             --with-jpeg \
@@ -665,7 +666,6 @@ install_imagemagick() {
             --with-lqr \
             --with-lzma \
             --with-openexr \
-            --with-mpeg2 \
             --with-pango \
             --with-png \
             --with-raw \

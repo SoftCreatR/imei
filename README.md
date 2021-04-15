@@ -118,7 +118,7 @@ Currently available build options are
 * `--work-dir` : Download, extract & build within the directory provided
 * `--build-dir` : Build target directory
 * `--force` : Force building of components, even if they are already installed in a newer or the latest version
-* `--no-sig-verify` : Disable signature verification on startup
+* `--no-sig-verify` / `--dev` : Disable signature verification on startup
 
 **Default options** :
 
