@@ -5,9 +5,13 @@ on:
   push:
     paths:
       - 'update_version_info.sh'
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+  workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
-  workflow_dispatch:
 
 jobs:
   Update:

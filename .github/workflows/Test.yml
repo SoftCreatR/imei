@@ -6,7 +6,11 @@ on:
     paths:
       - 'imei.sh'
       - 'versions/*.*'
-    workflow_dispatch:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+  workflow_dispatch:
 
 jobs:
   ShellCheck:
