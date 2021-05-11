@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-05-11 11:43                          #
+# Date           : 2020-05-11 19:51                          #
 # License        : ISC                                       #
-# Version        : 6.1.0                                     #
+# Version        : 6.1.1                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -117,6 +117,7 @@ SIGNATURE_FILE="/tmp/imei.sh.sig"
 PUBLIC_KEY_FILE="/tmp/imei.pem"
 GH_FILE_BASE="https://codeload.github.com"
 SOURCE_LIST="/etc/apt/sources.list.d/imei.list"
+LIB_DIR="/usr/local"
 CMAKE_VERSION=""
 
 # Colors
@@ -324,16 +325,16 @@ if command_exists magick; then
   INSTALLED_IMAGEMAGICK_VER=$(magick -version | grep -oP 'Version: ImageMagick \K([\d\.\-]+)')
 fi
 
-if [ -L "$BUILD_DIR/lib/libaom.so" ]; then
-  INSTALLED_AOM_VER=$(readlink -f "$BUILD_DIR/lib/libaom.so" | xargs basename | grep -oP 'libaom.so.\K([\d\.]+)')
+if [ -L "$LIB_DIR/lib/libaom.so" ]; then
+  INSTALLED_AOM_VER=$(readlink -f "$LIB_DIR/lib/libaom.so" | xargs basename | grep -oP 'libaom.so.\K([\d\.]+)')
 fi
 
-if [ -L "$BUILD_DIR/lib/libheif.so" ]; then
-  INSTALLED_LIBHEIF_VER=$(readlink -f "$BUILD_DIR/lib/libheif.so" | xargs basename | grep -oP 'libheif.so.\K([\d\.]+)')
+if [ -L "$LIB_DIR/lib/libheif.so" ]; then
+  INSTALLED_LIBHEIF_VER=$(readlink -f "$LIB_DIR/lib/libheif.so" | xargs basename | grep -oP 'libheif.so.\K([\d\.]+)')
 fi
 
-if [ -L "$BUILD_DIR/lib/libjxl.so" ]; then
-  INSTALLED_JXL_VER=$(readlink -f "$BUILD_DIR/lib/libjxl.so" | xargs basename | grep -oP 'libjxl.so.\K([\d\.]+)')
+if [ -L "$LIB_DIR/lib/libjxl.so" ]; then
+  INSTALLED_JXL_VER=$(readlink -f "$LIB_DIR/lib/libjxl.so" | xargs basename | grep -oP 'libjxl.so.\K([\d\.]+)')
 fi
 
 #######################
@@ -486,7 +487,7 @@ install_libheif() {
   if {
     echo -ne ' Building libheif              [..]\r'
 
-    if [ ! -L "$BUILD_DIR/lib/libaom.so" ]; then
+    if [ ! -L "$LIB_DIR/lib/libaom.so" ]; then
         echo -ne " Building libheif              [${CYELLOW}SKIPPED (aom is required but not installed)${CEND}]\\r"
         echo ""
 
