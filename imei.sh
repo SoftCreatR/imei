@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-04-12 09:29                          #
+# Date           : 2020-05-11 11:43                          #
 # License        : ISC                                       #
-# Version        : 6.0.2                                     #
+# Version        : 6.1.0                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -117,6 +117,7 @@ SIGNATURE_FILE="/tmp/imei.sh.sig"
 PUBLIC_KEY_FILE="/tmp/imei.pem"
 GH_FILE_BASE="https://codeload.github.com"
 SOURCE_LIST="/etc/apt/sources.list.d/imei.list"
+CMAKE_VERSION=""
 
 # Colors
 CSI='\033['
@@ -386,11 +387,13 @@ install_deps() {
     # Install other build dependencies
     PKG_LIST=(git curl make cmake automake libtool yasm g++ pkg-config perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev libjemalloc-dev)
 
-    if [[ "${OS_SHORT_CODENAME,,}" != *"stretch"* ]]; then
+    if [[ "${OS_SHORT_CODENAME,,}" != *"stretch"* && "${OS_SHORT_CODENAME,,}" != *"xenial"* ]]; then
       PKG_LIST+=(libraqm-dev libraqm0)
     fi
 
     apt-get install -y "${PKG_LIST[@]}"
+
+    CMAKE_VERSION=$(cmake --version | head -n1 | cut -d" " -f3)
   } >>"$LOG_FILE" 2>&1; then
     echo -ne " Installing dependencies       [${CGREEN}OK${CEND}]\\r"
     echo ""
@@ -410,6 +413,13 @@ install_aom() {
 
   if {
     echo -ne ' Building aom                  [..]\r'
+
+    if [ "$(version "$CMAKE_VERSION")" -lt "$(version 3.6)" ]; then
+        echo -ne " Building aom                  [${CYELLOW}SKIPPED (CMAKE version not sufficient)${CEND}]\\r"
+        echo ""
+
+        return
+    fi
 
     if [ -z "$SKIP_AOM" ]; then
       if [ -z "$FORCE" ] && [ -n "$INSTALLED_AOM_VER" ] && [ "$(version "$INSTALLED_AOM_VER")" -ge "$(version "$AOM_VER")" ]; then
@@ -476,6 +486,13 @@ install_libheif() {
   if {
     echo -ne ' Building libheif              [..]\r'
 
+    if [ ! -L "$BUILD_DIR/lib/libaom.so" ]; then
+        echo -ne " Building libheif              [${CYELLOW}SKIPPED (aom is required but not installed)${CEND}]\\r"
+        echo ""
+
+        return
+    fi
+
     if [ -z "$SKIP_LIBHEIF" ]; then
       if [ -z "$FORCE" ] && [ -z "$UPDATE_LIBHEIF" ] && [ -n "$INSTALLED_LIBHEIF_VER" ] && [ "$(version "$INSTALLED_LIBHEIF_VER")" -ge "$(version "$LIBHEIF_VER")" ]; then
         echo -ne " Building libheif              [${CYELLOW}SKIPPED${CEND}]\\r"
@@ -534,7 +551,6 @@ install_jxl() {
   if {
     echo -ne ' Building jpegxl               [..]\r'
 
-    CMAKE_VERSION=$(cmake --version | head -n1 | cut -d" " -f3)
     if [ "$(version "$CMAKE_VERSION")" -lt "$(version 3.10)" ]; then
         echo -ne " Building jpegxl               [${CYELLOW}SKIPPED (CMAKE version not sufficient)${CEND}]\\r"
         echo ""
@@ -624,7 +640,7 @@ install_imagemagick() {
 
         tar -xf "ImageMagick-$IMAGEMAGICK_VER.tar.gz" &&
           cd "ImageMagick-$IMAGEMAGICK_VER" &&
-          ./configure \
+          ./configure --prefix="$BUILD_DIR" \
             CFLAGS="-O3 -march=native" \
             CXXFLAGS="-O3 -march=native" \
             --disable-static \
