@@ -415,7 +415,7 @@ install_aom() {
   if {
     echo -ne ' Building aom                  [..]\r'
 
-    if [ "$(version "$CMAKE_VERSION")" -lt "$(version 3.6)" ]; then
+    if [ "$(version $CMAKE_VERSION)" -lt "$(version 3.6)" ]; then
         echo -ne " Building aom                  [${CYELLOW}SKIPPED (CMAKE version not sufficient)${CEND}]\\r"
         echo ""
 
