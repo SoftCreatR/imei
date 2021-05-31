@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-05-30 10:34                          #
+# Date           : 2020-05-31 17:41                          #
 # License        : ISC                                       #
-# Version        : 6.1.2                                     #
+# Version        : 6.1.3                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -289,8 +289,8 @@ if [ -z "$LIBHEIF_VER" ]; then
 fi
 
 if [ -z "$JXL_VER" ]; then
-  JXL_VER=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/jpeg-xl.version")
-  JXL_HASH=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/jpeg-xl.hash")
+  JXL_VER=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libjxl.version")
+  JXL_HASH=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libjxl.hash")
 fi
 
 # Make sure, that a version number for ImageMagick has been set

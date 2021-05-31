@@ -9,7 +9,6 @@ fi
 WORKDIR=$(dirname "$0")
 GH_API_BASE="https://api.github.com/repos"
 GH_FILE_BASE="https://codeload.github.com"
-GL_API_BASE="https://gitlab.com/api/v4/projects"
 CLIENT=""
 AUTHORIZATION=""
 
@@ -99,7 +98,7 @@ LIBHEIF_VER=$(httpGet "$GH_API_BASE/strukturag/libheif/tags" | jq -r '[.[] | sel
 if [ -n "$LIBHEIF_VER" ]; then
   echo "$LIBHEIF_VER" > "$WORKDIR/versions/libheif.version"
 else
-  echo "Error: Failed to get version information for Libheif."
+  echo "Error: Failed to get version information for libheif."
   exit 1
 fi
 
@@ -109,27 +108,27 @@ LIBHEIF_HASH=$(httpGet "$GH_FILE_BASE/strukturag/libheif/tar.gz/v$LIBHEIF_VER" |
 if [ -n "$LIBHEIF_HASH" ]; then
  echo "$LIBHEIF_HASH" > "$WORKDIR/versions/libheif.hash"
 else
-  echo "Error: Failed to get hash information for Libheif $LIBHEIF_VER tarball."
+  echo "Error: Failed to get hash information for libheif $LIBHEIF_VER tarball."
   exit 1
 fi
 
-# Get version information for JPEG XL and write it to file
-JXL_VER=$(httpGet "$GL_API_BASE/15769887/repository/tags" | jq -r '[.[] | select(.name|test("^v[0-9]+.[0-9]+.[0-9]+$")) | .name[1:]] | join("\n")' | sort -rV | head -1)
+# Get version information for libjxl and write it to file
+LIBJXL_VER=$(httpGet "$GH_API_BASE/libjxl/libjxl/tags" | jq -r '[.[] | select(.name|test("^v[0-9]+.[0-9]+.[0-9]+$")) | .name[1:]] | join("\n")' | sort -rV | head -1)
 
-if [ -n "$JXL_VER" ]; then
-  echo "$JXL_VER" > "$WORKDIR/versions/jpeg-xl.version"
+if [ -n "$LIBJXL_VER" ]; then
+  echo "$LIBJXL_VER" > "$WORKDIR/versions/libjxl.version"
 else
-  echo "Error: Failed to get version information for JPEG XL."
+  echo "Error: Failed to get version information for libjxl."
   exit 1
 fi
 
-# Download JPEG XL tarball, calculate it's hash and write it to file
-JXL_HASH=$(httpGet "https://gitlab.com/wg1/jpeg-xl/-/archive/v$JXL_VER/jpeg-xl-v$JXL_VER.tar" | sha1sum | cut -b-40)
+# Download libjxl tarball, calculate it's hash and write it to file
+LIBJXL_HASH=$(httpGet "$GH_FILE_BASE/libjxl/libjxl/tar.gz/v$LIBJXL_VER" | sha1sum | cut -b-40)
 
-if [ -n "$JXL_HASH" ]; then
- echo "$JXL_HASH" > "$WORKDIR/versions/jpeg-xl.hash"
+if [ -n "$LIBJXL_HASH" ]; then
+ echo "$LIBJXL_HASH" > "$WORKDIR/versions/libjxl.hash"
 else
-  echo "Error: Failed to get hash information for JPEG XL $LIBHEIF_VER tarball."
+  echo "Error: Failed to get hash information for libjxl $LIBJXL_VER tarball."
   exit 1
 fi
 
@@ -137,7 +136,7 @@ fi
 REPLACEMENT="\n* ImageMagick version: \`$IMAGEMAGICK_VER\`\n"
 REPLACEMENT+="* libaom version: \`$LIBAOM_VER\`\n"
 REPLACEMENT+="* libheif version: \`$LIBHEIF_VER\`\n"
-REPLACEMENT+="* libjxl version: \`$JXL_VER\`"
+REPLACEMENT+="* libjxl version: \`$LIBJXL_VER\`"
 sed -En '1h;1!H;${g;s/(<!-- versions start -->)(.*)(<!-- versions end -->)/\1'"$REPLACEMENT"'\3/;p;}' -i "$WORKDIR/README.md"
 
 exit 0
