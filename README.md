@@ -124,7 +124,7 @@ Currently available build options are
 
 <!-- versions start -->
 * ImageMagick version: `7.0.11-14`
-* libaom version: `3.1.0`
+* libaom version: `3.1.1`
 * libheif version: `1.12.0`
 * libjxl version: `0.3.7`<!-- versions end -->
 * Log File: `/var/log/imei.log`
