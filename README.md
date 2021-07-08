@@ -119,6 +119,7 @@ Currently available build options are
 * `--build-dir` : Build target directory for ImageMagick
 * `--config-dir` : Config target directory for ImageMagick
 * `--force` : Force building of components, even if they are already installed in a newer or the latest version
+* `--force-imagemagick` / `--force-im` : Force building of ImageMagick only, even if it's are already installed in a newer or the latest version
 * `--no-sig-verify` / `--dev` : Disable signature verification on startup
 
 **Default options** :

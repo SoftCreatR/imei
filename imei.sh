@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2021-07-08 15:05                          #
+# Date           : 2021-07-08 21:45                          #
 # License        : ISC                                       #
-# Version        : 6.2.0                                     #
+# Version        : 6.2.1                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -46,6 +46,9 @@ while [ "$#" -gt 0 ]; do
   case "$1" in
   --force)
     FORCE="yes"
+    ;;
+  --force-imagemagick|--force-im)
+    FORCE_IMAGEMAGICK=$2
     ;;
   --imagemagick-version|--im-version)
     IMAGEMAGICK_VER=$2
@@ -626,7 +629,7 @@ install_imagemagick() {
   if {
     echo -ne ' Building ImageMagick          [..]\r'
 
-    if [ -z "$FORCE" ] && [ -z "$UPDATE_IMAGEMAGICK" ] && [ -n "$INSTALLED_IMAGEMAGICK_VER" ] && [ "$(version "${INSTALLED_IMAGEMAGICK_VER//-/}")" -ge "$(version "${IMAGEMAGICK_VER//-/}")" ]; then
+    if [ -z "$FORCE" ] && [ -z "$FORCE_IMAGEMAGICK" ] && [ -z "$UPDATE_IMAGEMAGICK" ] && [ -n "$INSTALLED_IMAGEMAGICK_VER" ] && [ "$(version "${INSTALLED_IMAGEMAGICK_VER//-/}")" -ge "$(version "${IMAGEMAGICK_VER//-/}")" ]; then
       echo -ne " Building ImageMagick          [${CYELLOW}SKIPPED${CEND}]\\r"
       echo ""
 
@@ -773,7 +776,8 @@ echo " Build Dir       : $BUILD_DIR"
 echo " Config Dir      : $CONFIG_DIR"
 echo " Log File        : $LOG_FILE"
 echo ""
-echo " Force Build     : ${FORCE:-"no"}"
+echo " Force Build ALl : ${FORCE:-"no"}"
+echo " Force Build IM  : ${FORCE_IMAGEMAGICK:-"no"}"
 echo " CI Build        : ${CI_BUILD:-"no"}"
 echo " Signature Check : ${VERIFY_SIGNATURE:-"yes"}"
 echo ""
