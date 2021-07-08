@@ -71,7 +71,7 @@ jobs:
 
       - name: Verify release
         run: |-
-          openssl dgst -sha512 -verify public.pem -signature imei.sh.sig imei.sh
+          openssl dgst -sha512 -verify imei.sh.pem -signature imei.sh.sig imei.sh
 
       - name: Commit and push on changes
         run: |-

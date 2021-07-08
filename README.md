@@ -90,8 +90,8 @@ To do so, `openssl` is required:
 ```bash
 wget https://dist.1-2.dev/imei.sh && \                                 # Download IMEI
 wget https://dist.1-2.dev/imei.sh.sig && \                             # Download signature file
-wget https://dist.1-2.dev/public.pem && \                              # Download public key
-openssl dgst -sha512 -verify public.pem -signature imei.sh.sig imei.sh # Verify
+wget https://dist.1-2.dev/imei.sh.pem && \                             # Download public key
+openssl dgst -sha512 -verify imei.sh.pem -signature imei.sh.sig imei.sh # Verify
 ```
 
 ### Alternative integrity check
@@ -99,7 +99,7 @@ openssl dgst -sha512 -verify public.pem -signature imei.sh.sig imei.sh # Verify
 ```bash
 git clone https://github.com/SoftCreatR/imei
 cd imei
-openssl dgst -sha512 -verify public.pem -signature imei.sh.sig imei.sh
+openssl dgst -sha512 -verify imei.sh.pem -signature imei.sh.sig imei.sh
 ```
 
 #### Options available

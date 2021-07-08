@@ -114,7 +114,7 @@ OS_DISTRO="$(lsb_release -ds)"
 OS_SHORT_CODENAME="$(lsb_release -sc)"
 OS_ARCH="$(uname -m)"
 SIGNATURE_FILE="/tmp/imei.sh.sig"
-PUBLIC_KEY_FILE="/tmp/imei.pem"
+PUBLIC_KEY_FILE="/tmp/imei.sh.pem"
 GH_FILE_BASE="https://codeload.github.com"
 SOURCE_LIST="/etc/apt/sources.list.d/imei.list"
 LIB_DIR="/usr/local"
@@ -244,7 +244,7 @@ if [ -z "$VERIFY_SIGNATURE" ] && [ -f "$0" ]; then
     httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh.sig" >"$SIGNATURE_FILE"
 
     if [ ! -f "$PUBLIC_KEY_FILE" ]; then
-      httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/public.pem" >"$PUBLIC_KEY_FILE"
+      httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh.pem" >"$PUBLIC_KEY_FILE"
     fi
 
     openssl dgst -sha512 -verify "$PUBLIC_KEY_FILE" -signature "$SIGNATURE_FILE" "$0"
