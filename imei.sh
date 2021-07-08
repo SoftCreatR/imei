@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2020-05-31 17:41                          #
+# Date           : 2021-07-08 15:05                          #
 # License        : ISC                                       #
-# Version        : 6.1.3                                     #
+# Version        : 6.2.0                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -80,6 +80,9 @@ while [ "$#" -gt 0 ]; do
   --build-dir)
     BUILD_DIR=$2
     ;;
+  --config-dir)
+    CONFIG_DIR=$2
+    ;;
   --ci)
     CI_BUILD="yes"
     ;;
@@ -103,6 +106,10 @@ fi
 
 if [ -z "$BUILD_DIR" ]; then
   BUILD_DIR=/usr/local
+fi
+
+if [ -z "$CONFIG_DIR" ]; then
+  CONFIG_DIR="$BUILD_DIR/etc"
 fi
 
 if [ -z "$LOG_FILE" ]; then
@@ -641,7 +648,7 @@ install_imagemagick() {
 
         tar -xf "ImageMagick-$IMAGEMAGICK_VER.tar.gz" &&
           cd "ImageMagick-$IMAGEMAGICK_VER" &&
-          ./configure --prefix="$BUILD_DIR" \
+          ./configure --prefix="$BUILD_DIR" --sysconfdir="$CONFIG_DIR" \
             CFLAGS="-O3 -march=native" \
             CXXFLAGS="-O3 -march=native" \
             --disable-static \
@@ -763,6 +770,7 @@ echo " Used web client : $CLIENT"
 echo ""
 echo " Work Dir        : $WORK_DIR"
 echo " Build Dir       : $BUILD_DIR"
+echo " Config Dir      : $CONFIG_DIR"
 echo " Log File        : $LOG_FILE"
 echo ""
 echo " Force Build     : ${FORCE:-"no"}"

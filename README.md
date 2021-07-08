@@ -116,7 +116,8 @@ Currently available build options are
 * `--skip-jpeg-xl` / `--skip-jxl` : Skip building JPEG XL
 * `--log-file` : Log everything to the file provided
 * `--work-dir` : Download, extract & build within the directory provided
-* `--build-dir` : Build target directory
+* `--build-dir` : Build target directory for ImageMagick
+* `--config-dir` : Config target directory for ImageMagick
 * `--force` : Force building of components, even if they are already installed in a newer or the latest version
 * `--no-sig-verify` / `--dev` : Disable signature verification on startup
 
@@ -130,6 +131,7 @@ Currently available build options are
 * Log File: `/var/log/imei.log`
 * Work Dir: `/usr/local/src/imei`
 * Build Dir: `/usr/local`
+* Config Dir: `/usr/local/etc`
 
 ---
 
