@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2021-07-08 21:45                          #
+# Date           : 2021-07-09 05:52                          #
 # License        : ISC                                       #
-# Version        : 6.2.1                                     #
+# Version        : 6.3.0                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -396,7 +396,7 @@ install_deps() {
     fi
 
     # Install other build dependencies
-    PKG_LIST=(git curl make cmake automake libtool yasm g++ pkg-config perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev)
+    PKG_LIST=(git curl make cmake automake libtool yasm g++ pkg-config checkinstall perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev)
 
     if [[ "${OS_SHORT_CODENAME,,}" != *"stretch"* && "${OS_SHORT_CODENAME,,}" != *"xenial"* ]]; then
       PKG_LIST+=(libraqm-dev libraqm0)
@@ -460,7 +460,7 @@ install_aom() {
         fi
 
         # see https://github.com/SoftCreatR/imei/issues/9
-        CMAKE_FLAGS="-DBUILD_SHARED_LIBS=1"
+        CMAKE_FLAGS="-DBUILD_SHARED_LIBS=1 -DENABLE_DOCS=0 -DENABLE_TESTS=0 -DENABLE_CCACHE=1"
 
         if [[ "${OS_DISTRO,,}" == *"raspbian"* ]]; then
           CMAKE_FLAGS+=' -DCMAKE_C_FLAGS="-mfloat-abi=hard -march=armv7-a -marm -mfpu=neon"'
@@ -471,7 +471,16 @@ install_aom() {
           cd "$WORK_DIR/build_aom" &&
           cmake "../aom-$AOM_VER/" "$CMAKE_FLAGS" &&
           make &&
-          make install &&
+          echo "AV1 Video Codec Library (IMEI v$INSTALLER_VER)" >> description-pak &&
+          checkinstall \
+            --default \
+            --nodoc \
+            --pkgname="imei-libaom" \
+            --pkglicense="BSD-2-Clause" \
+            --pkgversion="$AOM_VER" \
+            --pkgrelease="imei$INSTALLER_VER" \
+            --pakdir="/usr/local/src" \
+            --requires="git,cmake \(\>= 3.6\),perl,yasm" &&
           ldconfig
       fi
     } >>"$LOG_FILE" 2>&1
@@ -536,7 +545,16 @@ install_libheif() {
           ./autogen.sh &&
           ./configure &&
           make &&
-          make install &&
+          echo "ISO/IEC 23008-12:2017 HEIF file format decoder (IMEI v$INSTALLER_VER)" >> description-pak &&
+          checkinstall \
+            --default \
+            --nodoc \
+            --pkgname="imei-libheif" \
+            --pkglicense="GPL-2.0-or-later" \
+            --pkgversion="$LIBHEIF_VER" \
+            --pkgrelease="imei$INSTALLER_VER" \
+            --pakdir="/usr/local/src" \
+            --requires="automake,make,pkg-config,libde265-dev,libx265-dev,libjpeg-dev,imei-libaom" &&
           ldconfig
       fi
     } >>"$LOG_FILE" 2>&1
@@ -603,7 +621,16 @@ install_jxl() {
           cd "build" &&
           cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF ..
           make &&
-          make install &&
+          echo "JPEG XL image format reference implementation (IMEI v$INSTALLER_VER)" >> description-pak &&
+          checkinstall \
+            --default \
+            --nodoc \
+            --pkgname="imei-libjxl" \
+            --pkglicense="Apache-2.0" \
+            --pkgversion="$JXL_VER" \
+            --pkgrelease="imei$INSTALLER_VER" \
+            --pakdir="/usr/local/src" \
+            --requires="cmake \(\>= 3.10\),pkg-config,libbrotli-dev,libgif-dev,libjpeg-dev,libopenexr-dev,libpng-dev,libwebp-dev" &&
           ldconfig
       fi
     } >>"$LOG_FILE" 2>&1
@@ -707,7 +734,17 @@ install_imagemagick() {
             --with-fontpath='/usr/share/fonts/type1' \
             PSDelegate='/usr/bin/gs' &&
           make &&
-          make install &&
+          echo "image manipulation programs (IMEI v$INSTALLER_VER)" >> description-pak &&
+          checkinstall \
+            --default \
+            --nodoc \
+            --pkgname=imei-imagemagick \
+            --pkglicense="Apache-2.0" \
+            --pkgversion="$IMAGEMAGICK_VER" \
+            --pkgrelease="imei$INSTALLER_VER" \
+            --pakdir="/usr/local/src" \
+            --conflicts="imagemagick" \
+            --requires="pkg-config,imei-libaom,imei-libheif,imei-libjxl" &&
           ldconfig
       fi
     } >>"$LOG_FILE" 2>&1
@@ -776,7 +813,7 @@ echo " Build Dir       : $BUILD_DIR"
 echo " Config Dir      : $CONFIG_DIR"
 echo " Log File        : $LOG_FILE"
 echo ""
-echo " Force Build ALl : ${FORCE:-"no"}"
+echo " Force Build All : ${FORCE:-"no"}"
 echo " Force Build IM  : ${FORCE_IMAGEMAGICK:-"no"}"
 echo " CI Build        : ${CI_BUILD:-"no"}"
 echo " Signature Check : ${VERIFY_SIGNATURE:-"yes"}"
