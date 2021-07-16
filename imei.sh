@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2021-07-16 16:07                          #
+# Date           : 2021-07-16 23:36                          #
 # License        : ISC                                       #
-# Version        : 6.4.0                                     #
+# Version        : 6.4.1                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -92,8 +92,8 @@ while [ "$#" -gt 0 ]; do
   --no-sig-verify|--dev)
     VERIFY_SIGNATURE="${CYELLOW}disabled${CEND}"
     ;;
-  --use-make|--no-checkinstall|--make)
-    CHECKINSTALL="${CYELLOW}disabled${CEND}"
+  --use-checkinstall|--checkinstall)
+    CHECKINSTALL="yes"
     ;;
   --no-backports)
     BACKPORTS="${CYELLOW}disabled${CEND}"
@@ -423,7 +423,7 @@ install_deps() {
       PKG_LIST+=(libraqm-dev libraqm0)
     fi
 
-    if [ -z "$CHECKINSTALL" ]; then
+    if [ -n "$CHECKINSTALL" ]; then
       PKG_LIST+=(checkinstall)
     fi
 
@@ -497,7 +497,7 @@ install_aom() {
           cmake "../aom-$AOM_VER/" "$CMAKE_FLAGS" &&
           make
           
-          if [ -z "$CHECKINSTALL" ]; then
+          if [ -n "$CHECKINSTALL" ]; then
             echo "AV1 Video Codec Library (IMEI v$INSTALLER_VER)" >> description-pak &&
             checkinstall \
               --default \
@@ -577,7 +577,7 @@ install_libheif() {
           ./configure &&
           make
           
-          if [ -z "$CHECKINSTALL" ]; then
+          if [ -n "$CHECKINSTALL" ]; then
             echo "ISO/IEC 23008-12:2017 HEIF file format decoder (IMEI v$INSTALLER_VER)" >> description-pak &&
             checkinstall \
               --default \
@@ -659,7 +659,7 @@ install_jxl() {
           cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF ..
           make
           
-          if [ -z "$CHECKINSTALL" ]; then
+          if [ -n "$CHECKINSTALL" ]; then
             echo "JPEG XL image format reference implementation (IMEI v$INSTALLER_VER)" >> description-pak &&
             checkinstall \
               --default \
@@ -778,7 +778,7 @@ install_imagemagick() {
             PSDelegate='/usr/bin/gs' &&
           make
           
-          if [ -z "$CHECKINSTALL" ]; then
+          if [ -n "$CHECKINSTALL" ]; then
             echo "image manipulation programs (IMEI v$INSTALLER_VER)" >> description-pak &&
             checkinstall \
               --default \
@@ -864,7 +864,7 @@ echo " Log File        : $LOG_FILE"
 echo ""
 echo " Force Build All : ${FORCE:-"no"}"
 echo " Force Build IM  : ${FORCE_IMAGEMAGICK:-"no"}"
-echo " Checkinstall    : ${CHECKINSTALL:-"yes"}"
+echo " Checkinstall    : ${CHECKINSTALL:-"no"}"
 echo " CI Build        : ${CI_BUILD:-"no"}"
 echo " Signature Check : ${VERIFY_SIGNATURE:-"yes"}"
 echo ""
