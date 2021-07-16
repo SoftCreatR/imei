@@ -46,23 +46,27 @@ Every IMEI build will be automatically tested against the latest Ubuntu LTS Vers
 
 #### Recommended
 
-* Ubuntu 21.04 (__Hirsute__ Hippo)
-* Ubuntu 20.10 (__Groovy__ Gorilla)
-* Ubuntu 20.04 LTS (__Focal__ Fossa)
-* Ubuntu 18.04 LTS (__Bionic__ Beaver)
+* Ubuntu 20.04 (__Focal__ Fossa)
+* Ubuntu 18.04 (__Bionic__ Beaver)
 * Debian 10 (__Buster__)
 * Raspbian 10 (__Buster__)
 
 #### Also compatible
 
+* Ubuntu 21.10 (__Impish__ Indri)
+* Ubuntu 21.04 (__Hirsute__ Hippo)
+* Ubuntu 20.10 (__Groovy__ Gorilla)
 * Ubuntu 19.10 (__Eoan__ Ermine)
-* Ubuntu 16.04 LTS (__Xenial__ Xerus)
+* Ubuntu 17.04 (__Zesty__ Zapus)
+* Ubuntu 16.04 (__Xenial__ Xerus)
+* Debian 11 (__Bullseye__)
 * Debian 9 (__Stretch__)
 * Raspbian 9 (__Stretch__)
 
 #### Known issues
 
-* For JPEG XL, CMake 3.10 or newer is required. On older systems (e.g. Debian 9), the maintainers version isn't sufficient. In this case, JPEG XL compilation will be skipped
+* For JPEG XL, CMake 3.10 or newer is required. On older systems (e.g. Debian 9), the maintainers version isn't sufficient. In this case, JPEG XL compilation will be skipped.
+* For libaom, CMake 3.6 or newer is required. On older systems, the maintainers version may be not sufficient. In this case, libaom compilation will be skipped. Without libaom, libheif will be skipped too.
 
 ---
 
@@ -120,7 +124,12 @@ Currently available build options are
 * `--config-dir` : Config target directory for ImageMagick
 * `--force` : Force building of components, even if they are already installed in a newer or the latest version
 * `--force-imagemagick` / `--force-im` : Force building of ImageMagick only, even if it's are already installed in a newer or the latest version
+
+Additional options / switches:
+
 * `--no-sig-verify` / `--dev` : Disable signature verification on startup
+* `--use-make` / `--no-checkinstall` / `--make` : Use `make` instead of `checkinstall`
+* `--no-backports` : Disable temporary installation of OS backports (they may be used anyways, depending on your server configuration)
 
 **Default options** :
 

@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2021-07-09 05:52                          #
+# Date           : 2021-07-16 16:07                          #
 # License        : ISC                                       #
-# Version        : 6.3.0                                     #
+# Version        : 6.4.0                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -91,6 +91,12 @@ while [ "$#" -gt 0 ]; do
     ;;
   --no-sig-verify|--dev)
     VERIFY_SIGNATURE="${CYELLOW}disabled${CEND}"
+    ;;
+  --use-make|--no-checkinstall|--make)
+    CHECKINSTALL="${CYELLOW}disabled${CEND}"
+    ;;
+  --no-backports)
+    BACKPORTS="${CYELLOW}disabled${CEND}"
     ;;
   *) ;;
   esac
@@ -376,12 +382,27 @@ install_deps() {
       if [[ "${OS_DISTRO,,}" == *"ubuntu"* ]]; then
         echo 'deb http://archive.ubuntu.com/ubuntu '"$OS_SHORT_CODENAME"' main restricted'
         echo 'deb-src http://archive.ubuntu.com/ubuntu '"$OS_SHORT_CODENAME"' main restricted universe multiverse'
+
+        if [ -z "$BACKPORTS" ]; then
+          echo 'deb http://archive.ubuntu.com/ubuntu '"$OS_SHORT_CODENAME"'-backports main restricted universe multiverse'
+          echo 'deb-src http://archive.ubuntu.com/ubuntu '"$OS_SHORT_CODENAME"'-backports main restricted universe multiverse'
+        fi
       elif [[ "${OS_DISTRO,,}" == *"debian"* ]]; then
         echo 'deb http://deb.debian.org/debian '"$OS_SHORT_CODENAME"' main contrib non-free'
         echo 'deb-src http://deb.debian.org/debian '"$OS_SHORT_CODENAME"' main contrib non-free'
+
+        if [ -z "$BACKPORTS" ]; then
+          echo 'deb http://deb.debian.org/debian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
+          echo 'deb-src http://deb.debian.org/debian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
+        fi
       elif [[ "${OS_DISTRO,,}" == *"raspbian"* ]]; then
         echo 'deb http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"' main contrib non-free'
         echo 'deb-src http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"' main contrib non-free'
+
+        if [ -z "$BACKPORTS" ]; then
+          echo 'deb http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
+          echo 'deb-src http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
+        fi
       else
         SKIP_BUILD_DEP="yes"
       fi
@@ -396,10 +417,14 @@ install_deps() {
     fi
 
     # Install other build dependencies
-    PKG_LIST=(git curl make cmake automake libtool yasm g++ pkg-config checkinstall perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev)
+    PKG_LIST=(git curl make cmake automake libtool yasm g++ pkg-config perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev)
 
     if [[ "${OS_SHORT_CODENAME,,}" != *"stretch"* && "${OS_SHORT_CODENAME,,}" != *"xenial"* ]]; then
       PKG_LIST+=(libraqm-dev libraqm0)
+    fi
+
+    if [ -z "$CHECKINSTALL" ]; then
+      PKG_LIST+=(checkinstall)
     fi
 
     apt-get install -y "${PKG_LIST[@]}"
@@ -470,17 +495,23 @@ install_aom() {
           mkdir "$WORK_DIR/build_aom" &&
           cd "$WORK_DIR/build_aom" &&
           cmake "../aom-$AOM_VER/" "$CMAKE_FLAGS" &&
-          make &&
-          echo "AV1 Video Codec Library (IMEI v$INSTALLER_VER)" >> description-pak &&
-          checkinstall \
-            --default \
-            --nodoc \
-            --pkgname="imei-libaom" \
-            --pkglicense="BSD-2-Clause" \
-            --pkgversion="$AOM_VER" \
-            --pkgrelease="imei$INSTALLER_VER" \
-            --pakdir="/usr/local/src" \
-            --requires="git,cmake \(\>= 3.6\),perl,yasm" &&
+          make
+          
+          if [ -z "$CHECKINSTALL" ]; then
+            echo "AV1 Video Codec Library (IMEI v$INSTALLER_VER)" >> description-pak &&
+            checkinstall \
+              --default \
+              --nodoc \
+              --pkgname="imei-libaom" \
+              --pkglicense="BSD-2-Clause" \
+              --pkgversion="$AOM_VER" \
+              --pkgrelease="imei$INSTALLER_VER" \
+              --pakdir="/usr/local/src" \
+              --requires="git,cmake \(\>= 3.6\),perl,yasm"
+          else
+            make install
+          fi
+          
           ldconfig
       fi
     } >>"$LOG_FILE" 2>&1
@@ -544,17 +575,23 @@ install_libheif() {
           cd "libheif-$LIBHEIF_VER" &&
           ./autogen.sh &&
           ./configure &&
-          make &&
-          echo "ISO/IEC 23008-12:2017 HEIF file format decoder (IMEI v$INSTALLER_VER)" >> description-pak &&
-          checkinstall \
-            --default \
-            --nodoc \
-            --pkgname="imei-libheif" \
-            --pkglicense="GPL-2.0-or-later" \
-            --pkgversion="$LIBHEIF_VER" \
-            --pkgrelease="imei$INSTALLER_VER" \
-            --pakdir="/usr/local/src" \
-            --requires="automake,make,pkg-config,libde265-dev,libx265-dev,libjpeg-dev,imei-libaom" &&
+          make
+          
+          if [ -z "$CHECKINSTALL" ]; then
+            echo "ISO/IEC 23008-12:2017 HEIF file format decoder (IMEI v$INSTALLER_VER)" >> description-pak &&
+            checkinstall \
+              --default \
+              --nodoc \
+              --pkgname="imei-libheif" \
+              --pkglicense="GPL-2.0-or-later" \
+              --pkgversion="$LIBHEIF_VER" \
+              --pkgrelease="imei$INSTALLER_VER" \
+              --pakdir="/usr/local/src" \
+              --requires="automake,make,pkg-config,libde265-dev,libx265-dev,libjpeg-dev,imei-libaom"
+          else
+            make install
+          fi
+          
           ldconfig
       fi
     } >>"$LOG_FILE" 2>&1
@@ -620,17 +657,23 @@ install_jxl() {
           mkdir "build" &&
           cd "build" &&
           cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF ..
-          make &&
-          echo "JPEG XL image format reference implementation (IMEI v$INSTALLER_VER)" >> description-pak &&
-          checkinstall \
-            --default \
-            --nodoc \
-            --pkgname="imei-libjxl" \
-            --pkglicense="Apache-2.0" \
-            --pkgversion="$JXL_VER" \
-            --pkgrelease="imei$INSTALLER_VER" \
-            --pakdir="/usr/local/src" \
-            --requires="cmake \(\>= 3.10\),pkg-config,libbrotli-dev,libgif-dev,libjpeg-dev,libopenexr-dev,libpng-dev,libwebp-dev" &&
+          make
+          
+          if [ -z "$CHECKINSTALL" ]; then
+            echo "JPEG XL image format reference implementation (IMEI v$INSTALLER_VER)" >> description-pak &&
+            checkinstall \
+              --default \
+              --nodoc \
+              --pkgname="imei-libjxl" \
+              --pkglicense="Apache-2.0" \
+              --pkgversion="$JXL_VER" \
+              --pkgrelease="imei$INSTALLER_VER" \
+              --pakdir="/usr/local/src" \
+              --requires="cmake \(\>= 3.10\),pkg-config,libbrotli-dev,libgif-dev,libjpeg-dev,libopenexr-dev,libpng-dev,libwebp-dev"
+          else
+            make install
+          fi
+          
           ldconfig
       fi
     } >>"$LOG_FILE" 2>&1
@@ -733,18 +776,24 @@ install_imagemagick() {
             --with-urw-base35-font-dir='/usr/share/fonts/type1/urw-base35' \
             --with-fontpath='/usr/share/fonts/type1' \
             PSDelegate='/usr/bin/gs' &&
-          make &&
-          echo "image manipulation programs (IMEI v$INSTALLER_VER)" >> description-pak &&
-          checkinstall \
-            --default \
-            --nodoc \
-            --pkgname=imei-imagemagick \
-            --pkglicense="Apache-2.0" \
-            --pkgversion="$IMAGEMAGICK_VER" \
-            --pkgrelease="imei$INSTALLER_VER" \
-            --pakdir="/usr/local/src" \
-            --conflicts="imagemagick" \
-            --requires="pkg-config,imei-libaom,imei-libheif,imei-libjxl" &&
+          make
+          
+          if [ -z "$CHECKINSTALL" ]; then
+            echo "image manipulation programs (IMEI v$INSTALLER_VER)" >> description-pak &&
+            checkinstall \
+              --default \
+              --nodoc \
+              --pkgname=imei-imagemagick \
+              --pkglicense="Apache-2.0" \
+              --pkgversion="$IMAGEMAGICK_VER" \
+              --pkgrelease="imei$INSTALLER_VER" \
+              --pakdir="/usr/local/src" \
+              --conflicts="imagemagick" \
+              --requires="pkg-config,imei-libaom,imei-libheif,imei-libjxl"
+          else
+            make install
+          fi
+          
           ldconfig
       fi
     } >>"$LOG_FILE" 2>&1
@@ -815,6 +864,7 @@ echo " Log File        : $LOG_FILE"
 echo ""
 echo " Force Build All : ${FORCE:-"no"}"
 echo " Force Build IM  : ${FORCE_IMAGEMAGICK:-"no"}"
+echo " Checkinstall    : ${CHECKINSTALL:-"yes"}"
 echo " CI Build        : ${CI_BUILD:-"no"}"
 echo " Signature Check : ${VERIFY_SIGNATURE:-"yes"}"
 echo ""
