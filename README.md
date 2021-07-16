@@ -145,7 +145,7 @@ Additional options / switches:
 
 ### checkinstall vs. make
 
-IMEI supports both, `checkinstall` and `make`. While `checkinstall` creates packages that you can uninstall at a later time, `make` doesn't, therefore it may be harder to remove everything, that has been installed by IMEI. However, `checkinstall` isn't always available and it contains some bugs, that might result in a broken installation of IMEI`s packages.
+IMEI supports both, `checkinstall` and `make`. While `checkinstall` creates packages that you can uninstall at a later time (e.g. `apt remove imei-imagemagick`), `make` doesn't, therefore it may be harder to remove everything, that has been installed by IMEI. However, `checkinstall` isn't always available and it contains some bugs, that might result in a broken installation of IMEI`s packages.
 
 IMEI uses `make` by default, but you can use `checkinstall` via option (see "Additional options / switches") instead.
 
