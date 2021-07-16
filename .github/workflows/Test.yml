@@ -43,7 +43,7 @@ jobs:
       - name: Build
         run: |
           sudo bash imei.sh --ci --no-sig-verify --log-file "/build.log"
-          [[ "$(magick -version)" == *"avif"* ]] && [[ "$(magick -version)" == *"heic"* ]] && [[ "$(magick -version)" == *"jxl"* ]] && echo "Test build OK" || exit 1
+          [[ "$(magick -version)" == *"heic"* ]] && [[ "$(magick -version)" == *"jxl"* ]] && echo "Test build OK" || exit 1
 
       - name: On failure
         if: ${{ failure() }}

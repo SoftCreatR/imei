@@ -47,7 +47,7 @@ jobs:
           echo "$PRIVATE_KEY" > /tmp/private.pem
           openssl dgst -sha512 -sign /tmp/private.pem -out /tmp/imei.sh.sig imei.sh
           sudo bash imei.sh --ci --log-file "/build.log"
-          [[ "$(magick -version)" == *"avif"* ]] && [[ "$(magick -version)" == *"heic"* ]] && [[ "$(magick -version)" == *"jxl"* ]] && echo "Test build OK" || exit 1
+          [[ "$(magick -version)" == *"heic"* ]] && [[ "$(magick -version)" == *"jxl"* ]] && echo "Test build OK" || exit 1
 
       - name: On failure
         if: ${{ failure() }}
