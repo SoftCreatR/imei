@@ -37,6 +37,9 @@ jobs:
       - name: Git checkout
         uses: actions/checkout@v2.3.4
 
+      - name: Uninstall ImageMagick
+        run: sudo apt-get remove imagemagick --purge -y
+
       - name: Build
         run: |
           sudo bash imei.sh --ci --no-sig-verify --log-file "/build.log"
