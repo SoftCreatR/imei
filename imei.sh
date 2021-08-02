@@ -129,7 +129,7 @@ if [ -z "$LOG_FILE" ]; then
 fi
 
 allowedQuantumDepth=(8 16 32)
-if [[ -z "$QUANTUM_DEPTH" || ! " ${allowedQuantumDepth[@]} " =~ " ${QUANTUM_DEPTH} " ]]; then
+if [[ -z "$QUANTUM_DEPTH" || ! " ${allowedQuantumDepth[*]} " =~ $QUANTUM_DEPTH ]]; then
   QUANTUM_DEPTH=8
 fi
 
