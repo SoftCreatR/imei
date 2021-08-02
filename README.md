@@ -112,6 +112,8 @@ Currently available build options are
 
 * `--skip-dependencies` / `--skip-deps` : Skip installation of dependencies
 * `--imagemagick-version` / `--im-version` : Build the given ImageMagick version (e.g. `7.0.10-28`)
+* `--force-imagemagick` / `--force-im` : Force building of ImageMagick only, even if it's are already installed in a newer or the latest version
+* `--imagemagick-quantum-depth` / `--im-q` : ImageMagick Quantum Depth (8, 16 or 32)
 * `--aom-version` : Build the given aom version (e.g. `2.0.0`)
 * `--skip-aom` : Skip building aom
 * `--libheif-version` / `--heif-version` : Build the given libheif version (e.g. `1.8.0`)
@@ -123,7 +125,6 @@ Currently available build options are
 * `--build-dir` : Build target directory for ImageMagick
 * `--config-dir` : Config target directory for ImageMagick
 * `--force` : Force building of components, even if they are already installed in a newer or the latest version
-* `--force-imagemagick` / `--force-im` : Force building of ImageMagick only, even if it's are already installed in a newer or the latest version
 
 Additional options / switches:
 
@@ -135,6 +136,7 @@ Additional options / switches:
 
 <!-- versions start -->
 * ImageMagick version: `7.1.0-4`
+* ImageMagick Quantum Depth: `8`
 * libaom version: `3.1.2`
 * libheif version: `1.12.0`
 * libjxl version: `0.3.7`<!-- versions end -->

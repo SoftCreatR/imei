@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2021-07-16 23:36                          #
+# Date           : 2021-08-08 05:02                          #
 # License        : ISC                                       #
-# Version        : 6.4.1                                     #
+# Version        : 6.5.0                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -52,6 +52,9 @@ while [ "$#" -gt 0 ]; do
     ;;
   --imagemagick-version|--im-version)
     IMAGEMAGICK_VER=$2
+    ;;
+  --imagemagick-quantum-depth|--im-q)
+    QUANTUM_DEPTH=$2
     ;;
   --skip-aom)
     SKIP_AOM="yes"
@@ -123,6 +126,11 @@ fi
 
 if [ -z "$LOG_FILE" ]; then
   LOG_FILE=/var/log/imei.log
+fi
+
+allowedQuantumDepth=(8 16 32)
+if [[ -z "$QUANTUM_DEPTH" || ! " ${allowedQuantumDepth[@]} " =~ " ${QUANTUM_DEPTH} " ]]; then
+  QUANTUM_DEPTH=8
 fi
 
 START=$(date +%s)
@@ -537,13 +545,6 @@ install_libheif() {
   if {
     echo -ne ' Building libheif              [..]\r'
 
-    if [ ! -L "$LIB_DIR/lib/libaom.so" ]; then
-        echo -ne " Building libheif              [${CYELLOW}SKIPPED (aom is required but not installed)${CEND}]\\r"
-        echo ""
-
-        return
-    fi
-
     if [ -z "$SKIP_LIBHEIF" ]; then
       if [ -z "$FORCE" ] && [ -z "$UPDATE_LIBHEIF" ] && [ -n "$INSTALLED_LIBHEIF_VER" ] && [ "$(version "$INSTALLED_LIBHEIF_VER")" -ge "$(version "$LIBHEIF_VER")" ]; then
         echo -ne " Building libheif              [${CYELLOW}SKIPPED${CEND}]\\r"
@@ -556,6 +557,13 @@ install_libheif() {
       echo ""
 
       return
+    fi
+
+    if [ ! -L "$LIB_DIR/lib/libaom.so" ]; then
+        echo -ne " Building libheif              [${CYELLOW}SKIPPED (aom is required but not installed)${CEND}]\\r"
+        echo ""
+
+        return
     fi
 
     {
@@ -697,10 +705,19 @@ install_imagemagick() {
   cd "$WORK_DIR" || exit 1
 
   if {
-    echo -ne ' Building ImageMagick          [..]\r'
+    if [ "$QUANTUM_DEPTH" -eq 8 ]; then
+      echo -ne ' Building ImageMagick (Q'"$QUANTUM_DEPTH"')     [..]\r'
+    else
+      echo -ne ' Building ImageMagick (Q'"$QUANTUM_DEPTH"')    [..]\r'
+    fi
 
     if [ -z "$FORCE" ] && [ -z "$FORCE_IMAGEMAGICK" ] && [ -z "$UPDATE_IMAGEMAGICK" ] && [ -n "$INSTALLED_IMAGEMAGICK_VER" ] && [ "$(version "${INSTALLED_IMAGEMAGICK_VER//-/}")" -ge "$(version "${IMAGEMAGICK_VER//-/}")" ]; then
-      echo -ne " Building ImageMagick          [${CYELLOW}SKIPPED${CEND}]\\r"
+      if [ "$QUANTUM_DEPTH" -eq 8 ]; then
+        echo -ne " Building ImageMagick (Q$QUANTUM_DEPTH)     [${CYELLOW}SKIPPED${CEND}]\\r"
+      else
+        echo -ne " Building ImageMagick (Q$QUANTUM_DEPTH)    [${CYELLOW}SKIPPED${CEND}]\\r"
+      fi
+      
       echo ""
 
       return
@@ -712,7 +729,12 @@ install_imagemagick() {
 
         if [ -n "$IMAGEMAGICK_HASH" ]; then
           if [ "$(sha1sum "ImageMagick-$IMAGEMAGICK_VER.tar.gz" | cut -b-40)" != "$IMAGEMAGICK_HASH" ]; then
-            echo -e " Building ImageMagick          [${CRED}FAILURE${CEND}]\\r"
+            if [ "$QUANTUM_DEPTH" -eq 8 ]; then
+              echo -e " Building ImageMagick (Q$QUANTUM_DEPTH)     [${CRED}FAILURE${CEND}]\\r"
+            else
+              echo -e " Building ImageMagick (Q$QUANTUM_DEPTH)    [${CRED}FAILURE${CEND}]\\r"
+            fi
+            
             echo ""
             echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
             echo ""
@@ -733,7 +755,7 @@ install_imagemagick() {
             --enable-docs \
             --with-threads \
             --with-modules \
-            --with-quantum-depth="32" \
+            --with-quantum-depth="$QUANTUM_DEPTH" \
             --with-magick-plus-plus \
             --with-perl \
             --without-jemalloc \
@@ -798,10 +820,20 @@ install_imagemagick() {
       fi
     } >>"$LOG_FILE" 2>&1
   }; then
-    echo -ne " Building ImageMagick          [${CGREEN}OK${CEND}]\\r"
+    if [ "$QUANTUM_DEPTH" -eq 8 ]; then
+      echo -ne " Building ImageMagick (Q$QUANTUM_DEPTH)     [${CGREEN}OK${CEND}]\\r"
+    else
+      echo -ne " Building ImageMagick (Q$QUANTUM_DEPTH)    [${CGREEN}OK${CEND}]\\r"
+    fi
+    
     echo ""
   else
-    echo -e " Building ImageMagick          [${CRED}FAILURE${CEND}]\\r"
+    if [ "$QUANTUM_DEPTH" -eq 8 ]; then
+      echo -e " Building ImageMagick (Q$QUANTUM_DEPTH)    [${CRED}FAILURE${CEND}]\\r"
+    else
+      echo -e " Building ImageMagick (Q$QUANTUM_DEPTH)   [${CRED}FAILURE${CEND}]\\r"
+    fi
+    
     echo ""
     echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
     echo ""
