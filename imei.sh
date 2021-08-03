@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2021-08-08 05:02                          #
+# Date           : 2021-08-03 22:16                          #
 # License        : ISC                                       #
-# Version        : 6.5.0                                     #
+# Version        : 6.5.1                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -725,7 +725,11 @@ install_imagemagick() {
 
     {
       if [ -n "$IMAGEMAGICK_VER" ]; then
-        httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick/tar.gz/$IMAGEMAGICK_VER" >"ImageMagick-$IMAGEMAGICK_VER.tar.gz"
+        if [ "$("$IMAGEMAGICK_VER" | cut -b-1)" -eq 6 ]; then
+          httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick6/tar.gz/$IMAGEMAGICK_VER" >"ImageMagick-$IMAGEMAGICK_VER.tar.gz"
+        else
+          httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick/tar.gz/$IMAGEMAGICK_VER" >"ImageMagick-$IMAGEMAGICK_VER.tar.gz"
+        fi
 
         if [ -n "$IMAGEMAGICK_HASH" ]; then
           if [ "$(sha1sum "ImageMagick-$IMAGEMAGICK_VER.tar.gz" | cut -b-40)" != "$IMAGEMAGICK_HASH" ]; then
