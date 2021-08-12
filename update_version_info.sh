@@ -133,7 +133,7 @@ else
 fi
 
 # Update README file
-REPLACEMENT="\n* ImageMagick version: \`$IMAGEMAGICK_VER\`\n"
+REPLACEMENT="\n* ImageMagick version: \`$IMAGEMAGICK_VER\` (Q8)\n"
 REPLACEMENT+="* libaom version: \`$LIBAOM_VER\`\n"
 REPLACEMENT+="* libheif version: \`$LIBHEIF_VER\`\n"
 REPLACEMENT+="* libjxl version: \`$LIBJXL_VER\`"
