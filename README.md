@@ -75,15 +75,19 @@ Every IMEI build will be automatically tested against the latest Ubuntu LTS Vers
 ### One-Step Automated Install
 
 ```bash
-bash <(wget -qO - https://dist.1-2.dev/imei.sh) --no-sig-verify
+t=$(mktemp) && \
+wget 'https://dist.1-2.dev/imei.sh' -qO "$t" && \
+bash "$t" && \
+rm "$t"
 ```
 
 ### Alternative Install Method
 
 ```bash
-git clone https://github.com/SoftCreatR/imei
-cd imei
-sudo ./imei.sh
+git clone https://github.com/SoftCreatR/imei && \
+cd imei && \
+chmod +x imei.sh && \
+./imei.sh
 ```
 
 ### Verify installer integrity
@@ -101,8 +105,8 @@ openssl dgst -sha512 -verify imei.sh.pem -signature imei.sh.sig imei.sh # Verify
 ### Alternative integrity check
 
 ```bash
-git clone https://github.com/SoftCreatR/imei
-cd imei
+git clone https://github.com/SoftCreatR/imei && \
+cd imei && \
 openssl dgst -sha512 -verify imei.sh.pem -signature imei.sh.sig imei.sh
 ```
 

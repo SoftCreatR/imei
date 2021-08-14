@@ -30,10 +30,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: fauguste/auto-cancellation-running-action@0.1.4
-        with:
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Git checkout
         uses: actions/checkout@v2.3.4
 

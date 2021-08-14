@@ -30,22 +30,13 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: fauguste/auto-cancellation-running-action@0.1.4
-        with:
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Git checkout
         uses: actions/checkout@v2.3.4
-
-      - name: Uninstall ImageMagick
-        run: sudo apt-get remove imagemagick* --purge -y
 
       - name: Build
         env:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         run: |-
-          echo "$PRIVATE_KEY" > /tmp/private.pem
-          openssl dgst -sha512 -sign /tmp/private.pem -out /tmp/imei.sh.sig imei.sh
           sudo bash imei.sh --ci --log-file "/build.log"
           [[ "$(magick -version)" == *"heic"* ]] && [[ "$(magick -version)" == *"jxl"* ]] && echo "Test build OK" || exit 1
 
@@ -60,9 +51,6 @@ jobs:
     steps:
       - name: Git checkout
         uses: actions/checkout@v2.3.4
-
-      - name: Install Dependencies
-        run: sudo apt-get install openssl
 
       - name: Sign release
         env:
