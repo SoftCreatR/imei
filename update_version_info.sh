@@ -113,7 +113,7 @@ else
 fi
 
 # Get version information for libjxl and write it to file
-LIBJXL_VER=$(httpGet "$GH_API_BASE/libjxl/libjxl/tags" | jq -r '[.[] | select(.name|test("^v[0-9]+.[0-9]+.[0-9]+$")) | .name[1:]] | join("\n")' | sort -rV | head -1)
+LIBJXL_VER=$(httpGet "$GH_API_BASE/libjxl/libjxl/tags" | jq -r '[.[] | select(.name|test("^v[0-9]+.[0-9]+(.[0-9]+)?$")) | .name[1:]] | join("\n")' | sort -rV | head -1)
 
 if [ -n "$LIBJXL_VER" ]; then
   echo "$LIBJXL_VER" > "$WORKDIR/versions/libjxl.version"
