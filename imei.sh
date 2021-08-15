@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2021-08-03 22:16                          #
+# Date           : 2021-08-15 13:37                          #
 # License        : ISC                                       #
-# Version        : 6.5.1                                     #
+# Version        : 6.5.2                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -24,7 +24,7 @@
 }
 
 command_exists() {
-  command -v "$@" >/dev/null 2>&1
+  command -v "$@" > /dev/null 2>&1
 }
 
 # Make sure, that we are on Debian or Ubuntu
@@ -35,7 +35,7 @@ fi
 
 # Checking if lsb_release is installed or install it
 if ! command_exists lsb_release; then
-  apt-get update && apt-get install -qq lsb-release >/dev/null 2>&1
+  apt-get update && apt-get install -qq lsb-release > /dev/null 2>&1
 fi
 
 ####################
@@ -137,8 +137,6 @@ START=$(date +%s)
 OS_DISTRO="$(lsb_release -ds)"
 OS_SHORT_CODENAME="$(lsb_release -sc)"
 OS_ARCH="$(uname -m)"
-SIGNATURE_FILE="/tmp/imei.sh.sig"
-PUBLIC_KEY_FILE="/tmp/imei.sh.pem"
 GH_FILE_BASE="https://codeload.github.com"
 SOURCE_LIST="/etc/apt/sources.list.d/imei.list"
 LIB_DIR="/usr/local"
@@ -193,11 +191,11 @@ cleanup() {
 }
 
 getClient() {
-  if command -v curl &>/dev/null; then
+  if command -v curl &> /dev/null; then
     CLIENT="curl"
-  elif command -v wget &>/dev/null; then
+  elif command -v wget &> /dev/null; then
     CLIENT="wget"
-  elif command -v http &>/dev/null; then
+  elif command -v http &> /dev/null; then
     CLIENT="httpie"
   else
     echo -e "${CRED}This tool requires either curl, wget or httpie to be installed.${CEND}" >&2
@@ -215,6 +213,19 @@ httpGet() {
   wget) wget -qO- --header="$AUTHORIZATION" "$@" ;;
   httpie) http -b GET "$@" "$AUTHORIZATION" ;;
   esac
+}
+
+getImeiInfo() {
+  local IMEI_INFO
+
+  if ! command_exists jq; then
+    apt-get update && apt-get install -qq jq > /dev/null 2>&1
+  fi
+
+  IMEI_INFO=$(httpGet "https://api.github.com/repos/SoftCreatR/imei/tags")
+
+  IMEI_LATEST_VERSION_COMMIT=$(echo "$IMEI_INFO" | jq -r '.[0].commit.sha')
+  IMEI_LATEST_VERSION_NAME=$(echo "$IMEI_INFO" | jq -r '.[0].name')
 }
 
 ########
@@ -244,11 +255,15 @@ if [ -z "$CLIENT" ]; then
   getClient || exit 1
 fi
 
+if [ -z "$IMEI_LATEST_VERSION_NAME" ]; then
+  getImeiInfo || exit 1
+fi
+
 ###################
 # Integrity check #
 ###################
 
-if [ -z "$VERIFY_SIGNATURE" ] && [ -f "$0" ]; then
+if [ -z "$CI_BUILD" ] && [ -z "$VERIFY_SIGNATURE" ] && [ -f "$0" ]; then
   sigCleanup() {
     if [ -f "$SIGNATURE_FILE" ]; then
       rm "$SIGNATURE_FILE"
@@ -261,18 +276,18 @@ if [ -z "$VERIFY_SIGNATURE" ] && [ -f "$0" ]; then
 
   # Install OpenSSL, if it's not already installed
   if ! command_exists openssl; then
-    apt-get update && apt-get install -qq openssl >/dev/null 2>&1
+    apt-get update && apt-get install -qq openssl > /dev/null 2>&1
   fi
 
   if {
-    httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh.sig" >"$SIGNATURE_FILE"
+    httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/$IMEI_LATEST_VERSION_COMMIT/imei.sh.sig" > "$SIGNATURE_FILE"
 
     if [ ! -f "$PUBLIC_KEY_FILE" ]; then
-      httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh.pem" >"$PUBLIC_KEY_FILE"
+      httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/$IMEI_LATEST_VERSION_COMMIT/imei.sh.pem" > "$PUBLIC_KEY_FILE"
     fi
 
     openssl dgst -sha512 -verify "$PUBLIC_KEY_FILE" -signature "$SIGNATURE_FILE" "$0"
-  } >>"$LOG_FILE" 2>&1; then
+  } >> "$LOG_FILE" 2>&1; then
     sigCleanup
 
     echo -ne "\ec"
@@ -294,7 +309,7 @@ fi
 
 if [ -f "$0" ]; then
   INSTALLER_VER=$(grep -oP 'Version\s+:\s+\K([\d\.]+)' "$0")
-  INSTALLER_LATEST_VER=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/imei.sh" | grep -oP 'Version\s+:\s+\K([\d\.]+)')
+  INSTALLER_LATEST_VER="$IMEI_LATEST_VERSION_NAME"
 fi
 
 if [ -z "$IMAGEMAGICK_VER" ]; then
@@ -414,7 +429,7 @@ install_deps() {
       else
         SKIP_BUILD_DEP="yes"
       fi
-    } >>"$SOURCE_LIST"
+    } >> "$SOURCE_LIST"
 
     # Update package list and satisfy build dependencies for imagemagick
     if [ -n "$SKIP_BUILD_DEP" ]; then
@@ -438,7 +453,7 @@ install_deps() {
     apt-get install -y "${PKG_LIST[@]}"
 
     CMAKE_VERSION=$(cmake --version | head -n1 | cut -d" " -f3)
-  } >>"$LOG_FILE" 2>&1; then
+  } >> "$LOG_FILE" 2>&1; then
     echo -ne " Installing dependencies       [${CGREEN}OK${CEND}]\\r"
     echo ""
   else
@@ -481,7 +496,7 @@ install_aom() {
 
     {
       if [ -n "$AOM_VER" ]; then
-        httpGet "$GH_FILE_BASE/jbeich/aom/tar.gz/v$AOM_VER" >"aom-$AOM_VER.tar.gz"
+        httpGet "$GH_FILE_BASE/jbeich/aom/tar.gz/v$AOM_VER" > "aom-$AOM_VER.tar.gz"
 
         if [ -n "$AOM_HASH" ]; then
           if [ "$(sha1sum "aom-$AOM_VER.tar.gz" | cut -b-40)" != "$AOM_HASH" ]; then
@@ -522,7 +537,7 @@ install_aom() {
           
           ldconfig
       fi
-    } >>"$LOG_FILE" 2>&1
+    } >> "$LOG_FILE" 2>&1
   }; then
     UPDATE_LIBHEIF="yes"
 
@@ -602,7 +617,7 @@ install_libheif() {
           
           ldconfig
       fi
-    } >>"$LOG_FILE" 2>&1
+    } >> "$LOG_FILE" 2>&1
   }; then
     UPDATE_IMAGEMAGICK="yes"
 
@@ -684,7 +699,7 @@ install_jxl() {
           
           ldconfig
       fi
-    } >>"$LOG_FILE" 2>&1
+    } >> "$LOG_FILE" 2>&1
   }; then
     UPDATE_IMAGEMAGICK="yes"
 
@@ -726,9 +741,9 @@ install_imagemagick() {
     {
       if [ -n "$IMAGEMAGICK_VER" ]; then
         if [ "$("$IMAGEMAGICK_VER" | cut -b-1)" -eq 6 ]; then
-          httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick6/tar.gz/$IMAGEMAGICK_VER" >"ImageMagick-$IMAGEMAGICK_VER.tar.gz"
+          httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick6/tar.gz/$IMAGEMAGICK_VER" > "ImageMagick-$IMAGEMAGICK_VER.tar.gz"
         else
-          httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick/tar.gz/$IMAGEMAGICK_VER" >"ImageMagick-$IMAGEMAGICK_VER.tar.gz"
+          httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick/tar.gz/$IMAGEMAGICK_VER" > "ImageMagick-$IMAGEMAGICK_VER.tar.gz"
         fi
 
         if [ -n "$IMAGEMAGICK_HASH" ]; then
@@ -822,7 +837,7 @@ install_imagemagick() {
           
           ldconfig
       fi
-    } >>"$LOG_FILE" 2>&1
+    } >> "$LOG_FILE" 2>&1
   }; then
     if [ "$QUANTUM_DEPTH" -eq 8 ]; then
       echo -ne " Building ImageMagick (Q$QUANTUM_DEPTH)     [${CGREEN}OK${CEND}]\\r"
@@ -852,7 +867,7 @@ finish_installation() {
   # Check if ImageMagick version matches
   {
     VERIFY_INSTALLATION=$("$BUILD_DIR/bin/magick" -version | grep -oP "$IMAGEMAGICK_VER")
-  } >>"$LOG_FILE" 2>&1
+  } >> "$LOG_FILE" 2>&1
 
   if [ -n "$VERIFY_INSTALLATION" ]; then
     echo -ne " Verifying installation        [${CGREEN}OK${CEND}]\\r"
