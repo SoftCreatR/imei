@@ -27,7 +27,7 @@ jobs:
 
   TestBuild:
     needs: ShellCheck
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     
     steps:
       - name: Git checkout
@@ -37,12 +37,14 @@ jobs:
         env:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         run: |-
-          sudo bash imei.sh --ci --log-file "/build.log"
+          sudo apt-get update -qq
+          sudo apt-get upgrade -y
+          sudo bash imei.sh --ci --im-q 8 --log-file "/build.log"
           [[ "$(magick -version)" == *"heic"* ]] && [[ "$(magick -version)" == *"jxl"* ]] && echo "Test build OK" || exit 1
 
       - name: On failure
         if: ${{ failure() }}
-        run: sudo tail -25 /build.log
+        run: cat /build.log
 
   Sign:
     needs: TestBuild

@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2021-08-15 13:37                          #
+# Date           : 2021-08-18 22:44                          #
 # License        : ISC                                       #
-# Version        : 6.5.2                                     #
+# Version        : 6.5.3                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -130,7 +130,7 @@ fi
 
 allowedQuantumDepth=(8 16 32)
 if [[ -z "$QUANTUM_DEPTH" || ! " ${allowedQuantumDepth[*]} " =~ $QUANTUM_DEPTH ]]; then
-  QUANTUM_DEPTH=8
+  QUANTUM_DEPTH=16
 fi
 
 START=$(date +%s)
@@ -264,6 +264,9 @@ fi
 ###################
 
 if [ -z "$CI_BUILD" ] && [ -z "$VERIFY_SIGNATURE" ] && [ -f "$0" ]; then
+  SIGNATURE_FILE="/tmp/imei.sh.sig"
+  PUBLIC_KEY_FILE="/tmp/imei.sh.pem"
+
   sigCleanup() {
     if [ -f "$SIGNATURE_FILE" ]; then
       rm "$SIGNATURE_FILE"
