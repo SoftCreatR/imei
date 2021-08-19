@@ -27,7 +27,7 @@ jobs:
 
   TestBuild:
     needs: ShellCheck
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     
     steps:
       - name: Git checkout
