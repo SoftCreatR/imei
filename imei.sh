@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2021-08-18 22:44                          #
+# Date           : 2021-10-06 15:17                          #
 # License        : ISC                                       #
-# Version        : 6.5.3                                     #
+# Version        : 6.5.4                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -522,7 +522,7 @@ install_aom() {
           cd "$WORK_DIR/build_aom" &&
           cmake "../aom-$AOM_VER/" "$CMAKE_FLAGS" &&
           make
-          
+
           if [ -n "$CHECKINSTALL" ]; then
             echo "AV1 Video Codec Library (IMEI v$INSTALLER_VER)" >> description-pak &&
             checkinstall \
@@ -537,7 +537,7 @@ install_aom() {
           else
             make install
           fi
-          
+
           ldconfig
       fi
     } >> "$LOG_FILE" 2>&1
@@ -602,7 +602,7 @@ install_libheif() {
           ./autogen.sh &&
           ./configure &&
           make
-          
+
           if [ -n "$CHECKINSTALL" ]; then
             echo "ISO/IEC 23008-12:2017 HEIF file format decoder (IMEI v$INSTALLER_VER)" >> description-pak &&
             checkinstall \
@@ -617,7 +617,7 @@ install_libheif() {
           else
             make install
           fi
-          
+
           ldconfig
       fi
     } >> "$LOG_FILE" 2>&1
@@ -666,10 +666,10 @@ install_jxl() {
 
     {
       if [ -n "$JXL_VER" ]; then
-        httpGet "https://gitlab.com/wg1/jpeg-xl/-/archive/v$JXL_VER/jpeg-xl-v$JXL_VER.tar" > "jpeg-xl-v$JXL_VER.tar"
+        httpGet "$GH_FILE_BASE/libjxl/libjxl/tar.gz/v$JXL_VER" > "libjxl-$JXL_VER.tar.gz"
 
         if [ -n "$JXL_HASH" ]; then
-          if [ "$(sha1sum "jpeg-xl-v$JXL_VER.tar" | cut -b-40)" != "$JXL_HASH" ]; then
+          if [ "$(sha1sum "libjxl-$JXL_VER.tar.gz" | cut -b-40)" != "$JXL_HASH" ]; then
             echo -e " Building jpegxl               [${CRED}FAILURE${CEND}]\\r"
             echo ""
             echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
@@ -677,14 +677,14 @@ install_jxl() {
           fi
         fi
 
-        tar -xf "jpeg-xl-v$JXL_VER.tar" &&
-          cd "jpeg-xl-v$JXL_VER" &&
+        tar -xf "libjxl-$JXL_VER.tar.gz" &&
+          cd "libjxl-$JXL_VER" &&
           ./deps.sh &&
           mkdir "build" &&
           cd "build" &&
           cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF ..
           make
-          
+
           if [ -n "$CHECKINSTALL" ]; then
             echo "JPEG XL image format reference implementation (IMEI v$INSTALLER_VER)" >> description-pak &&
             checkinstall \
@@ -699,7 +699,7 @@ install_jxl() {
           else
             make install
           fi
-          
+
           ldconfig
       fi
     } >> "$LOG_FILE" 2>&1
@@ -735,7 +735,7 @@ install_imagemagick() {
       else
         echo -ne " Building ImageMagick (Q$QUANTUM_DEPTH)    [${CYELLOW}SKIPPED${CEND}]\\r"
       fi
-      
+
       echo ""
 
       return
@@ -756,7 +756,7 @@ install_imagemagick() {
             else
               echo -e " Building ImageMagick (Q$QUANTUM_DEPTH)    [${CRED}FAILURE${CEND}]\\r"
             fi
-            
+
             echo ""
             echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
             echo ""
@@ -821,7 +821,7 @@ install_imagemagick() {
             --with-fontpath='/usr/share/fonts/type1' \
             PSDelegate='/usr/bin/gs' &&
           make
-          
+
           if [ -n "$CHECKINSTALL" ]; then
             echo "image manipulation programs (IMEI v$INSTALLER_VER)" >> description-pak &&
             checkinstall \
@@ -837,7 +837,7 @@ install_imagemagick() {
           else
             make install
           fi
-          
+
           ldconfig
       fi
     } >> "$LOG_FILE" 2>&1
@@ -847,7 +847,7 @@ install_imagemagick() {
     else
       echo -ne " Building ImageMagick (Q$QUANTUM_DEPTH)    [${CGREEN}OK${CEND}]\\r"
     fi
-    
+
     echo ""
   else
     if [ "$QUANTUM_DEPTH" -eq 8 ]; then
@@ -855,7 +855,7 @@ install_imagemagick() {
     else
       echo -e " Building ImageMagick (Q$QUANTUM_DEPTH)   [${CRED}FAILURE${CEND}]\\r"
     fi
-    
+
     echo ""
     echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
     echo ""
