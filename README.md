@@ -140,7 +140,7 @@ Additional options / switches:
 
 <!-- versions start -->
 * ImageMagick version: `7.1.0-10` (Q8)
-* libaom version: `3.1.3`
+* libaom version: `3.2.0`
 * libheif version: `1.12.0`
 * libjxl version: `0.6`<!-- versions end -->
 * Log File: `/var/log/imei.log`
