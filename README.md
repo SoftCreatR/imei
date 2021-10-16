@@ -21,7 +21,7 @@
 <a href="#contributing"> Contributing</a> •
 <a href="#license"> License</a>
 
-![Screenshot](imei.png)
+![Screenshot](screenshot.png)
 
 </div>
 
