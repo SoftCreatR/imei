@@ -743,7 +743,8 @@ install_imagemagick() {
 
     {
       if [ -n "$IMAGEMAGICK_VER" ]; then
-        if [ "$("$IMAGEMAGICK_VER" | cut -b-1)" -eq 6 ]; then
+        if [ "$(echo "$IMAGEMAGICK_VER" | cut -b-1)" -eq 6 ]; then
+          legacyRelease=6
           httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick6/tar.gz/$IMAGEMAGICK_VER" > "ImageMagick-$IMAGEMAGICK_VER.tar.gz"
         else
           httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick/tar.gz/$IMAGEMAGICK_VER" > "ImageMagick-$IMAGEMAGICK_VER.tar.gz"
@@ -764,7 +765,7 @@ install_imagemagick() {
         fi
 
         tar -xf "ImageMagick-$IMAGEMAGICK_VER.tar.gz" &&
-          cd "ImageMagick-$IMAGEMAGICK_VER" &&
+          cd "ImageMagick$legacyRelease-$IMAGEMAGICK_VER" &&
           ./configure --prefix="$BUILD_DIR" --sysconfdir="$CONFIG_DIR" \
             CFLAGS="-O3 -march=native" \
             CXXFLAGS="-O3 -march=native" \
