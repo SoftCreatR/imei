@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2021-10-06 15:17                          #
+# Date           : 2021-10-06 22:26                          #
 # License        : ISC                                       #
-# Version        : 6.5.4                                     #
+# Version        : 6.5.5                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -743,7 +743,11 @@ install_imagemagick() {
 
     {
       if [ -n "$IMAGEMAGICK_VER" ]; then
-        if [ "$("$IMAGEMAGICK_VER" | cut -b-1)" -eq 6 ]; then
+        DIR_SUFFIX=""
+
+        if [ "$(echo "$IMAGEMAGICK_VER" | cut -b-1)" -eq 6 ]; then
+          DIR_SUFFIX="6"
+
           httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick6/tar.gz/$IMAGEMAGICK_VER" > "ImageMagick-$IMAGEMAGICK_VER.tar.gz"
         else
           httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick/tar.gz/$IMAGEMAGICK_VER" > "ImageMagick-$IMAGEMAGICK_VER.tar.gz"
@@ -764,7 +768,7 @@ install_imagemagick() {
         fi
 
         tar -xf "ImageMagick-$IMAGEMAGICK_VER.tar.gz" &&
-          cd "ImageMagick-$IMAGEMAGICK_VER" &&
+          cd "ImageMagick$DIR_SUFFIX-$IMAGEMAGICK_VER" &&
           ./configure --prefix="$BUILD_DIR" --sysconfdir="$CONFIG_DIR" \
             CFLAGS="-O3 -march=native" \
             CXXFLAGS="-O3 -march=native" \
@@ -833,7 +837,7 @@ install_imagemagick() {
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="/usr/local/src" \
               --conflicts="imagemagick" \
-              --requires="pkg-config,imei-libaom,imei-libheif,imei-libjxl"
+              --requires="pkg-config"
           else
             make install
           fi
@@ -869,7 +873,7 @@ finish_installation() {
 
   # Check if ImageMagick version matches
   {
-    VERIFY_INSTALLATION=$("$BUILD_DIR/bin/magick" -version | grep -oP "$IMAGEMAGICK_VER")
+    VERIFY_INSTALLATION=$("$BUILD_DIR/bin/identify" -version | grep -oP "$IMAGEMAGICK_VER")
   } >> "$LOG_FILE" 2>&1
 
   if [ -n "$VERIFY_INSTALLATION" ]; then
