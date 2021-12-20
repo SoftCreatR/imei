@@ -18,10 +18,10 @@ jobs:
 
     steps:
       - name: Git checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.4.0
 
       - name: Run Shellcheck
-        uses: azohra/shell-linter@v0.5.0
+        uses: azohra/shell-linter@v0.6.0
         with:
           path: 'imei.sh'
 
@@ -31,7 +31,7 @@ jobs:
     
     steps:
       - name: Git checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.4.0
 
       - name: Build
         env:
@@ -52,7 +52,7 @@ jobs:
 
     steps:
       - name: Git checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.4.0
 
       - name: Sign release
         env:

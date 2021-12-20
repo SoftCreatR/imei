@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Git checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.4.0
 
       - name: Update Version Information
         run: sudo bash update_version_info.sh -- && echo "OK"
