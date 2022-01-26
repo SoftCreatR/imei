@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2021-10-06 22:26                          #
+# Date           : 2022-01-26 14:25                          #
 # License        : ISC                                       #
-# Version        : 6.5.5                                     #
+# Version        : 6.6.0                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -114,6 +114,9 @@ export DEBIAN_FRONTEND=noninteractive
 
 if [ -z "$WORK_DIR" ]; then
   WORK_DIR=/usr/local/src/imei
+elif [ -d "$WORK_DIR" ] && [ "$(ls -A $WORK_DIR)" ]; then
+  echo -e "${CRED}Work Dir $WORK_DIR is not empty!${CEND}" >&2
+  return 1
 fi
 
 if [ -z "$BUILD_DIR" ]; then
