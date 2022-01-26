@@ -125,7 +125,7 @@ Currently available build options are
 * `--jpeg-xl-version` / `--jxl-version` : Build the given JPEG XL version (e.g. `0.3.3`)
 * `--skip-jpeg-xl` / `--skip-jxl` : Skip building JPEG XL
 * `--log-file` : Log everything to the file provided
-* `--work-dir` : Download, extract & build within the directory provided
+* `--work-dir` : **DANGER directory will be deleted and re-created**. Download, extract & build within the directory provided
 * `--build-dir` : Build target directory for ImageMagick
 * `--config-dir` : Config target directory for ImageMagick
 * `--force` : Force building of components, even if they are already installed in a newer or the latest version
