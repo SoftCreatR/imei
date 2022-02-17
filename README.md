@@ -139,8 +139,8 @@ Additional options / switches:
 **Default options** :
 
 <!-- versions start -->
-* ImageMagick version: `7.1.0-24 (Q16)`
-* libaom version: `3.2.0`
+* ImageMagick version: `7.1.0-25 (Q16)`
+* libaom version: `3.3.0`
 * libheif version: `1.12.0`
 * libjxl version: `0.6.1`<!-- versions end -->
 * Log File: `/var/log/imei.log`
