@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2022-01-26 14:25                          #
+# Date           : 2022-04-30 14:10                          #
 # License        : ISC                                       #
-# Version        : 6.6.0                                     #
+# Version        : 6.6.1                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -101,6 +101,12 @@ while [ "$#" -gt 0 ]; do
   --no-backports)
     BACKPORTS="${CYELLOW}disabled${CEND}"
     ;;
+  --build-cflags)
+    BUILD_CFLAGS=$2
+    ;;
+  --build-cxxflags)
+    BUILD_CXXFLAGS=$2
+    ;;
   *) ;;
   esac
   shift
@@ -134,6 +140,14 @@ fi
 allowedQuantumDepth=(8 16 32)
 if [[ -z "$QUANTUM_DEPTH" || ! " ${allowedQuantumDepth[*]} " =~ $QUANTUM_DEPTH ]]; then
   QUANTUM_DEPTH=16
+fi
+
+if [ -z "$BUILD_CFLAGS" ]; then
+  BUILD_CFLAGS="-O3 -march=native"
+fi
+
+if [ -z "$BUILD_CXXFLAGS" ]; then
+  BUILD_CXXFLAGS="-O3 -march=native"
 fi
 
 START=$(date +%s)
@@ -773,8 +787,8 @@ install_imagemagick() {
         tar -xf "ImageMagick-$IMAGEMAGICK_VER.tar.gz" &&
           cd "ImageMagick$DIR_SUFFIX-$IMAGEMAGICK_VER" &&
           ./configure --prefix="$BUILD_DIR" --sysconfdir="$CONFIG_DIR" \
-            CFLAGS="-O3 -march=native" \
-            CXXFLAGS="-O3 -march=native" \
+            CFLAGS="$BUILD_CFLAGS" \
+            CXXFLAGS="$BUILD_CXXFLAGS" \
             --disable-static \
             --enable-shared \
             --enable-openmp \

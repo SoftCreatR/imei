@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Git checkout
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Run Shellcheck
         uses: azohra/shell-linter@v0.6.0
@@ -31,7 +31,7 @@ jobs:
     
     steps:
       - name: Git checkout
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Build
         env:
@@ -40,7 +40,9 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get upgrade -y
           sudo bash imei.sh --ci --im-q 8 --log-file "/build.log"
-          [[ "$(magick -version)" == *"heic"* ]] && [[ "$(magick -version)" == *"jxl"* ]] && echo "Test build OK" || exit 1
+          /usr/local/bin/identify -version
+          # [[ "$(/usr/local/bin/identify -version)" == *"heic"* ]] && [[ "$(/usr/local/bin/identify -version)" == *"jxl"* ]] && echo "Test build OK" || (echo "Test build FAILED" && exit 1)
+          [[ "$(/usr/local/bin/identify -version)" == *"jxl"* ]] && echo "Test build OK" || (echo "Test build FAILED" && exit 1)
 
       - name: On failure
         if: ${{ failure() }}
@@ -52,7 +54,7 @@ jobs:
 
     steps:
       - name: Git checkout
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Sign release
         env:
