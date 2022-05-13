@@ -14,7 +14,7 @@ on:
 
 jobs:
   ShellCheck:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-18.04
 
     steps:
       - name: Git checkout
@@ -27,7 +27,7 @@ jobs:
 
   TestBuild:
     needs: ShellCheck
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-18.04
     
     steps:
       - name: Git checkout
@@ -50,7 +50,7 @@ jobs:
 
   Sign:
     needs: TestBuild
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-18.04
 
     steps:
       - name: Git checkout
