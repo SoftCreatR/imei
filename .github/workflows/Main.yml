@@ -5,7 +5,7 @@ on:
   push:
     paths:
       - 'imei.sh'
-      - 'versions/*.*'
+      - 'versions/*'
     branches:
       - '**'
     tags-ignore:
@@ -14,7 +14,7 @@ on:
 
 jobs:
   ShellCheck:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Git checkout
@@ -27,7 +27,7 @@ jobs:
 
   TestBuild:
     needs: ShellCheck
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     
     steps:
       - name: Git checkout
@@ -37,11 +37,8 @@ jobs:
         env:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         run: |-
-          sudo apt-get update -qq
-          sudo apt-get upgrade -y
-          sudo bash imei.sh --ci --im-q 8 --log-file "/build.log"
+          sudo bash imei.sh --ci --log-file "/build.log"
           /usr/local/bin/identify -version
-          # [[ "$(/usr/local/bin/identify -version)" == *"heic"* ]] && [[ "$(/usr/local/bin/identify -version)" == *"jxl"* ]] && echo "Test build OK" || (echo "Test build FAILED" && exit 1)
           [[ "$(/usr/local/bin/identify -version)" == *"jxl"* ]] && echo "Test build OK" || (echo "Test build FAILED" && exit 1)
 
       - name: On failure
@@ -50,7 +47,7 @@ jobs:
 
   Sign:
     needs: TestBuild
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Git checkout

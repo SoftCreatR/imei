@@ -31,8 +31,7 @@
 
 * Compiles the latest ImageMagick release
 * Installs ImageMagick or updates ImageMagick package previously installed (via IMEI)
-* Additional HEIF support
-* Additional HEIX support
+* Additional HEIF/HEIC/HEIX support
 * Additional AVIF support
 * Additional JPEG XL support
 
@@ -40,33 +39,38 @@
 
 ## Compatibility
 
-Every IMEI build will be automatically tested against the latest Ubuntu LTS Versions (16.04 and newer) using GitHub Actions. Compatibility with other operating systems (such as Debian 10) is tested manually.
+Every IMEI build will be automatically tested against the latest Ubuntu LTS Versions (16.04 and newer) using GitHub Actions. Compatibility with other operating systems (such as Debian 10, or Ubuntu 21.04) is tested manually.
 
 ### Operating System
 
 #### Recommended
 
-* Ubuntu 20.04 (__Focal__ Fossa)
-* Ubuntu 18.04 (__Bionic__ Beaver)
-* Debian 10 (__Buster__)
-* Raspbian 10 (__Buster__)
+* Ubuntu 22.04 (__Focal__ Fossa)
+* Debian 11 (__Bullseye__)
 
 #### Also compatible
 
 * Ubuntu 21.10 (__Impish__ Indri)
 * Ubuntu 21.04 (__Hirsute__ Hippo)
 * Ubuntu 20.10 (__Groovy__ Gorilla)
+* Ubuntu 20.04 (__Focal__ Fossa)
 * Ubuntu 19.10 (__Eoan__ Ermine)
+* Ubuntu 19.04 (__Disco__ Dingo)
+* Ubuntu 18.10 (__Cosmic__ Cuttlefish)
+* Ubuntu 18.04 (__Bionic__ Beaver)
+* Ubuntu 17.10 (__Artful__ Aardvark)
 * Ubuntu 17.04 (__Zesty__ Zapus)
+* Ubuntu 16.10 (__Yakkety__ Yak)
 * Ubuntu 16.04 (__Xenial__ Xerus)
-* Debian 11 (__Bullseye__)
+* Debian 12 (__Bookworm__)
+* Debian 10 (__Buster__)
 * Debian 9 (__Stretch__)
-* Raspbian 9 (__Stretch__)
 
 #### Known issues
 
 * For JPEG XL, CMake 3.10 or newer is required. On older systems (e.g. Debian 9), the maintainers version isn't sufficient. In this case, JPEG XL compilation will be skipped.
 * For libaom, CMake 3.6 or newer is required. On older systems, the maintainers version may be not sufficient. In this case, libaom compilation will be skipped. Without libaom, libheif will be skipped too.
+* When building using GitHub actions, `heic` isn't reported as built-in delegate. While it did in the past, it stopped out of sudden. So you better avoid using it as assertion for tests.
 
 ---
 

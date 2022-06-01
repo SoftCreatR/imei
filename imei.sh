@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2022-04-30 14:10                          #
+# Date           : 2022-06-01 11:54                          #
 # License        : ISC                                       #
-# Version        : 6.6.1                                     #
+# Version        : 6.6.2                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -455,8 +455,6 @@ install_deps() {
     if [ -n "$SKIP_BUILD_DEP" ]; then
       apt-get update -qq &&
       apt-get build-dep -qq imagemagick -y
-    elif [ -z "$CI_BUILD" ]; then
-      apt-get update -qq
     fi
 
     # Install other build dependencies
