@@ -1,5 +1,4 @@
----
-name: UpdateVersionInfo
+name: Update Version Information
 
 on:
   push:
@@ -15,11 +14,11 @@ on:
 
 jobs:
   Update:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Git checkout
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Update Version Information
         run: sudo bash update_version_info.sh -- && echo "OK"

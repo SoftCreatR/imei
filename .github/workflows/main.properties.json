@@ -1,0 +1,5 @@
+{
+  "name": "Main",
+  "description": "Action to validate the program code, perform a functional test build and sign the code, if changes to the program code have been made.",
+  "iconName": "github-octocat"
+}

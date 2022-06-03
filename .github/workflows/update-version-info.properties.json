@@ -1,0 +1,5 @@
+{
+  "name": "Update Version Information",
+  "description": "Action to update version information of libaom, libheif, libjxl & ImageMagick once a day.",
+  "iconName": "github-octocat"
+}
