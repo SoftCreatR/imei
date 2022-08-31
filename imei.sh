@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2022-06-01 11:54                          #
+# Date           : 2022-08-31 09:01                          #
 # License        : ISC                                       #
-# Version        : 6.6.2                                     #
+# Version        : 6.6.3                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -790,10 +790,10 @@ install_imagemagick() {
             --disable-static \
             --enable-shared \
             --enable-openmp \
-            --enable-opencl \
             --enable-cipher \
             --enable-hdri \
             --enable-docs \
+            --disable-opencl \
             --with-threads \
             --with-modules \
             --with-quantum-depth="$QUANTUM_DEPTH" \
