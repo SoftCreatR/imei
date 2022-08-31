@@ -8,7 +8,7 @@
 # Author         : Sascha Greuel <hello@1-2.dev>             #
 # Date           : 2022-08-31 09:01                          #
 # License        : ISC                                       #
-# Version        : 6.6.3                                     #
+# Version        : 6.6.4                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -535,7 +535,7 @@ install_aom() {
         tar -xf "aom-$AOM_VER.tar.gz" &&
           mkdir "$WORK_DIR/build_aom" &&
           cd "$WORK_DIR/build_aom" &&
-          cmake "../aom-$AOM_VER/" "$CMAKE_FLAGS" &&
+          cmake "../aom-$AOM_VER/" $CMAKE_FLAGS &&
           make
 
           if [ -n "$CHECKINSTALL" ]; then
