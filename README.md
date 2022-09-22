@@ -144,9 +144,9 @@ Additional options / switches:
 
 <!-- versions start -->
 * ImageMagick version: `7.1.0-48 (Q16)`
-* libaom version: `3.4.0`
+* libaom version: `3.5.0`
 * libheif version: `1.13.0`
-* libjxl version: `0.6.1`<!-- versions end -->
+* libjxl version: `0.7.0`<!-- versions end -->
 * Log File: `/var/log/imei.log`
 * Work Dir: `/usr/local/src/imei`
 * Build Dir: `/usr/local`
