@@ -45,7 +45,7 @@ Every IMEI build will be automatically tested against the latest Ubuntu LTS Vers
 
 #### Recommended
 
-* Ubuntu 22.04 (__Focal__ Fossa)
+* Ubuntu 22.04 (__Jammy__ Jellyfish)
 * Debian 11 (__Bullseye__)
 
 #### Also compatible
