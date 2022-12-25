@@ -53,7 +53,7 @@ fi
 ###
 
 # Get version information for latest stable ImageMagick and write it to file
-IMAGEMAGICK_VER=$(httpGet "$GH_API_BASE/ImageMagick/ImageMagick/tags" | jq -r '[.[] | select(.name|test("^[0-9]+.[0-9]+.[0-9]+(-[0-9]+)?$")) | .name[1:]] | join("\n")' | sort -rV | head -1)
+IMAGEMAGICK_VER=$(httpGet "$GH_API_BASE/ImageMagick/ImageMagick/tags" | jq -r '[.[] | select(.name|test("^[0-9]+.[0-9]+.[0-9]+(-[0-9]+)?$")) | join("\n")' | sort -rV | head -1)
 
 if [ -n "$IMAGEMAGICK_VER" ]; then
   echo "$IMAGEMAGICK_VER" > "$WORKDIR/versions/imagemagick.version"
