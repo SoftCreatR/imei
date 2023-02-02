@@ -3,7 +3,7 @@
 # IMEI - ImageMagick Easy Install
 #### Automated ImageMagick compilation from sources for Debian/Ubuntu including advanced delegate support.
 
-[![Build](https://img.shields.io/github/workflow/status/SoftCreatR/imei/Main?style=flat-square)](https://github.com/SoftCreatR/imei/actions/workflows/Main.yml)
+[![Build](https://img.shields.io/github/actions/workflow/status/SoftCreatR/imei/.github/workflows/main.yml?branch=main&style=flat-square)](https://github.com/SoftCreatR/imei/actions/workflows/main.yml)
 
 [![Commits](https://img.shields.io/github/last-commit/SoftCreatR/imei?style=flat-square)](https://github.com/SoftCreatR/imei/commits/main) [![GitHub release](https://img.shields.io/github/release/SoftCreatR/imei?style=flat-square)](https://github.com/SoftCreatR/imei/releases) [![GitHub license](https://img.shields.io/github/license/SoftCreatR/imei?style=flat-square&color=lightgray)](LICENSE.md) [![Plant Tree](https://img.shields.io/badge/dynamic/json?color=brightgreen&label=Plant%20Tree&query=%24.total&url=https%3A%2F%2Fpublic.offset.earth%2Fusers%2Fsoftcreatr%2Ftrees&style=flat-square)](https://ecologi.com/softcreatr?r=61212ab3fc69b8eb8a2014f4)  ![Installs](https://img.shields.io/badge/dynamic/json?style=flat-square&color=blue&label=installs&query=value&url=https%3A%2F%2Fapi.countapi.xyz%2Fget%2Fsoftcreatr%2Fimei) [![GitHub file size in bytes](https://img.shields.io/github/size/SoftCreatR/imei/imei.sh?style=flat-square)](https://github.com/SoftCreatR/imei/blob/main/imei.sh)
 
