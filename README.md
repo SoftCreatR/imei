@@ -143,7 +143,7 @@ Additional options / switches:
 **Default options** :
 
 <!-- versions start -->
-* ImageMagick version: `7.1.1-7 (Q16)`
+* ImageMagick version: `7.1.1-8 (Q16)`
 * libaom version: `3.6.0`
 * libheif version: `1.15.2`
 * libjxl version: `0.8.1`<!-- versions end -->
