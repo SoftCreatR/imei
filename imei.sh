@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2022-08-31 09:01                          #
+# Date           : 2023-05-05 23:00                          #
 # License        : ISC                                       #
-# Version        : 6.6.4                                     #
+# Version        : 6.7.0                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -235,14 +235,9 @@ httpGet() {
 getImeiInfo() {
   local IMEI_INFO
 
-  if ! command_exists jq; then
-    apt-get update && apt-get install -qq jq > /dev/null 2>&1
-  fi
-
   IMEI_INFO=$(httpGet "https://api.github.com/repos/SoftCreatR/imei/tags")
-
-  IMEI_LATEST_VERSION_COMMIT=$(echo "$IMEI_INFO" | jq -r '.[0].commit.sha')
-  IMEI_LATEST_VERSION_NAME=$(echo "$IMEI_INFO" | jq -r '.[0].name')
+  IMEI_LATEST_VERSION_COMMIT=$(echo "$json" | grep -oP '(?<="sha": ")[^"]*' | head -1)
+  IMEI_LATEST_VERSION_NAME=$(echo "$json" | grep -oP '(?<="name": ")[^"]*' | head -1)
 }
 
 ########
@@ -281,6 +276,11 @@ fi
 ###################
 
 if [ -z "$CI_BUILD" ] && [ -z "$VERIFY_SIGNATURE" ] && [ -f "$0" ]; then
+  if [[ -z "$IMEI_LATEST_VERSION_COMMIT" || -z "$IMEI_LATEST_VERSION_NAME" ]]; then
+    echo -e " ${CRED}Signature verification failed! (1)${CEND}"
+    exit 1
+  fi
+
   SIGNATURE_FILE="/tmp/imei.sh.sig"
   PUBLIC_KEY_FILE="/tmp/imei.sh.pem"
 
@@ -316,7 +316,7 @@ if [ -z "$CI_BUILD" ] && [ -z "$VERIFY_SIGNATURE" ] && [ -f "$0" ]; then
 
     echo -ne "\ec"
 
-    echo -e " ${CRED}Signature verification failed!${CEND}"
+    echo -e " ${CRED}Signature verification failed! (2)${CEND}"
     echo ""
     echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
     exit 1
@@ -458,7 +458,7 @@ install_deps() {
     fi
 
     # Install other build dependencies
-    PKG_LIST=(git curl make cmake automake libtool yasm g++ pkg-config perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev)
+    PKG_LIST=(git curl make cmake automake libtool yasm g++ pkg-config perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev libdav1d-dev)
 
     if [[ "${OS_SHORT_CODENAME,,}" != *"stretch"* && "${OS_SHORT_CODENAME,,}" != *"xenial"* ]]; then
       PKG_LIST+=(libraqm-dev libraqm0)
@@ -612,11 +612,21 @@ install_libheif() {
           fi
         fi
 
-        tar -xf "libheif-$LIBHEIF_VER.tar.gz" &&
+		# see https://github.com/SoftCreatR/imei/issues/78
+        if [ "$(version "$LIBHEIF_VER")" -lt "$(version 1.16.0)" ]; then
+          tar -xf "libheif-$LIBHEIF_VER.tar.gz" &&
+          cd "libheif-$LIBHEIF_VER" &&
+          mkdir build &&
+          cd build &&
+          cmake --preset=release ..
+          make
+        else
+          tar -xf "libheif-$LIBHEIF_VER.tar.gz" &&
           cd "libheif-$LIBHEIF_VER" &&
           ./autogen.sh &&
           ./configure &&
           make
+        fi
 
           if [ -n "$CHECKINSTALL" ]; then
             echo "ISO/IEC 23008-12:2017 HEIF file format decoder (IMEI v$INSTALLER_VER)" >> description-pak &&

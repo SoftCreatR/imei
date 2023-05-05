@@ -50,6 +50,8 @@ Every IMEI build will be automatically tested against the latest Ubuntu LTS Vers
 
 #### Also compatible
 
+* Ubuntu 23.04 (__Lunar__ Lobster)
+* Ubuntu 22.10 (__Kinetic__ Kudu)
 * Ubuntu 21.10 (__Impish__ Indri)
 * Ubuntu 21.04 (__Hirsute__ Hippo)
 * Ubuntu 20.10 (__Groovy__ Gorilla)
