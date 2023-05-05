@@ -236,8 +236,8 @@ getImeiInfo() {
   local IMEI_INFO
 
   IMEI_INFO=$(httpGet "https://api.github.com/repos/SoftCreatR/imei/tags")
-  IMEI_LATEST_VERSION_COMMIT=$(echo "$json" | grep -oP '(?<="sha": ")[^"]*' | head -1)
-  IMEI_LATEST_VERSION_NAME=$(echo "$json" | grep -oP '(?<="name": ")[^"]*' | head -1)
+  IMEI_LATEST_VERSION_COMMIT=$(echo "$IMEI_INFO" | grep -oP '(?<="sha": ")[^"]*' | head -1)
+  IMEI_LATEST_VERSION_NAME=$(echo "$IMEI_INFO" | grep -oP '(?<="name": ")[^"]*' | head -1)
 }
 
 ########
