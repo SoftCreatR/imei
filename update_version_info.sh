@@ -1,142 +1,114 @@
 #!/usr/bin/env bash
 
-# Make sure, that jq is available
-if ! command -v jq >/dev/null 2>&1; then
-  echo "Error: This tool requires jq to be installed." >&2
-  exit 1
-fi
-
 WORKDIR=$(dirname "$0")
-GH_API_BASE="https://api.github.com/repos"
 GH_FILE_BASE="https://codeload.github.com"
 CLIENT=""
-AUTHORIZATION=""
 
 ###
-# Helper functions
+# Functions
 ###
-getClient()
-{
-  if command -v curl &>/dev/null; then
-    CLIENT="curl"
-  elif command -v wget &>/dev/null; then
-    CLIENT="wget"
-  elif command -v http &>/dev/null; then
-    CLIENT="httpie"
-  else
-    echo "Error: This tool requires either curl, wget or httpie to be installed." >&2
+
+getClient() {
+  for cmd in curl wget httpie; do
+    if command -v "$cmd" &>/dev/null; then
+      CLIENT="$cmd"
+      break
+    fi
+  done
+
+  if [ -z "$CLIENT" ]; then
+    echo "Error: This tool requires either curl, wget, or httpie to be installed." >&2
     return 1
   fi
 }
 
-httpGet()
-{
-  if [[ -n "${GITHUB_TOKEN}" ]]; then
-    AUTHORIZATION='{"Authorization": "Bearer '"$GITHUB_TOKEN"'}"}'
-  fi
-
+httpGet() {
   case "$CLIENT" in
-    curl) curl -A curl -s -H "$AUTHORIZATION" "$@" ;;
-    wget) wget -qO- --header="$AUTHORIZATION" "$@" ;;
-    httpie) http -b GET "$@" "$AUTHORIZATION" ;;
+    curl) curl -A curl -s  "$@" ;;
+    wget) wget -qO- "$@" ;;
+    httpie) http -b GET "$@" ;;
   esac
 }
+
+sanitizeVersion() {
+  echo "${1//[^0-9\-.]/}"
+}
+
+getLatestVersion() {
+  local repo="$1"
+  local tag_pattern="$2"
+
+  local version=$(git ls-remote --tags --sort="v:refname" --refs "https://github.com/$repo.git" | awk -F/ '{print $NF}' | grep -oE "$tag_pattern" | sort -rV | head -1)
+
+  if [ -z "$version" ]; then
+    echo "Error: Failed to get version information for $repo." >&2
+    exit 1
+  fi
+
+  echo "$version"
+}
+
+getTarballHash() {
+  local repo="$1"
+  local version="$2"
+
+  local hash=$(httpGet "$GH_FILE_BASE/$repo/tar.gz/$version" | sha1sum | cut -b-40)
+
+  if [ -z "$hash" ]; then
+    echo "Error: Failed to get hash information for $repo $version tarball." >&2
+    exit 1
+  fi
+
+  echo "$hash"
+}
+
+getVersionInfoAndWriteToFile() {
+  local repo="$1"
+  local tag_pattern="$2"
+  local version_file="$3"
+  local hash_file="$4"
+
+  local version=$(getLatestVersion "$repo" "$tag_pattern")
+
+  if [ -z "$version" ]; then
+    echo "Error: Failed to get version information for $repo." >&2
+    exit 1
+  fi
+
+  local sanitized_version=$(sanitizeVersion "$version")
+  echo "$sanitized_version" > "$version_file"
+
+  local hash=$(getTarballHash "$repo" "$version")
+
+  if [ -z "$hash" ]; then
+    echo "Error: Failed to get hash information for $repo $version tarball." >&2
+    exit 1
+  fi
+
+  echo "$hash" > "$hash_file"
+
+  echo "$version"
+}
+
+###
+# Main
 ###
 
-if [ -z "$CLIENT" ]; then
-  getClient || exit 1
-fi
-
-###
-# Stuff that looks more complicated
-# than it actually is
-###
-
-# Get version information for latest stable ImageMagick and write it to file
-IMAGEMAGICK_VER=$(httpGet "$GH_API_BASE/ImageMagick/ImageMagick/tags" | jq -r '[.[] | select(.name|test("^[0-9]+.[0-9]+.[0-9]+(-[0-9]+)?$")) | .name] | join("\n")' | sort -rV | head -1)
-
-if [ -n "$IMAGEMAGICK_VER" ]; then
-  echo "$IMAGEMAGICK_VER" > "$WORKDIR/versions/imagemagick.version"
-else
-  echo "Error: Failed to get version information for ImageMagick."
+if ! getClient; then
   exit 1
 fi
 
-# Download ImageMagick tarball, calculate it's hash and write it to file
-IMAGEMAGICK_HASH=$(httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick/tar.gz/$IMAGEMAGICK_VER" | sha1sum | cut -b-40)
-
-if [ -n "$IMAGEMAGICK_HASH" ]; then
- echo "$IMAGEMAGICK_HASH" > "$WORKDIR/versions/imagemagick.hash"
-else
-  echo "Error: Failed to get hash information for ImageMagick $IMAGEMAGICK_VER tarball."
-  exit 1
-fi
-
-# Get version information for latest stable aom and write it to file
-LIBAOM_VER=$(httpGet "$GH_API_BASE/jbeich/aom/tags" | jq -r '[.[] | select(.name|test("^v[0-9]+.[0-9]+.[0-9]+$")) | .name[1:]] | join("\n")' | sort -rV | head -1)
-
-if [ -n "$LIBAOM_VER" ]; then
-  echo "$LIBAOM_VER" > "$WORKDIR/versions/aom.version"
-else
-  echo "Error: Failed to get version information for AOM."
-  exit 1
-fi
-
-# Download aom tarball, calculate it's hash and write it to file
-LIBAOM_HASH=$(httpGet "$GH_FILE_BASE/jbeich/aom/tar.gz/v$LIBAOM_VER" | sha1sum | cut -b-40)
-
-if [ -n "$LIBAOM_HASH" ]; then
- echo "$LIBAOM_HASH" > "$WORKDIR/versions/aom.hash"
-else
-  echo "Error: Failed to get hash information for AOM $LIBAOM_VER tarball."
-  exit 1
-fi
-
-# Get version information for libheif and write it to file
-LIBHEIF_VER=$(httpGet "$GH_API_BASE/strukturag/libheif/tags" | jq -r '[.[] | select(.name|test("^v[0-9]+.[0-9]+.[0-9]+$")) | .name[1:]] | join("\n")' | sort -rV | head -1)
-
-if [ -n "$LIBHEIF_VER" ]; then
-  echo "$LIBHEIF_VER" > "$WORKDIR/versions/libheif.version"
-else
-  echo "Error: Failed to get version information for libheif."
-  exit 1
-fi
-
-# Download libheif tarball, calculate it's hash and write it to file
-LIBHEIF_HASH=$(httpGet "$GH_FILE_BASE/strukturag/libheif/tar.gz/v$LIBHEIF_VER" | sha1sum | cut -b-40)
-
-if [ -n "$LIBHEIF_HASH" ]; then
- echo "$LIBHEIF_HASH" > "$WORKDIR/versions/libheif.hash"
-else
-  echo "Error: Failed to get hash information for libheif $LIBHEIF_VER tarball."
-  exit 1
-fi
-
-# Get version information for libjxl and write it to file
-LIBJXL_VER=$(httpGet "$GH_API_BASE/libjxl/libjxl/tags" | jq -r '[.[] | select(.name|test("^v[0-9]+.[0-9]+(.[0-9]+)?$")) | .name[1:]] | join("\n")' | sort -rV | head -1)
-
-if [ -n "$LIBJXL_VER" ]; then
-  echo "$LIBJXL_VER" > "$WORKDIR/versions/libjxl.version"
-else
-  echo "Error: Failed to get version information for libjxl."
-  exit 1
-fi
-
-# Download libjxl tarball, calculate it's hash and write it to file
-LIBJXL_HASH=$(httpGet "$GH_FILE_BASE/libjxl/libjxl/tar.gz/v$LIBJXL_VER" | sha1sum | cut -b-40)
-
-if [ -n "$LIBJXL_HASH" ]; then
- echo "$LIBJXL_HASH" > "$WORKDIR/versions/libjxl.hash"
-else
-  echo "Error: Failed to get hash information for libjxl $LIBJXL_VER tarball."
-  exit 1
-fi
+# Get version information and write it to files
+IMAGEMAGICK_VER=$(getVersionInfoAndWriteToFile "ImageMagick/ImageMagick" '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+)?$' "$WORKDIR/versions/imagemagick.version" "$WORKDIR/versions/imagemagick.hash")
+LIBAOM_VER=$(getVersionInfoAndWriteToFile "jbeich/aom" '^v[0-9]+\.[0-9]+\.[0-9]+$' "$WORKDIR/versions/aom.version" "$WORKDIR/versions/aom.hash")
+LIBHEIF_VER=$(getVersionInfoAndWriteToFile "strukturag/libheif" '^v[0-9]+\.[0-9]+\.[0-9]+$' "$WORKDIR/versions/libheif.version" "$WORKDIR/versions/libheif.hash")
+LIBJXL_VER=$(getVersionInfoAndWriteToFile "libjxl/libjxl" '^v[0-9]+\.[0-9]+(\.[0-9]+)?$' "$WORKDIR/versions/libjxl.version" "$WORKDIR/versions/libjxl.hash")
 
 # Update README file
-REPLACEMENT="\n* ImageMagick version: \`$IMAGEMAGICK_VER (Q16)\`\n"
-REPLACEMENT+="* libaom version: \`$LIBAOM_VER\`\n"
-REPLACEMENT+="* libheif version: \`$LIBHEIF_VER\`\n"
-REPLACEMENT+="* libjxl version: \`$LIBJXL_VER\`"
+REPLACEMENT="\n* ImageMagick version: \`$(sanitizeVersion $IMAGEMAGICK_VER) (Q16)\`\n"
+REPLACEMENT+="* libaom version: \`$(sanitizeVersion $LIBAOM_VER)\`\n"
+REPLACEMENT+="* libheif version: \`$(sanitizeVersion $LIBHEIF_VER)\`\n"
+REPLACEMENT+="* libjxl version: \`$(sanitizeVersion $LIBJXL_VER)\`"
 sed -En '1h;1!H;${g;s/(<!-- versions start -->)(.*)(<!-- versions end -->)/\1'"$REPLACEMENT"'\3/;p;}' -i "$WORKDIR/README.md"
 
 exit 0
