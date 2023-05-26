@@ -157,9 +157,9 @@ Additional options / switches:
 
 ### checkinstall vs. make
 
-IMEI offers support for both checkinstall and make methods. While checkinstall enables the creation of packages that can be uninstalled at a later time, such as apt remove imei-imagemagick, the use of make does not provide the same convenience, making it potentially more difficult to remove all components installed by IMEI. However, it's important to note that checkinstall may not always be available and may have certain bugs that could lead to an incomplete installation of IMEI packages.
+IMEI offers support for both `checkinstall` and `make` methods. While `checkinstall` enables the creation of packages that can be uninstalled at a later time, such as `apt remove imei-imagemagick`, the use of `make` does not provide the same convenience, making it potentially more difficult to remove all components installed by IMEI. However, it's important to note that `checkinstall` may not always be available and may have certain bugs that could lead to an incomplete installation of IMEI packages.
 
-By default, IMEI utilizes the make method, but you have the option to use checkinstall by specifying it in the additional options or switches (refer to "Additional options / switches" for more details).
+By default, IMEI utilizes the `make` method, but you have the option to use `checkinstall` by specifying it in the additional options or switches (refer to "Additional options / switches" for more details).
 
 ### OpenCL support
 
