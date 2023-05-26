@@ -39,7 +39,7 @@
 
 ## Compatibility
 
-Every IMEI build will be automatically tested against the latest Ubuntu LTS Versions (16.04 and newer) using GitHub Actions. Compatibility with other operating systems (such as Debian 10, or Ubuntu 21.04) is tested manually.
+The compatibility of every IMEI build is automatically tested using GitHub Actions against the latest Ubuntu LTS version. However, manual testing is conducted to ensure compatibility with other operating systems, such as Debian 10 or Ubuntu 21.04.
 
 ### Operating System
 
@@ -70,9 +70,9 @@ Every IMEI build will be automatically tested against the latest Ubuntu LTS Vers
 
 #### Known issues
 
-* For JPEG XL, CMake 3.10 or newer is required. On older systems (e.g. Debian 9), the maintainers version isn't sufficient. In this case, JPEG XL compilation will be skipped.
-* For libaom, CMake 3.6 or newer is required. On older systems, the maintainers version may be not sufficient. In this case, libaom compilation will be skipped. Without libaom, libheif will be skipped too.
-* When building using GitHub actions, `heic` isn't reported as built-in delegate. While it did in the past, it stopped out of sudden. So you better avoid using it as assertion for tests.
+- To compile JPEG XL, CMake 3.10 or a newer version is required. On older systems like Debian 9, the version provided by maintainers is not adequate. In such cases, the compilation of JPEG XL will be skipped.
+- For libaom, a minimum CMake version of 3.6 is necessary. On older systems, the version provided by maintainers might not be sufficient. In these instances, the compilation of libaom will be skipped. Consequently, libheif will also be skipped since it depends on libaom.
+- When using GitHub actions for building, `heic` is not reported as a built-in delegate. Although it was reported in the past, it suddenly stopped. Therefore, it is advisable to avoid using it as an assertion for tests.
 
 ---
 
@@ -124,6 +124,7 @@ Currently available build options are
 * `--imagemagick-version` / `--im-version` : Build the given ImageMagick version (e.g. `7.0.10-28`)
 * `--force-imagemagick` / `--force-im` : Force building of ImageMagick only, even if it's are already installed in a newer or the latest version
 * `--imagemagick-quantum-depth` / `--im-q` : ImageMagick Quantum Depth (8, 16 or 32)
+* `--imagemagick-opencl` / `--im-ocl` : Install ImageMagick with OpenCL support
 * `--aom-version` : Build the given aom version (e.g. `2.0.0`)
 * `--skip-aom` : Skip building aom
 * `--libheif-version` / `--heif-version` : Build the given libheif version (e.g. `1.8.0`)
@@ -156,9 +157,15 @@ Additional options / switches:
 
 ### checkinstall vs. make
 
-IMEI supports both, `checkinstall` and `make`. While `checkinstall` creates packages that you can uninstall at a later time (e.g. `apt remove imei-imagemagick`), `make` doesn't, therefore it may be harder to remove everything, that has been installed by IMEI. However, `checkinstall` isn't always available and it contains some bugs, that might result in a broken installation of IMEI`s packages.
+IMEI offers support for both checkinstall and make methods. While checkinstall enables the creation of packages that can be uninstalled at a later time, such as apt remove imei-imagemagick, the use of make does not provide the same convenience, making it potentially more difficult to remove all components installed by IMEI. However, it's important to note that checkinstall may not always be available and may have certain bugs that could lead to an incomplete installation of IMEI packages.
 
-IMEI uses `make` by default, but you can use `checkinstall` via option (see "Additional options / switches") instead.
+By default, IMEI utilizes the make method, but you have the option to use checkinstall by specifying it in the additional options or switches (refer to "Additional options / switches" for more details).
+
+### OpenCL support
+
+IMEI provides the option to install ImageMagick with OpenCL support. However, it is important to consider that according to the information provided [here](https://github.com/SoftCreatR/imei/issues/69#issuecomment-1563379174), ImageMagick's performance is significantly lower when utilizing OpenCL compared to OpenMP.
+
+When you choose to install ImageMagick with OpenCL support using IMEI, please be aware that IMEI only compiles ImageMagick with OpenCL capabilities. It does not handle the installation of necessary drivers or any other specific requirements to enable general OpenCL support on your system.
 
 ---
 

@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2023-05-05 23:00                          #
+# Date           : 2023-05-26 13:25                          #
 # License        : ISC                                       #
-# Version        : 6.7.0                                     #
+# Version        : 6.7.1                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -55,6 +55,9 @@ while [ "$#" -gt 0 ]; do
     ;;
   --imagemagick-quantum-depth|--im-q)
     QUANTUM_DEPTH=$2
+    ;;
+  --imagemagick-opencl|--im-ocl)
+    USE_OPENCL="yes"
     ;;
   --skip-aom)
     SKIP_AOM="yes"
@@ -612,7 +615,7 @@ install_libheif() {
           fi
         fi
 
-		# see https://github.com/SoftCreatR/imei/issues/78
+        # see https://github.com/SoftCreatR/imei/issues/78
         if [ "$(version "$LIBHEIF_VER")" -lt "$(version 1.16.0)" ]; then
           tar -xf "libheif-$LIBHEIF_VER.tar.gz" &&
           cd "libheif-$LIBHEIF_VER" &&
@@ -792,6 +795,13 @@ install_imagemagick() {
           fi
         fi
 
+        # see https://github.com/SoftCreatR/imei/issues/69
+        if [ -n "$USE_OPENCL" ]; then
+            OPENCL_C="disable"
+        else
+            OPENCL_C="enable"
+        fi
+
         tar -xf "ImageMagick-$IMAGEMAGICK_VER.tar.gz" &&
           cd "ImageMagick$DIR_SUFFIX-$IMAGEMAGICK_VER" &&
           ./configure --prefix="$BUILD_DIR" --sysconfdir="$CONFIG_DIR" \
@@ -803,7 +813,7 @@ install_imagemagick() {
             --enable-cipher \
             --enable-hdri \
             --enable-docs \
-            --disable-opencl \
+            --${OPENCL_C}-opencl \
             --with-threads \
             --with-modules \
             --with-quantum-depth="$QUANTUM_DEPTH" \
