@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2023-05-28 07:38                          #
+# Date           : 2023-05-28 22:45                          #
 # License        : ISC                                       #
-# Version        : 6.8.0                                     #
+# Version        : 6.8.1                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -586,7 +586,7 @@ install_aom() {
           make install
         fi
 
-        ldconfig
+        ldconfig $LIB_DIR
       fi
     } >>"$LOG_FILE" 2>&1
   }; then
@@ -676,7 +676,7 @@ install_libheif() {
           make install
         fi
 
-        ldconfig
+        ldconfig $LIB_DIR
       fi
     } >>"$LOG_FILE" 2>&1
   }; then
@@ -758,7 +758,7 @@ install_jxl() {
           make install
         fi
 
-        ldconfig
+        ldconfig $LIB_DIR
       fi
     } >>"$LOG_FILE" 2>&1
   }; then
@@ -907,7 +907,7 @@ install_imagemagick() {
           make install
         fi
 
-        ldconfig
+        ldconfig $LIB_DIR
       fi
     } >>"$LOG_FILE" 2>&1
   }; then
