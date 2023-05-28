@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2023-05-26 13:25                          #
+# Date           : 2023-05-28 07:38                          #
 # License        : ISC                                       #
-# Version        : 6.7.1                                     #
+# Version        : 6.8.0                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -24,7 +24,7 @@
 }
 
 command_exists() {
-  command -v "$@" > /dev/null 2>&1
+  command -v "$@" >/dev/null 2>&1
 }
 
 # Make sure, that we are on Debian or Ubuntu
@@ -35,7 +35,7 @@ fi
 
 # Checking if lsb_release is installed or install it
 if ! command_exists lsb_release; then
-  apt-get update && apt-get install -qq lsb-release > /dev/null 2>&1
+  apt-get update && apt-get install -qq lsb-release >/dev/null 2>&1
 fi
 
 ####################
@@ -47,16 +47,16 @@ while [ "$#" -gt 0 ]; do
   --force)
     FORCE="yes"
     ;;
-  --force-imagemagick|--force-im)
+  --force-imagemagick | --force-im)
     FORCE_IMAGEMAGICK=$2
     ;;
-  --imagemagick-version|--im-version)
+  --imagemagick-version | --im-version)
     IMAGEMAGICK_VER=$2
     ;;
-  --imagemagick-quantum-depth|--im-q)
+  --imagemagick-quantum-depth | --im-q)
     QUANTUM_DEPTH=$2
     ;;
-  --imagemagick-opencl|--im-ocl)
+  --imagemagick-opencl | --im-ocl)
     USE_OPENCL="yes"
     ;;
   --skip-aom)
@@ -65,19 +65,19 @@ while [ "$#" -gt 0 ]; do
   --aom-version)
     AOM_VER=$2
     ;;
-  --skip-libheif|--skip-heif)
+  --skip-libheif | --skip-heif)
     SKIP_LIBHEIF="yes"
     ;;
-  --libheif-version|--heif-version)
+  --libheif-version | --heif-version)
     LIBHEIF_VER=$2
     ;;
-  --skip-jpeg-xl|--skip-jxl)
+  --skip-jpeg-xl | --skip-jxl)
     SKIP_JXL="yes"
     ;;
-  --jpeg-xl-version|--jxl-version)
+  --jpeg-xl-version | --jxl-version)
     JXL_VER=$2
     ;;
-  --skip-dependencies|--skip-deps)
+  --skip-dependencies | --skip-deps)
     SKIP_DEPS="yes"
     ;;
   --log-file)
@@ -95,10 +95,10 @@ while [ "$#" -gt 0 ]; do
   --ci)
     CI_BUILD="yes"
     ;;
-  --no-sig-verify|--dev)
+  --no-sig-verify | --dev)
     VERIFY_SIGNATURE="${CYELLOW}disabled${CEND}"
     ;;
-  --use-checkinstall|--checkinstall)
+  --use-checkinstall | --checkinstall)
     CHECKINSTALL="yes"
     ;;
   --no-backports)
@@ -211,11 +211,11 @@ cleanup() {
 }
 
 getClient() {
-  if command -v curl &> /dev/null; then
+  if command -v curl &>/dev/null; then
     CLIENT="curl"
-  elif command -v wget &> /dev/null; then
+  elif command -v wget &>/dev/null; then
     CLIENT="wget"
-  elif command -v http &> /dev/null; then
+  elif command -v http &>/dev/null; then
     CLIENT="httpie"
   else
     echo -e "${CRED}This tool requires either curl, wget or httpie to be installed.${CEND}" >&2
@@ -299,18 +299,18 @@ if [ -z "$CI_BUILD" ] && [ -z "$VERIFY_SIGNATURE" ] && [ -f "$0" ]; then
 
   # Install OpenSSL, if it's not already installed
   if ! command_exists openssl; then
-    apt-get update && apt-get install -qq openssl > /dev/null 2>&1
+    apt-get update && apt-get install -qq openssl >/dev/null 2>&1
   fi
 
   if {
-    httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/$IMEI_LATEST_VERSION_COMMIT/imei.sh.sig" > "$SIGNATURE_FILE"
+    httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/$IMEI_LATEST_VERSION_COMMIT/imei.sh.sig" >"$SIGNATURE_FILE"
 
     if [ ! -f "$PUBLIC_KEY_FILE" ]; then
-      httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/$IMEI_LATEST_VERSION_COMMIT/imei.sh.pem" > "$PUBLIC_KEY_FILE"
+      httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/$IMEI_LATEST_VERSION_COMMIT/imei.sh.pem" >"$PUBLIC_KEY_FILE"
     fi
 
     openssl dgst -sha512 -verify "$PUBLIC_KEY_FILE" -signature "$SIGNATURE_FILE" "$0"
-  } >> "$LOG_FILE" 2>&1; then
+  } >>"$LOG_FILE" 2>&1; then
     sigCleanup
 
     echo -ne "\ec"
@@ -426,42 +426,72 @@ install_deps() {
     # Allow installation of source files
     {
       if [[ "${OS_DISTRO,,}" == *"ubuntu"* ]]; then
-        echo 'deb http://archive.ubuntu.com/ubuntu '"$OS_SHORT_CODENAME"' main restricted'
-        echo 'deb-src http://archive.ubuntu.com/ubuntu '"$OS_SHORT_CODENAME"' main restricted universe multiverse'
+        if [[ "${OS_ARCH}" == "aarch64" ]]; then
+          echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ '"$OS_SHORT_CODENAME"' main restricted'
+          echo 'deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ '"$OS_SHORT_CODENAME"' main restricted universe multiverse'
 
-        if [ -z "$BACKPORTS" ]; then
-          echo 'deb http://archive.ubuntu.com/ubuntu '"$OS_SHORT_CODENAME"'-backports main restricted universe multiverse'
-          echo 'deb-src http://archive.ubuntu.com/ubuntu '"$OS_SHORT_CODENAME"'-backports main restricted universe multiverse'
+          if [ -z "$BACKPORTS" ]; then
+            echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ '"$OS_SHORT_CODENAME"'-backports main restricted universe multiverse'
+            echo 'deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ '"$OS_SHORT_CODENAME"'-backports main restricted universe multiverse'
+          fi
+        else
+          echo 'deb http://archive.ubuntu.com/ubuntu '"$OS_SHORT_CODENAME"' main restricted'
+          echo 'deb-src http://archive.ubuntu.com/ubuntu '"$OS_SHORT_CODENAME"' main restricted universe multiverse'
+
+          if [ -z "$BACKPORTS" ]; then
+            echo 'deb http://archive.ubuntu.com/ubuntu '"$OS_SHORT_CODENAME"'-backports main restricted universe multiverse'
+            echo 'deb-src http://archive.ubuntu.com/ubuntu '"$OS_SHORT_CODENAME"'-backports main restricted universe multiverse'
+          fi
         fi
       elif [[ "${OS_DISTRO,,}" == *"debian"* ]]; then
-        echo 'deb http://deb.debian.org/debian '"$OS_SHORT_CODENAME"' main contrib non-free'
-        echo 'deb-src http://deb.debian.org/debian '"$OS_SHORT_CODENAME"' main contrib non-free'
+        if [[ "${OS_ARCH}" == "aarch64" ]]; then
+          echo 'deb [arch=arm64] http://deb.debian.org/debian '"$OS_SHORT_CODENAME"' main contrib non-free'
+          echo 'deb-src [arch=arm64] http://deb.debian.org/debian '"$OS_SHORT_CODENAME"' main contrib non-free'
 
-        if [ -z "$BACKPORTS" ]; then
-          echo 'deb http://deb.debian.org/debian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
-          echo 'deb-src http://deb.debian.org/debian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
+          if [ -z "$BACKPORTS" ]; then
+            echo 'deb [arch=arm64] http://deb.debian.org/debian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
+            echo 'deb-src [arch=arm64] http://deb.debian.org/debian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
+          fi
+        else
+          echo 'deb http://deb.debian.org/debian '"$OS_SHORT_CODENAME"' main contrib non-free'
+          echo 'deb-src http://deb.debian.org/debian '"$OS_SHORT_CODENAME"' main contrib non-free'
+
+          if [ -z "$BACKPORTS" ]; then
+            echo 'deb http://deb.debian.org/debian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
+            echo 'deb-src http://deb.debian.org/debian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
+          fi
         fi
       elif [[ "${OS_DISTRO,,}" == *"raspbian"* ]]; then
-        echo 'deb http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"' main contrib non-free'
-        echo 'deb-src http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"' main contrib non-free'
+        if [[ "${OS_ARCH}" == "aarch64" ]]; then
+          echo 'deb [arch=arm64] http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"' main contrib non-free'
+          echo 'deb-src [arch=arm64] http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"' main contrib non-free'
 
-        if [ -z "$BACKPORTS" ]; then
-          echo 'deb http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
-          echo 'deb-src http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
+          if [ -z "$BACKPORTS" ]; then
+            echo 'deb [arch=arm64] http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
+            echo 'deb-src [arch=arm64] http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
+          fi
+        else
+          echo 'deb http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"' main contrib non-free'
+          echo 'deb-src http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"' main contrib non-free'
+
+          if [ -z "$BACKPORTS" ]; then
+            echo 'deb http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
+            echo 'deb-src http://archive.raspbian.org/raspbian '"$OS_SHORT_CODENAME"'-backports main contrib non-free'
+          fi
         fi
       else
         SKIP_BUILD_DEP="yes"
       fi
-    } >> "$SOURCE_LIST"
+    } >>"$SOURCE_LIST"
 
     # Update package list and satisfy build dependencies for imagemagick
     if [ -n "$SKIP_BUILD_DEP" ]; then
       apt-get update -qq &&
-      apt-get build-dep -qq imagemagick -y
+        apt-get build-dep -qq imagemagick -y
     fi
 
     # Install other build dependencies
-    PKG_LIST=(git curl make cmake automake libtool yasm g++ pkg-config perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev libdav1d-dev)
+    PKG_LIST=(git curl make cmake automake libtool yasm g++ pkg-config perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev)
 
     if [[ "${OS_SHORT_CODENAME,,}" != *"stretch"* && "${OS_SHORT_CODENAME,,}" != *"xenial"* ]]; then
       PKG_LIST+=(libraqm-dev libraqm0)
@@ -474,7 +504,7 @@ install_deps() {
     apt-get install -y "${PKG_LIST[@]}"
 
     CMAKE_VERSION=$(cmake --version | head -n1 | cut -d" " -f3)
-  } >> "$LOG_FILE" 2>&1; then
+  } >>"$LOG_FILE" 2>&1; then
     echo -ne " Installing dependencies       [${CGREEN}OK${CEND}]\\r"
     echo ""
   else
@@ -495,10 +525,10 @@ install_aom() {
     echo -ne ' Building aom                  [..]\r'
 
     if [ "$(version "$CMAKE_VERSION")" -lt "$(version 3.6)" ]; then
-        echo -ne " Building aom                  [${CYELLOW}SKIPPED (CMAKE version not sufficient)${CEND}]\\r"
-        echo ""
+      echo -ne " Building aom                  [${CYELLOW}SKIPPED (CMAKE version not sufficient)${CEND}]\\r"
+      echo ""
 
-        return
+      return
     fi
 
     if [ -z "$SKIP_AOM" ]; then
@@ -517,7 +547,7 @@ install_aom() {
 
     {
       if [ -n "$AOM_VER" ]; then
-        httpGet "$GH_FILE_BASE/jbeich/aom/tar.gz/v$AOM_VER" > "aom-$AOM_VER.tar.gz"
+        httpGet "$GH_FILE_BASE/jbeich/aom/tar.gz/v$AOM_VER" >"aom-$AOM_VER.tar.gz"
 
         if [ -n "$AOM_HASH" ]; then
           if [ "$(sha1sum "aom-$AOM_VER.tar.gz" | cut -b-40)" != "$AOM_HASH" ]; then
@@ -541,8 +571,8 @@ install_aom() {
           cmake "../aom-$AOM_VER/" "${CMAKE_FLAGS[@]}" &&
           make
 
-          if [ -n "$CHECKINSTALL" ]; then
-            echo "AV1 Video Codec Library (IMEI v$INSTALLER_VER)" >> description-pak &&
+        if [ -n "$CHECKINSTALL" ]; then
+          echo "AV1 Video Codec Library (IMEI v$INSTALLER_VER)" >>description-pak &&
             checkinstall \
               --default \
               --nodoc \
@@ -552,13 +582,13 @@ install_aom() {
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="/usr/local/src" \
               --requires="git,cmake \(\>= 3.6\),perl,yasm"
-          else
-            make install
-          fi
+        else
+          make install
+        fi
 
-          ldconfig
+        ldconfig
       fi
-    } >> "$LOG_FILE" 2>&1
+    } >>"$LOG_FILE" 2>&1
   }; then
     UPDATE_LIBHEIF="yes"
 
@@ -596,15 +626,15 @@ install_libheif() {
     fi
 
     if [ ! -L "$LIB_DIR/lib/libaom.so" ]; then
-        echo -ne " Building libheif              [${CYELLOW}SKIPPED (aom is required but not installed)${CEND}]\\r"
-        echo ""
+      echo -ne " Building libheif              [${CYELLOW}SKIPPED (aom is required but not installed)${CEND}]\\r"
+      echo ""
 
-        return
+      return
     fi
 
     {
       if [ -n "$LIBHEIF_VER" ]; then
-        httpGet "$GH_FILE_BASE/strukturag/libheif/tar.gz/v$LIBHEIF_VER" > "libheif-$LIBHEIF_VER.tar.gz"
+        httpGet "$GH_FILE_BASE/strukturag/libheif/tar.gz/v$LIBHEIF_VER" >"libheif-$LIBHEIF_VER.tar.gz"
 
         if [ -n "$LIBHEIF_HASH" ]; then
           if [ "$(sha1sum "libheif-$LIBHEIF_VER.tar.gz" | cut -b-40)" != "$LIBHEIF_HASH" ]; then
@@ -618,21 +648,21 @@ install_libheif() {
         # see https://github.com/SoftCreatR/imei/issues/78
         if [ "$(version "$LIBHEIF_VER")" -lt "$(version 1.16.0)" ]; then
           tar -xf "libheif-$LIBHEIF_VER.tar.gz" &&
-          cd "libheif-$LIBHEIF_VER" &&
-          mkdir build &&
-          cd build &&
-          cmake --preset=release ..
-          make
+            cd "libheif-$LIBHEIF_VER" &&
+            ./autogen.sh &&
+            ./configure &&
+            make
         else
           tar -xf "libheif-$LIBHEIF_VER.tar.gz" &&
-          cd "libheif-$LIBHEIF_VER" &&
-          ./autogen.sh &&
-          ./configure &&
+            cd "libheif-$LIBHEIF_VER" &&
+            mkdir build &&
+            cd build &&
+            cmake --preset=release ..
           make
         fi
 
-          if [ -n "$CHECKINSTALL" ]; then
-            echo "ISO/IEC 23008-12:2017 HEIF file format decoder (IMEI v$INSTALLER_VER)" >> description-pak &&
+        if [ -n "$CHECKINSTALL" ]; then
+          echo "ISO/IEC 23008-12:2017 HEIF file format decoder (IMEI v$INSTALLER_VER)" >>description-pak &&
             checkinstall \
               --default \
               --nodoc \
@@ -642,13 +672,13 @@ install_libheif() {
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="/usr/local/src" \
               --requires="automake,make,pkg-config,libde265-dev,libx265-dev,libjpeg-dev,imei-libaom"
-          else
-            make install
-          fi
+        else
+          make install
+        fi
 
-          ldconfig
+        ldconfig
       fi
-    } >> "$LOG_FILE" 2>&1
+    } >>"$LOG_FILE" 2>&1
   }; then
     UPDATE_IMAGEMAGICK="yes"
 
@@ -672,10 +702,10 @@ install_jxl() {
     echo -ne ' Building jpegxl               [..]\r'
 
     if [ "$(version "$CMAKE_VERSION")" -lt "$(version 3.10)" ]; then
-        echo -ne " Building jpegxl               [${CYELLOW}SKIPPED (CMAKE version not sufficient)${CEND}]\\r"
-        echo ""
+      echo -ne " Building jpegxl               [${CYELLOW}SKIPPED (CMAKE version not sufficient)${CEND}]\\r"
+      echo ""
 
-        return
+      return
     fi
 
     if [ -z "$SKIP_JXL" ]; then
@@ -694,7 +724,7 @@ install_jxl() {
 
     {
       if [ -n "$JXL_VER" ]; then
-        httpGet "$GH_FILE_BASE/libjxl/libjxl/tar.gz/v$JXL_VER" > "libjxl-$JXL_VER.tar.gz"
+        httpGet "$GH_FILE_BASE/libjxl/libjxl/tar.gz/v$JXL_VER" >"libjxl-$JXL_VER.tar.gz"
 
         if [ -n "$JXL_HASH" ]; then
           if [ "$(sha1sum "libjxl-$JXL_VER.tar.gz" | cut -b-40)" != "$JXL_HASH" ]; then
@@ -711,10 +741,10 @@ install_jxl() {
           mkdir "build" &&
           cd "build" &&
           cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF ..
-          make
+        make
 
-          if [ -n "$CHECKINSTALL" ]; then
-            echo "JPEG XL image format reference implementation (IMEI v$INSTALLER_VER)" >> description-pak &&
+        if [ -n "$CHECKINSTALL" ]; then
+          echo "JPEG XL image format reference implementation (IMEI v$INSTALLER_VER)" >>description-pak &&
             checkinstall \
               --default \
               --nodoc \
@@ -724,13 +754,13 @@ install_jxl() {
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="/usr/local/src" \
               --requires="cmake \(\>= 3.10\),pkg-config,libbrotli-dev,libgif-dev,libjpeg-dev,libopenexr-dev,libpng-dev,libwebp-dev"
-          else
-            make install
-          fi
+        else
+          make install
+        fi
 
-          ldconfig
+        ldconfig
       fi
-    } >> "$LOG_FILE" 2>&1
+    } >>"$LOG_FILE" 2>&1
   }; then
     UPDATE_IMAGEMAGICK="yes"
 
@@ -776,9 +806,9 @@ install_imagemagick() {
         if [ "$(echo "$IMAGEMAGICK_VER" | cut -b-1)" -eq 6 ]; then
           DIR_SUFFIX="6"
 
-          httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick6/tar.gz/$IMAGEMAGICK_VER" > "ImageMagick-$IMAGEMAGICK_VER.tar.gz"
+          httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick6/tar.gz/$IMAGEMAGICK_VER" >"ImageMagick-$IMAGEMAGICK_VER.tar.gz"
         else
-          httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick/tar.gz/$IMAGEMAGICK_VER" > "ImageMagick-$IMAGEMAGICK_VER.tar.gz"
+          httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick/tar.gz/$IMAGEMAGICK_VER" >"ImageMagick-$IMAGEMAGICK_VER.tar.gz"
         fi
 
         if [ -n "$IMAGEMAGICK_HASH" ]; then
@@ -797,9 +827,9 @@ install_imagemagick() {
 
         # see https://github.com/SoftCreatR/imei/issues/69
         if [ -n "$USE_OPENCL" ]; then
-            OPENCL_C="disable"
+          OPENCL_C="disable"
         else
-            OPENCL_C="enable"
+          OPENCL_C="enable"
         fi
 
         tar -xf "ImageMagick-$IMAGEMAGICK_VER.tar.gz" &&
@@ -861,8 +891,8 @@ install_imagemagick() {
             PSDelegate='/usr/bin/gs' &&
           make
 
-          if [ -n "$CHECKINSTALL" ]; then
-            echo "image manipulation programs (IMEI v$INSTALLER_VER)" >> description-pak &&
+        if [ -n "$CHECKINSTALL" ]; then
+          echo "image manipulation programs (IMEI v$INSTALLER_VER)" >>description-pak &&
             checkinstall \
               --default \
               --nodoc \
@@ -873,13 +903,13 @@ install_imagemagick() {
               --pakdir="/usr/local/src" \
               --conflicts="imagemagick" \
               --requires="pkg-config"
-          else
-            make install
-          fi
+        else
+          make install
+        fi
 
-          ldconfig
+        ldconfig
       fi
-    } >> "$LOG_FILE" 2>&1
+    } >>"$LOG_FILE" 2>&1
   }; then
     if [ "$QUANTUM_DEPTH" -eq 8 ]; then
       echo -ne " Building ImageMagick (Q$QUANTUM_DEPTH)     [${CGREEN}OK${CEND}]\\r"
@@ -909,7 +939,7 @@ finish_installation() {
   # Check if ImageMagick version matches
   {
     VERIFY_INSTALLATION=$("$BUILD_DIR/bin/identify" -version | grep -oP "$IMAGEMAGICK_VER")
-  } >> "$LOG_FILE" 2>&1
+  } >>"$LOG_FILE" 2>&1
 
   if [ -n "$VERIFY_INSTALLATION" ]; then
     echo -ne " Verifying installation        [${CGREEN}OK${CEND}]\\r"
