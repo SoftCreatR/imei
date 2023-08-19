@@ -145,12 +145,23 @@ if [[ -z "$QUANTUM_DEPTH" || ! " ${allowedQuantumDepth[*]} " =~ $QUANTUM_DEPTH ]
   QUANTUM_DEPTH=16
 fi
 
-if [ -z "$BUILD_CFLAGS" ]; then
-  BUILD_CFLAGS="-O3 -march=native"
-fi
+if [ -f "/.dockerenv" ]; then
+  # default optimize for max. CPU compatibility
+  if [ -z "$BUILD_CFLAGS" ]; then
+    BUILD_CFLAGS="-O3 -mtune=generic" 
+  fi
 
-if [ -z "$BUILD_CXXFLAGS" ]; then
-  BUILD_CXXFLAGS="-O3 -march=native"
+  if [ -z "$BUILD_CXXFLAGS" ]; then
+    BUILD_CXXFLAGS="-O3 -mtune=generic"
+  fi
+else
+  if [ -z "$BUILD_CFLAGS" ]; then
+    BUILD_CFLAGS="-O3 -march=native"
+  fi
+
+  if [ -z "$BUILD_CXXFLAGS" ]; then
+    BUILD_CXXFLAGS="-O3 -march=native"
+  fi
 fi
 
 START=$(date +%s)
