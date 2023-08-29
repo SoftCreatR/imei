@@ -150,10 +150,18 @@ Additional options / switches:
 * libaom version: `3.6.1`
 * libheif version: `1.16.2`
 * libjxl version: `0.8.2`<!-- versions end -->
-* Log File: `/var/log/imei.log`
+* Log File: `/var/log/imei-###.log` (`###` will be the timestamp of the script execution)
 * Work Dir: `/usr/local/src/imei`
 * Build Dir: `/usr/local`
 * Config Dir: `/usr/local/etc`
+
+### Older versions of ImageMagick (installed via apt / dpkg)
+
+IMEI enforces a stringent policy that prohibits execution when ImageMagick is detected as pre-installed via the `apt` or `dpkg` package managers. Currently, there is no sanctioned method to bypass this limitation. To facilitate the installation of ImageMagick through IMEI, it is imperative to first remove any extant installations, e.g.:
+
+```bash
+apt remove "*imagemagick*` --purge -y && apt autoremove --purge -y
+```
 
 ### checkinstall vs. make
 

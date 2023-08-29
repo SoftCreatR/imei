@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2023-08-20 23:05                          #
+# Date           : 2023-09-29 17:15                          #
 # License        : ISC                                       #
-# Version        : 6.8.2                                     #
+# Version        : 6.8.3                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -38,6 +38,12 @@ if ! command_exists lsb_release; then
   apt-get update && apt-get install -qq lsb-release >/dev/null 2>&1
 fi
 
+# Checking if imagemagick is already installed via apt/dpkg
+if dpkg -l | grep -qE '^ii\s+imagemagick\s'; then
+  echo "ImageMagick is already installed via apt/dpkg. Please uninstall it first, before proceeding"
+  exit 1
+fi
+
 ####################
 # Script arguments #
 ####################
@@ -48,7 +54,7 @@ while [ "$#" -gt 0 ]; do
     FORCE="yes"
     ;;
   --force-imagemagick | --force-im)
-    FORCE_IMAGEMAGICK=$2
+    FORCE_IMAGEMAGICK="yes"
     ;;
   --imagemagick-version | --im-version)
     IMAGEMAGICK_VER=$2
@@ -134,10 +140,6 @@ fi
 
 if [ -z "$CONFIG_DIR" ]; then
   CONFIG_DIR="$BUILD_DIR/etc"
-fi
-
-if [ -z "$LOG_FILE" ]; then
-  LOG_FILE=/var/log/imei.log
 fi
 
 allowedQuantumDepth=(8 16 32)
@@ -264,8 +266,9 @@ trap cleanup 0 1 2 3 6 15
 # Clean up on execution
 cleanup
 
-if [ -f "$LOG_FILE" ]; then
-  rm "$LOG_FILE"
+# Set log file, if unset
+if [ -z "$LOG_FILE" ]; then
+  LOG_FILE="/var/log/imei-$START.log"
 fi
 
 # Create working directory
