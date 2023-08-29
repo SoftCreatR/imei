@@ -39,34 +39,23 @@
 
 ## Compatibility
 
-The compatibility of every IMEI build is automatically tested using GitHub Actions against the latest Ubuntu LTS version. However, manual testing is conducted to ensure compatibility with other operating systems, such as Debian 10 or Ubuntu 21.04.
+The compatibility of every IMEI build is automatically tested using GitHub Actions against the latest Ubuntu LTS version. However, manual testing is conducted to ensure compatibility with other operating systems, such as Debian 10 or Ubuntu 18.04.
 
 ### Operating System
 
 #### Recommended
 
 * Ubuntu 22.04 (__Jammy__ Jellyfish)
-* Debian 11 (__Bullseye__)
+* Debian 12 (__Bookworm__)
 
 #### Also compatible
 
-* Ubuntu 23.04 (__Lunar__ Lobster)
-* Ubuntu 22.10 (__Kinetic__ Kudu)
-* Ubuntu 21.10 (__Impish__ Indri)
-* Ubuntu 21.04 (__Hirsute__ Hippo)
-* Ubuntu 20.10 (__Groovy__ Gorilla)
 * Ubuntu 20.04 (__Focal__ Fossa)
-* Ubuntu 19.10 (__Eoan__ Ermine)
-* Ubuntu 19.04 (__Disco__ Dingo)
-* Ubuntu 18.10 (__Cosmic__ Cuttlefish)
 * Ubuntu 18.04 (__Bionic__ Beaver)
-* Ubuntu 17.10 (__Artful__ Aardvark)
-* Ubuntu 17.04 (__Zesty__ Zapus)
-* Ubuntu 16.10 (__Yakkety__ Yak)
-* Ubuntu 16.04 (__Xenial__ Xerus)
-* Debian 12 (__Bookworm__)
+* Debian 11 (__Bullseye__)
 * Debian 10 (__Buster__)
-* Debian 9 (__Stretch__)
+
+Other versions than the ones listed might be compatible as well, but they are not officially supported.
 
 #### Known issues
 
@@ -160,7 +149,7 @@ Additional options / switches:
 IMEI enforces a stringent policy that prohibits execution when ImageMagick is detected as pre-installed via the `apt` or `dpkg` package managers. Currently, there is no sanctioned method to bypass this limitation. To facilitate the installation of ImageMagick through IMEI, it is imperative to first remove any extant installations, e.g.:
 
 ```bash
-apt remove "*imagemagick*` --purge -y && apt autoremove --purge -y
+apt remove "*imagemagick*" --purge -y && apt autoremove --purge -y
 ```
 
 ### checkinstall vs. make

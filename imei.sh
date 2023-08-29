@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2023-09-29 17:15                          #
+# Date           : 2023-09-29 23:26                          #
 # License        : ISC                                       #
-# Version        : 6.8.3                                     #
+# Version        : 6.9.0                                     #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -499,9 +499,10 @@ install_deps() {
     } >>"$SOURCE_LIST"
 
     # Update package list and satisfy build dependencies for imagemagick
+    apt-get update -qq
+    
     if [ -n "$SKIP_BUILD_DEP" ]; then
-      apt-get update -qq &&
-        apt-get build-dep -qq imagemagick -y
+      apt-get build-dep -qq imagemagick -y
     fi
 
     # Install other build dependencies
@@ -595,7 +596,11 @@ install_aom() {
               --pkgversion="$AOM_VER" \
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="/usr/local/src" \
-              --requires="git,cmake \(\>= 3.6\),perl,yasm"
+              --fstrans=no \
+              --backup=no \
+              --deldoc=yes \
+              --deldesc=yes \
+              --delspec=yes
         else
           make install
         fi
@@ -685,7 +690,12 @@ install_libheif() {
               --pkgversion="$LIBHEIF_VER" \
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="/usr/local/src" \
-              --requires="automake,make,pkg-config,libde265-dev,libx265-dev,libjpeg-dev,imei-libaom"
+              --requires="libde265-dev,libx265-dev,imei-libaom" \
+              --fstrans=no \
+              --backup=no \
+              --deldoc=yes \
+              --deldesc=yes \
+              --delspec=yes
         else
           make install
         fi
@@ -767,7 +777,12 @@ install_jxl() {
               --pkgversion="$JXL_VER" \
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="/usr/local/src" \
-              --requires="cmake \(\>= 3.10\),pkg-config,libbrotli-dev,libgif-dev,libjpeg-dev,libopenexr-dev,libpng-dev,libwebp-dev"
+              --requires="libgif7,libjpeg-dev,libopenexr-dev,libbrotli-dev,imei-libaom,imei-libheif" \
+              --fstrans=no \
+              --backup=no \
+              --deldoc=yes \
+              --deldesc=yes \
+              --delspec=yes
         else
           make install
         fi
@@ -916,7 +931,12 @@ install_imagemagick() {
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="/usr/local/src" \
               --conflicts="imagemagick" \
-              --requires="pkg-config"
+              --requires="libraqm0,libgomp1,libfftw3-dev,liblcms2-2,libfontconfig1,libxext6,libltdl7,liblqr-1-0-dev,libwebp-dev,libzip-dev,libice-dev,libsm-dev,imei-libaom,imei-libheif,imei-libjxl" \
+              --fstrans=no \
+              --backup=no \
+              --deldoc=yes \
+              --deldesc=yes \
+              --delspec=yes
         else
           make install
         fi

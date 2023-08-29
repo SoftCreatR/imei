@@ -33,6 +33,13 @@ jobs:
       - name: Git checkout
         uses: actions/checkout@v3
 
+      - name: Pre-Cleanup
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+        run: |-
+          sudo apt remove "*imagemagick*" --purge -y
+          sudo apt autoremove --purge -y
+
       - name: Build
         env:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
