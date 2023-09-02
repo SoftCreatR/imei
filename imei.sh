@@ -955,9 +955,9 @@ install_imagemagick() {
           fi
 
           if [ "$IM_HEIC" == "without" ] && [ "$IM_JXL" == "without" ]; then
-            REQUIRES=$(echo "${REQUIRES}" | sed 's/,imei-libaom//')
+            REQUIRES="${REQUIRES//,imei-libaom/}"
           else
-            RECOMMENDS=$(echo "${RECOMMENDS}" | sed 's/imei-libaom,//')
+            RECOMMENDS="${RECOMMENDS//imei-libaom,/}"
           fi
 
           echo "image manipulation programs (IMEI v$INSTALLER_VER)" >>description-pak &&
