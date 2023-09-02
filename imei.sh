@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2023-09-29 23:26                          #
+# Date           : 2023-09-02 15:03                          #
 # License        : ISC                                       #
-# Version        : 6.9.0                                     #
+# Version        : 6.10.0                                    #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -106,6 +106,9 @@ while [ "$#" -gt 0 ]; do
     ;;
   --use-checkinstall | --checkinstall)
     CHECKINSTALL="yes"
+    ;;
+  --build-only)
+    INSTALL="no"
     ;;
   --no-backports)
     BACKPORTS="${CYELLOW}disabled${CEND}"
@@ -546,7 +549,7 @@ install_aom() {
       return
     fi
 
-    if [ -z "$SKIP_AOM" ]; then
+    if [ -z "$SKIP_AOM" ] && [ -z "$SKIP_LIBHEIF" ]; then
       if [ -z "$FORCE" ] && [ -n "$INSTALLED_AOM_VER" ] && [ "$(version "$INSTALLED_AOM_VER")" -ge "$(version "$AOM_VER")" ]; then
         echo -ne " Building aom                  [${CYELLOW}SKIPPED${CEND}]\\r"
         echo ""
@@ -600,7 +603,10 @@ install_aom() {
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
-              --delspec=yes
+              --delspec=yes \
+              --install="${INSTALL:-"yes"}"
+
+              make uninstall
         else
           make install
         fi
@@ -625,6 +631,8 @@ install_aom() {
 
 # Build libheif
 install_libheif() {
+  IM_HEIC="without"
+
   cd "$WORK_DIR" || exit 1
 
   if {
@@ -695,7 +703,10 @@ install_libheif() {
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
-              --delspec=yes
+              --delspec=yes \
+              --install="${INSTALL:-"yes"}"
+
+              make uninstall
         else
           make install
         fi
@@ -705,6 +716,7 @@ install_libheif() {
     } >>"$LOG_FILE" 2>&1
   }; then
     UPDATE_IMAGEMAGICK="yes"
+    IM_HEIC="with"
 
     echo -ne " Building libheif              [${CGREEN}OK${CEND}]\\r"
     echo ""
@@ -720,6 +732,8 @@ install_libheif() {
 
 # Build JPEG XL
 install_jxl() {
+  IM_JXL="without"
+
   cd "$WORK_DIR" || exit 1
 
   if {
@@ -764,8 +778,8 @@ install_jxl() {
           ./deps.sh &&
           mkdir "build" &&
           cd "build" &&
-          cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF ..
-        make
+          cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF .. &&
+          make
 
         if [ -n "$CHECKINSTALL" ]; then
           echo "JPEG XL image format reference implementation (IMEI v$INSTALLER_VER)" >>description-pak &&
@@ -782,7 +796,10 @@ install_jxl() {
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
-              --delspec=yes
+              --delspec=yes \
+              --install="${INSTALL:-"yes"}"
+
+              make uninstall
         else
           make install
         fi
@@ -792,6 +809,7 @@ install_jxl() {
     } >>"$LOG_FILE" 2>&1
   }; then
     UPDATE_IMAGEMAGICK="yes"
+    IM_JXL="with"
 
     echo -ne " Building jpegxl               [${CGREEN}OK${CEND}]\\r"
     echo ""
@@ -896,10 +914,10 @@ install_imagemagick() {
             --with-raqm \
             --with-gslib \
             --with-gvc \
-            --with-heic \
+            --${IM_HEIC}-heic \
             --with-jbig \
             --with-jpeg \
-            --with-jxl=yes \
+            --${IM_JXL}-jxl \
             --with-lcms \
             --with-openjp2 \
             --with-lqr \
@@ -921,6 +939,27 @@ install_imagemagick() {
           make
 
         if [ -n "$CHECKINSTALL" ]; then
+          REQUIRES="libraqm0,libgomp1,libfftw3-dev,liblcms2-2,libfontconfig1,libxext6,libltdl7,liblqr-1-0-dev,libwebp-dev,libjpeg-dev,libzip-dev,libice-dev,libsm-dev"
+          RECOMMENDS=""
+
+          if [ "$IM_HEIC" == "with" ]; then
+            REQUIRES="${REQUIRES},imei-libaom,imei-libheif"
+          else
+            RECOMMENDS="${RECOMMENDS:+$RECOMMENDS,}imei-libaom,imei-libheif"
+          fi
+
+          if [ "$IM_JXL" == "with" ]; then
+            REQUIRES="${REQUIRES},imei-libaom,imei-libjxl"
+          else
+            RECOMMENDS="${RECOMMENDS:+$RECOMMENDS,}imei-libaom,imei-libjxl"
+          fi
+
+          if [ "$IM_HEIC" == "without" ] && [ "$IM_JXL" == "without" ]; then
+            REQUIRES=$(echo "${REQUIRES}" | sed 's/,imei-libaom//')
+          else
+            RECOMMENDS=$(echo "${RECOMMENDS}" | sed 's/imei-libaom,//')
+          fi
+
           echo "image manipulation programs (IMEI v$INSTALLER_VER)" >>description-pak &&
             checkinstall \
               --default \
@@ -931,12 +970,16 @@ install_imagemagick() {
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="/usr/local/src" \
               --conflicts="imagemagick" \
-              --requires="libraqm0,libgomp1,libfftw3-dev,liblcms2-2,libfontconfig1,libxext6,libltdl7,liblqr-1-0-dev,libwebp-dev,libzip-dev,libice-dev,libsm-dev,imei-libaom,imei-libheif,imei-libjxl" \
+              --requires="${REQUIRES}" \
+              --recommends="${RECOMMENDS}" \
               --fstrans=no \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
-              --delspec=yes
+              --delspec=yes \
+              --install="${INSTALL:-"yes"}"
+
+              make uninstall
         else
           make install
         fi
@@ -970,20 +1013,32 @@ install_imagemagick() {
 finish_installation() {
   echo -ne ' Verifying installation        [..]\r'
 
-  # Check if ImageMagick version matches
-  {
-    VERIFY_INSTALLATION=$("$BUILD_DIR/bin/identify" -version | grep -oP "$IMAGEMAGICK_VER")
-  } >>"$LOG_FILE" 2>&1
+  if [ -z "$INSTALL" ]; then
+    # Check if ImageMagick version matches
+    {
+      VERIFY_INSTALLATION=$("$BUILD_DIR/bin/identify" -version | grep -oP "$IMAGEMAGICK_VER")
+    } >>"$LOG_FILE" 2>&1
 
-  if [ -n "$VERIFY_INSTALLATION" ]; then
-    echo -ne " Verifying installation        [${CGREEN}OK${CEND}]\\r"
-    echo ""
-    echo -e " ${CGREEN}Process has been finished successfully after $(displaytime $(($(date +%s) - START)))!${CEND}"
-    echo ""
+    if [ -n "$VERIFY_INSTALLATION" ]; then
+      echo -ne " Verifying installation        [${CGREEN}OK${CEND}]\\r"
+      echo ""
+      echo ""
+      echo -e " ${CBLUE}Process has been finished successfully after $(displaytime $(($(date +%s) - START)))!${CEND}"
+      echo ""
+    else
+      echo -ne " Verifying installation        [${CRED}FAILURE${CEND}]\\r"
+      echo ""
+      echo ""
+      echo -e " ${CRED}Please check $LOG_FILE for details.${CEND}"
+      echo ""
+      echo -e " ${CBLUE}Process has been finished after $(displaytime $(($(date +%s) - START)))!${CEND}"
+      echo ""
+    fi
   else
-    echo -ne " Verifying installation        [${CRED}FAILURE${CEND}]\\r"
+    echo -ne " Verifying installation        [${CYELLOW}SKIPPED (Checkinstall is set to build-only)${CEND}]\\r"
     echo ""
-    echo -e " ${CBLUE}Please check $LOG_FILE for details.${CEND}"
+    echo ""
+    echo -e " ${CBLUE}Process has been finished after $(displaytime $(($(date +%s) - START)))!${CEND}"
     echo ""
   fi
 }
@@ -992,7 +1047,8 @@ finish_installation() {
 # Install everything #
 ######################
 
-echo -ne "\ec"
+#echo -ne "\ec"
+echo -ne "\033c"
 
 WELCOME_TXT="Welcome to IMEI - ImageMagick Easy Install ${INSTALLER_VER}"
 WELCOME_LEN=${#WELCOME_TXT}

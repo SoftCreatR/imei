@@ -130,6 +130,7 @@ Additional options / switches:
 
 * `--no-sig-verify` / `--dev` : Disable signature verification on startup
 * `--use-checkinstall` / `--checkinstall` : Use `checkinstall` instead of `make`
+* `--build-only` : Used in combination with `--use-checkinstall` to build packages, without installing them
 * `--no-backports` : Disable temporary installation of OS backports (they may be used anyways, depending on your server configuration)
 
 **Default options** :

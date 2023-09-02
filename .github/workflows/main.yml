@@ -45,8 +45,8 @@ jobs:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         run: |-
           sudo bash imei.sh --ci --log-file "/build.log"
-          /usr/local/bin/identify -version
-          [[ "$(/usr/local/bin/identify -version)" == *"jxl"* ]] && echo "Test build OK" || (echo "Test build FAILED" && exit 1)
+          identify -version
+          [[ "$(identify -version)" == *"heic"* ]] && [[ "$(identify -version)" == *"jxl"* ]] && echo "Test build OK" || (echo "Test build FAILED" && exit 1)
 
       - name: On failure
         if: ${{ failure() }}
