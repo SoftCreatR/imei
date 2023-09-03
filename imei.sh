@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2023-09-02 15:03                          #
+# Date           : 2023-09-03 02:02                          #
 # License        : ISC                                       #
-# Version        : 6.10.0                                    #
+# Version        : 6.10.1                                    #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -939,7 +939,7 @@ install_imagemagick() {
           make
 
         if [ -n "$CHECKINSTALL" ]; then
-          REQUIRES="libraqm0,libgomp1,libfftw3-dev,liblcms2-2,libfontconfig1,libxext6,libltdl7,liblqr-1-0-dev,libwebp-dev,libjpeg-dev,libzip-dev,libice-dev,libsm-dev"
+          REQUIRES="libraqm0,libgomp1,libfftw3-dev,liblcms2-2,libfontconfig1,libxext6,libltdl7,liblqr-1-0-dev,webp,libjpeg-dev,libzip-dev,libice-dev,libsm-dev"
           RECOMMENDS=""
 
           if [ "$IM_HEIC" == "with" ]; then
