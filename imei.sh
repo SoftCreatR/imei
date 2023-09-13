@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2023-09-03 02:02                          #
+# Date           : 2023-09-13 22:27                          #
 # License        : ISC                                       #
-# Version        : 6.10.1                                    #
+# Version        : 6.10.2                                    #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -48,7 +48,7 @@ fi
 # Script arguments #
 ####################
 
-while [ "$#" -gt 0 ]; do
+while [ $# -gt 0 ]; do
   case "$1" in
   --force)
     FORCE="yes"
@@ -56,11 +56,21 @@ while [ "$#" -gt 0 ]; do
   --force-imagemagick | --force-im)
     FORCE_IMAGEMAGICK="yes"
     ;;
-  --imagemagick-version | --im-version)
-    IMAGEMAGICK_VER=$2
+  --imagemagick-version* | --im-version*)
+    if [[ "$1" == *=* ]]; then
+      IMAGEMAGICK_VER="${1#*=}"
+    else
+      shift
+      IMAGEMAGICK_VER="$1"
+    fi
     ;;
-  --imagemagick-quantum-depth | --im-q)
-    QUANTUM_DEPTH=$2
+  --imagemagick-quantum-depth* | --im-q*)
+    if [[ "$1" == *=* ]]; then
+      QUANTUM_DEPTH="${1#*=}"
+    else
+      shift
+      QUANTUM_DEPTH="$1"
+    fi
     ;;
   --imagemagick-opencl | --im-ocl)
     USE_OPENCL="yes"
@@ -68,35 +78,70 @@ while [ "$#" -gt 0 ]; do
   --skip-aom)
     SKIP_AOM="yes"
     ;;
-  --aom-version)
-    AOM_VER=$2
+  --aom-version*)
+    if [[ "$1" == *=* ]]; then
+      AOM_VER="${1#*=}"
+    else
+      shift
+      AOM_VER="$1"
+    fi
     ;;
   --skip-libheif | --skip-heif)
     SKIP_LIBHEIF="yes"
     ;;
-  --libheif-version | --heif-version)
-    LIBHEIF_VER=$2
+  --libheif-version* | --heif-version*)
+    if [[ "$1" == *=* ]]; then
+      LIBHEIF_VER="${1#*=}"
+    else
+      shift
+      LIBHEIF_VER="$1"
+    fi
     ;;
   --skip-jpeg-xl | --skip-jxl)
     SKIP_JXL="yes"
     ;;
-  --jpeg-xl-version | --jxl-version)
-    JXL_VER=$2
+  --jpeg-xl-version* | --jxl-version*)
+    if [[ "$1" == *=* ]]; then
+      JXL_VER="${1#*=}"
+    else
+      shift
+      JXL_VER="$1"
+    fi
     ;;
   --skip-dependencies | --skip-deps)
     SKIP_DEPS="yes"
     ;;
-  --log-file)
-    LOG_FILE=$2
+  --log-file*)
+    if [[ "$1" == *=* ]]; then
+      LOG_FILE="${1#*=}"
+    else
+      shift
+      LOG_FILE="$1"
+    fi
     ;;
-  --work-dir)
-    WORK_DIR=$2
+  --work-dir*)
+    if [[ "$1" == *=* ]]; then
+      WORK_DIR="${1#*=}"
+    else
+      shift
+      WORK_DIR="$1"
+    fi
     ;;
-  --build-dir)
-    BUILD_DIR=$2
+  --build-dir*)
+    if [[ "$1" == *=* ]]; then
+      BUILD_DIR="${1#*=}"
+    else
+      shift
+      BUILD_DIR="$1"
+    fi
     ;;
-  --config-dir)
-    CONFIG_DIR=$2
+  --config-dir*)
+    if [[ "$1" == *=* ]]; then
+      CONFIG_DIR="${1#*=}"
+    else
+      shift
+      CONFIG_DIR="$1"
+    fi
     ;;
   --ci)
     CI_BUILD="yes"
@@ -113,11 +158,21 @@ while [ "$#" -gt 0 ]; do
   --no-backports)
     BACKPORTS="${CYELLOW}disabled${CEND}"
     ;;
-  --build-cflags)
-    BUILD_CFLAGS=$2
+  --build-cflags*)
+    if [[ "$1" == *=* ]]; then
+      BUILD_CFLAGS="${1#*=}"
+    else
+      shift
+      BUILD_CFLAGS="$1"
+    fi
     ;;
-  --build-cxxflags)
-    BUILD_CXXFLAGS=$2
+  --build-cxxflags*)
+    if [[ "$1" == *=* ]]; then
+      BUILD_CXXFLAGS="${1#*=}"
+    else
+      shift
+      BUILD_CXXFLAGS="$1"
+    fi
     ;;
   *) ;;
   esac
@@ -1081,6 +1136,18 @@ echo " Checkinstall    : ${CHECKINSTALL:-"no"}"
 echo " CI Build        : ${CI_BUILD:-"no"}"
 echo " Signature Check : ${VERIFY_SIGNATURE:-"yes"}"
 echo ""
+
+if [ -n "$CI_BUILD" ]; then
+  echo " ####################"
+  echo " Version Information"
+  echo " ####################"
+  echo ""
+  echo " libaom Version  : $AOM_VER"
+  echo " libheif Version : $LIBHEIF_VER"
+  echo " libjxl Version  : $JXL_VER"
+  echo " IM Version      : $IMAGEMAGICK_VER"
+  echo ""
+fi
 
 echo " #####################"
 echo " Installation Process"
