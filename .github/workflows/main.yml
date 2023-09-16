@@ -1,4 +1,3 @@
----
 name: Main
 
 on:
@@ -14,7 +13,7 @@ on:
 
 jobs:
   ShellCheck:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Git checkout
@@ -27,7 +26,7 @@ jobs:
 
   TestBuild:
     needs: ShellCheck
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     
     steps:
       - name: Git checkout
@@ -54,7 +53,7 @@ jobs:
 
   Sign:
     needs: TestBuild
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Git checkout
@@ -80,3 +79,40 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git commit -m "Updated signature" -a || echo "No changes to commit"
           git push
+
+  CreateRelease:
+    needs: Sign
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+
+      - name: Check if version differs
+        id: version-check
+        run: |
+          LATEST_VERSION=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" | jq -r .tag_name)
+          THIS_VERSION=$(grep -oP 'Version\s*:\s*\K[0-9.]+' imei.sh)
+          echo "Latest version: $LATEST_VERSION"
+          echo "This version: $THIS_VERSION"
+          if [[ "$LATEST_VERSION" != "$THIS_VERSION" ]]; then
+            echo "RELEASE_NEEDED=true" >> $GITHUB_OUTPUT
+            echo "LATEST_VERSION=$LATEST_VERSION" >> $GITHUB_OUTPUT
+            echo "THIS_VERSION=$THIS_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "RELEASE_NEEDED=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        id: create-release
+        if: steps.version-check.outputs.RELEASE_NEEDED == 'true'
+        run: |
+          LATEST_VERSION="${{ steps.version-check.outputs.LATEST_VERSION }}"
+          THIS_VERSION="${{ steps.version-check.outputs.THIS_VERSION }}"
+          RELEASE_BODY="**Full Changelog**: https://github.com/${{ github.repository }}/compare/$LATEST_VERSION...$THIS_VERSION"
+          echo "Creating release $THIS_VERSION..."
+          echo "Tagging commit..."
+          git tag $THIS_VERSION
+          git push --tag
+          echo "Creating release..."
+          response=$(curl -s --data "{\"tag_name\": \"$THIS_VERSION\", \"name\": \"$THIS_VERSION\", \"body\": \"$RELEASE_BODY\"}" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases")

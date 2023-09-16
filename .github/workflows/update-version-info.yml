@@ -14,14 +14,15 @@ on:
 
 jobs:
   Update:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Git checkout
         uses: actions/checkout@v3
 
       - name: Update Version Information
-        run: sudo bash update_version_info.sh -- && echo "OK"
+        run: |-
+          sudo bash update_version_info.sh -- && echo "OK"
 
       - name: Commit and push on changes
         run: |-
