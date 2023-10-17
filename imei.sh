@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2023-09-13 23:33                          #
+# Date           : 2023-10-17 19:33                          #
 # License        : ISC                                       #
-# Version        : 6.10.3                                    #
+# Version        : 6.10.4                                    #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -205,23 +205,12 @@ if [[ -z "$QUANTUM_DEPTH" || ! " ${allowedQuantumDepth[*]} " =~ $QUANTUM_DEPTH ]
   QUANTUM_DEPTH=16
 fi
 
-if [ -f "/.dockerenv" ]; then
-  # default optimize for max. CPU compatibility
-  if [ -z "$BUILD_CFLAGS" ]; then
-    BUILD_CFLAGS="-O3 -mtune=generic" 
-  fi
+if [ -z "$BUILD_CFLAGS" ]; then
+  BUILD_CFLAGS="-O3 -mtune=generic" 
+fi
 
-  if [ -z "$BUILD_CXXFLAGS" ]; then
-    BUILD_CXXFLAGS="-O3 -mtune=generic"
-  fi
-else
-  if [ -z "$BUILD_CFLAGS" ]; then
-    BUILD_CFLAGS="-O3 -march=native"
-  fi
-
-  if [ -z "$BUILD_CXXFLAGS" ]; then
-    BUILD_CXXFLAGS="-O3 -march=native"
-  fi
+if [ -z "$BUILD_CXXFLAGS" ]; then
+  BUILD_CXXFLAGS="-O3 -mtune=generic"
 fi
 
 START=$(date +%s)

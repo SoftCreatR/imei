@@ -91,10 +91,10 @@ Though the installer performs a self check upon startup, you can also perform it
 To do so, `openssl` is required:
 
 ```bash
-wget https://dist.1-2.dev/imei.sh && \                                  # Download IMEI
-wget https://dist.1-2.dev/imei.sh.sig && \                              # Download signature file
-wget https://dist.1-2.dev/imei.sh.pem && \                              # Download public key
-openssl dgst -sha512 -verify imei.sh.pem -signature imei.sh.sig imei.sh # Verify
+wget -q https://dist.1-2.dev/imei.sh && \
+wget -q https://dist.1-2.dev/imei.sh.sig && \
+wget -q https://dist.1-2.dev/imei.sh.pem && \
+openssl dgst -sha512 -verify imei.sh.pem -signature imei.sh.sig imei.sh
 ```
 
 ### Alternative integrity check
