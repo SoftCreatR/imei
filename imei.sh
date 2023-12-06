@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2023-10-17 19:33                          #
+# Date           : 2023-12-06 11:38                          #
 # License        : ISC                                       #
-# Version        : 6.10.4                                    #
+# Version        : 6.10.5                                    #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -650,7 +650,9 @@ install_aom() {
               --delspec=yes \
               --install="${INSTALL:-"yes"}"
 
-              make uninstall
+              if [ -n "$INSTALL" ]; then
+                make uninstall
+              fi
         else
           make install
         fi
@@ -750,7 +752,9 @@ install_libheif() {
               --delspec=yes \
               --install="${INSTALL:-"yes"}"
 
-              make uninstall
+              if [ -n "$INSTALL" ]; then
+                make uninstall
+              fi
         else
           make install
         fi
@@ -843,7 +847,9 @@ install_jxl() {
               --delspec=yes \
               --install="${INSTALL:-"yes"}"
 
-              make uninstall
+              if [ -n "$INSTALL" ]; then
+                make uninstall
+              fi
         else
           make install
         fi
@@ -1023,7 +1029,9 @@ install_imagemagick() {
               --delspec=yes \
               --install="${INSTALL:-"yes"}"
 
-              make uninstall
+              if [ -n "$INSTALL" ]; then
+                make uninstall
+              fi
         else
           make install
         fi
