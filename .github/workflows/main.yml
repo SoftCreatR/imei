@@ -10,6 +10,10 @@ on:
     tags-ignore:
       - '**'
   workflow_dispatch:
+    inputs:
+      im_version:
+        default: ""
+        description: "ImageMagick Version"
 
 jobs:
   ShellCheck:
@@ -17,7 +21,7 @@ jobs:
 
     steps:
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run Shellcheck
         uses: azohra/shell-linter@v0.6.0
@@ -30,7 +34,7 @@ jobs:
     
     steps:
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Pre-Cleanup
         env:
@@ -43,7 +47,9 @@ jobs:
         env:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         run: |-
-          sudo bash imei.sh --ci --log-file "/build.log"
+          INPUT=${{ github.event.inputs.im_version }}
+          IM_VERSION=${INPUT:-""}
+          sudo bash imei.sh --ci --im-version "$IM_VERSION" --log-file "/build.log"
           identify -version
           [[ "$(identify -version)" == *"heic"* ]] && [[ "$(identify -version)" == *"jxl"* ]] && echo "Test build OK" || (echo "Test build FAILED" && exit 1)
 
@@ -57,7 +63,7 @@ jobs:
 
     steps:
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Sign release
         env:
@@ -86,7 +92,7 @@ jobs:
 
     steps:
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: main
