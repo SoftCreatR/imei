@@ -833,6 +833,7 @@ install_jxl() {
           cd "libjxl-$JXL_VER"
           
           # 45e552880a862c56ab3b356b8ff28c0b0ff8ac94@libjxl
+          # shellcheck disable=SC2016
           sed -i 's/varname="\${varname\/\[\\\/-\]\/_}"/varname="\${varname\/\/\[\\\/-\]\/_}"/' ./deps.sh
 
           ./deps.sh &&
