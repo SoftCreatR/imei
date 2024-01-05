@@ -110,15 +110,16 @@ openssl dgst -sha512 -verify imei.sh.pem -signature imei.sh.sig imei.sh
 Currently available build options are
 
 * `--skip-dependencies` / `--skip-deps` : Skip installation of dependencies
-* `--imagemagick-version` / `--im-version` : Build the given ImageMagick version (e.g. `7.0.10-28`)
+* `--imagemagick-version` / `--im-version` : Build the given ImageMagick version (e.g. `7.1.1-25`)
 * `--force-imagemagick` / `--force-im` : Force building of ImageMagick only, even if it's are already installed in a newer or the latest version
 * `--imagemagick-quantum-depth` / `--im-q` : ImageMagick Quantum Depth (8, 16 or 32)
 * `--imagemagick-opencl` / `--im-ocl` : Install ImageMagick with OpenCL support
-* `--aom-version` : Build the given aom version (e.g. `2.0.0`)
+* `--imagemagick-static` / `--im-static` : Enables static libraries, disables shared libraries
+* `--aom-version` : Build the given aom version (e.g. `3.8.0`)
 * `--skip-aom` : Skip building aom
-* `--libheif-version` / `--heif-version` : Build the given libheif version (e.g. `1.8.0`)
+* `--libheif-version` / `--heif-version` : Build the given libheif version (e.g. `1.17.6`)
 * `--skip-libheif` / `--skip-heif` : Skip building libheif
-* `--jpeg-xl-version` / `--jxl-version` : Build the given JPEG XL version (e.g. `0.3.3`)
+* `--jpeg-xl-version` / `--jxl-version` : Build the given JPEG XL version (e.g. `0.9.0`)
 * `--skip-jpeg-xl` / `--skip-jxl` : Skip building JPEG XL
 * `--log-file` : Log everything to the file provided
 * `--work-dir` : Download, extract & build within the directory provided

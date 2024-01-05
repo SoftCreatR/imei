@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2023-12-06 11:38                          #
+# Date           : 2024-01-05 13:42                          #
 # License        : ISC                                       #
-# Version        : 6.10.5                                    #
+# Version        : 6.11.0                                    #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -74,6 +74,9 @@ while [ $# -gt 0 ]; do
     ;;
   --imagemagick-opencl | --im-ocl)
     USE_OPENCL="yes"
+    ;;
+  --imagemagick-build-static | --im-build-static)
+    BUILD_STATIC="yes"
     ;;
   --skip-aom)
     SKIP_AOM="yes"
@@ -318,6 +321,9 @@ if [ -z "$LOG_FILE" ]; then
   LOG_FILE="/var/log/imei-$START.log"
 fi
 
+# Link log file
+ln -fs "$LOG_FILE" /var/log/imei.log
+
 # Create working directory
 [ ! -d "$WORK_DIR" ] && mkdir -p "$WORK_DIR"
 
@@ -553,7 +559,7 @@ install_deps() {
     fi
 
     # Install other build dependencies
-    PKG_LIST=(git curl make cmake automake libtool yasm g++ pkg-config perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev)
+    PKG_LIST=(git curl make cmake automake libtool yasm g++ pkg-config perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libxml2 libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev)
 
     if [[ "${OS_SHORT_CODENAME,,}" != *"stretch"* && "${OS_SHORT_CODENAME,,}" != *"xenial"* ]]; then
       PKG_LIST+=(libraqm-dev libraqm0)
@@ -643,6 +649,7 @@ install_aom() {
               --pkgversion="$AOM_VER" \
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="/usr/local/src" \
+              --provides="libaom3 \(= $AOM_VER\)" \
               --fstrans=no \
               --backup=no \
               --deldoc=yes \
@@ -745,6 +752,7 @@ install_libheif() {
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="/usr/local/src" \
               --requires="libde265-dev,libx265-dev,imei-libaom" \
+              --provides="libheif1 \(= $LIBHEIF_VER\)" \
               --fstrans=no \
               --backup=no \
               --deldoc=yes \
@@ -822,12 +830,16 @@ install_jxl() {
         fi
 
         tar -xf "libjxl-$JXL_VER.tar.gz" &&
-          cd "libjxl-$JXL_VER" &&
+          cd "libjxl-$JXL_VER"
+          
+          # 45e552880a862c56ab3b356b8ff28c0b0ff8ac94@libjxl
+          sed -i 's/varname="\${varname\/\[\\\/-\]\/_}"/varname="\${varname\/\/\[\\\/-\]\/_}"/' ./deps.sh
+
           ./deps.sh &&
           mkdir "build" &&
           cd "build" &&
           cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF .. &&
-          make
+          cmake --build .
 
         if [ -n "$CHECKINSTALL" ]; then
           echo "JPEG XL image format reference implementation (IMEI v$INSTALLER_VER)" >>description-pak &&
@@ -839,7 +851,8 @@ install_jxl() {
               --pkgversion="$JXL_VER" \
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="/usr/local/src" \
-              --requires="libgif7,libjpeg-dev,libopenexr-dev,libbrotli-dev,imei-libaom,imei-libheif" \
+              --requires="libgif7,libjpeg-dev,libopenexr-dev,libbrotli-dev" \
+              --provides="libjxl$JXL_VER \(= $JXL_VER\)" \
               --fstrans=no \
               --backup=no \
               --deldoc=yes \
@@ -851,7 +864,7 @@ install_jxl() {
                 make uninstall
               fi
         else
-          make install
+          cmake --install .
         fi
 
         ldconfig $LIB_DIR
@@ -899,9 +912,11 @@ install_imagemagick() {
     {
       if [ -n "$IMAGEMAGICK_VER" ]; then
         DIR_SUFFIX=""
+        MAIN_VER="7"
 
         if [ "$(echo "$IMAGEMAGICK_VER" | cut -b-1)" -eq 6 ]; then
           DIR_SUFFIX="6"
+          MAIN_VER="6"
 
           httpGet "$GH_FILE_BASE/ImageMagick/ImageMagick6/tar.gz/$IMAGEMAGICK_VER" >"ImageMagick-$IMAGEMAGICK_VER.tar.gz"
         else
@@ -929,13 +944,22 @@ install_imagemagick() {
           OPENCL_C="enable"
         fi
 
+        # see https://github.com/SoftCreatR/imei/issues/100
+        if [ -n "$BUILD_STATIC" ]; then
+          STATIC_C="enable"
+          SHARED_C="disable"
+        else
+          STATIC_C="disable"
+          SHARED_C="enable"
+        fi
+
         tar -xf "ImageMagick-$IMAGEMAGICK_VER.tar.gz" &&
           cd "ImageMagick$DIR_SUFFIX-$IMAGEMAGICK_VER" &&
           ./configure --prefix="$BUILD_DIR" --sysconfdir="$CONFIG_DIR" \
             CFLAGS="$BUILD_CFLAGS" \
             CXXFLAGS="$BUILD_CXXFLAGS" \
-            --disable-static \
-            --enable-shared \
+            --${STATIC_C}-static \
+            --${SHARED_C}-shared \
             --enable-openmp \
             --enable-cipher \
             --enable-hdri \
@@ -989,7 +1013,7 @@ install_imagemagick() {
           make
 
         if [ -n "$CHECKINSTALL" ]; then
-          REQUIRES="libraqm0,libgomp1,libfftw3-dev,liblcms2-2,libfontconfig1,libxext6,libltdl7,liblqr-1-0-dev,webp,libjpeg-dev,libzip-dev,libice-dev,libsm-dev"
+          REQUIRES="libraqm0,libgomp1,libfftw3-dev,liblcms2-2,libfontconfig1,libxext6,libltdl7,liblqr-1-0-dev,webp|libwebp-dev,libjpeg-dev,libzip-dev,libice-dev,libsm-dev,libxml2|libxml2-dev"
           RECOMMENDS=""
 
           if [ "$IM_HEIC" == "with" ]; then
@@ -1022,16 +1046,13 @@ install_imagemagick() {
               --conflicts="imagemagick" \
               --requires="${REQUIRES}" \
               --recommends="${RECOMMENDS}" \
+              --provides="imagemagick \(= $IMAGEMAGICK_VER\),imagemagick-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickcore-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickwand-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\)" \
               --fstrans=no \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
               --install="${INSTALL:-"yes"}"
-
-              if [ -n "$INSTALL" ]; then
-                make uninstall
-              fi
         else
           make install
         fi
