@@ -61,7 +61,6 @@ Other versions than the ones listed might be compatible as well, but they are no
 
 - To compile JPEG XL, CMake 3.10 or a newer version is required. On older systems like Debian 9, the version provided by maintainers is not adequate. In such cases, the compilation of JPEG XL will be skipped.
 - For libaom, a minimum CMake version of 3.6 is necessary. On older systems, the version provided by maintainers might not be sufficient. In these instances, the compilation of libaom will be skipped. Consequently, libheif will also be skipped since it depends on libaom.
-- When using GitHub actions for building, `heic` is not reported as a built-in delegate. Although it was reported in the past, it suddenly stopped. Therefore, it is advisable to avoid using it as an assertion for tests.
 
 ---
 
@@ -165,6 +164,10 @@ By default, IMEI utilizes the `make` method, but you have the option to use `che
 IMEI provides the option to install ImageMagick with OpenCL support. However, it is important to consider that according to the information provided [here](https://github.com/SoftCreatR/imei/issues/69#issuecomment-1563379174), ImageMagick's performance is significantly lower when utilizing OpenCL compared to OpenMP.
 
 When you choose to install ImageMagick with OpenCL support using IMEI, please be aware that IMEI only compiles ImageMagick with OpenCL capabilities. It does not handle the installation of necessary drivers or any other specific requirements to enable general OpenCL support on your system.
+
+### PHP Imagick extension
+
+The ImageMagick installation facilitated through IMEI exhibits full compatibility with the Imagick extension of PHP. It is imperative to note that the compilation of Imagick must be conducted against the version of ImageMagick that is currently installed, rather than vice versa. Consequently, subsequent to the installation of ImageMagick, it is essential to undertake the reinstallation of the Imagick extension. This reinstallation can be executed either through the PECL interface or in accordance with the procedure delineated [here](https://github.com/SoftCreatR/imei/issues/80#issuecomment-1566265225).
 
 ---
 
