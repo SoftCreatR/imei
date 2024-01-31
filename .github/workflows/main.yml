@@ -43,6 +43,11 @@ jobs:
           sudo apt remove "*imagemagick*" --purge -y
           sudo apt autoremove --purge -y
 
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: git curl make cmake automake libtool yasm g++ pkg-config perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libxml2 libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev
+          version: 1.0
+
       - name: Build
         env:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
