@@ -139,7 +139,7 @@ Additional options / switches:
 * ImageMagick version: `7.1.1-29 (Q16)`
 * libaom version: `3.8.1`
 * libheif version: `1.17.6`
-* libjxl version: `0.10.1`<!-- versions end -->
+* libjxl version: `0.10.2`<!-- versions end -->
 * Log File: `/var/log/imei-###.log` (`###` will be the timestamp of the script execution)
 * Work Dir: `/usr/local/src/imei`
 * Build Dir: `/usr/local`
