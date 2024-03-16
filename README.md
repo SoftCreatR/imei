@@ -45,14 +45,15 @@ The compatibility of every IMEI build is automatically tested using GitHub Actio
 
 #### Recommended
 
+* Ubuntu 24.04 (__Noble__ Numbat)
 * Ubuntu 22.04 (__Jammy__ Jellyfish)
+* Ubuntu 20.04 (__Focal__ Fossa)
 * Debian 12 (__Bookworm__)
+* Debian 11 (__Bullseye__)
 
 #### Also compatible
 
-* Ubuntu 20.04 (__Focal__ Fossa)
 * Ubuntu 18.04 (__Bionic__ Beaver)
-* Debian 11 (__Bullseye__)
 * Debian 10 (__Buster__)
 
 Other versions than the ones listed might be compatible as well, but they are not officially supported.
