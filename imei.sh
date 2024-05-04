@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2024-01-05 13:42                          #
+# Date           : 2024-05-04 23:50                          #
 # License        : ISC                                       #
-# Version        : 6.11.0                                    #
+# Version        : 6.11.1                                    #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -648,7 +648,7 @@ install_aom() {
               --pkglicense="BSD-2-Clause" \
               --pkgversion="$AOM_VER" \
               --pkgrelease="imei$INSTALLER_VER" \
-              --pakdir="/usr/local/src" \
+              --pakdir="$BUILD_DIR" \
               --provides="libaom3 \(= $AOM_VER\)" \
               --fstrans=no \
               --backup=no \
@@ -750,7 +750,7 @@ install_libheif() {
               --pkglicense="GPL-2.0-or-later" \
               --pkgversion="$LIBHEIF_VER" \
               --pkgrelease="imei$INSTALLER_VER" \
-              --pakdir="/usr/local/src" \
+              --pakdir="$BUILD_DIR" \
               --requires="libde265-dev,libx265-dev,imei-libaom" \
               --provides="libheif1 \(= $LIBHEIF_VER\)" \
               --fstrans=no \
@@ -851,7 +851,7 @@ install_jxl() {
               --pkglicense="Apache-2.0" \
               --pkgversion="$JXL_VER" \
               --pkgrelease="imei$INSTALLER_VER" \
-              --pakdir="/usr/local/src" \
+              --pakdir="$BUILD_DIR" \
               --requires="libgif7,libjpeg-dev,libopenexr-dev,libbrotli-dev" \
               --provides="libjxl$JXL_VER \(= $JXL_VER\)" \
               --fstrans=no \
@@ -1043,7 +1043,7 @@ install_imagemagick() {
               --pkglicense="Apache-2.0" \
               --pkgversion="$IMAGEMAGICK_VER" \
               --pkgrelease="imei$INSTALLER_VER" \
-              --pakdir="/usr/local/src" \
+              --pakdir="$BUILD_DIR" \
               --conflicts="imagemagick" \
               --requires="${REQUIRES}" \
               --recommends="${RECOMMENDS}" \
