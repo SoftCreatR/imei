@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2024-05-04 23:50                          #
+# Date           : 2024-05-20 02:29                          #
 # License        : ISC                                       #
-# Version        : 6.11.1                                    #
+# Version        : 6.11.2                                    #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -223,7 +223,7 @@ OS_ARCH="$(uname -m)"
 GH_FILE_BASE="https://codeload.github.com"
 SOURCE_LIST="/etc/apt/sources.list.d/imei.list"
 LIB_DIR="/usr/local"
-CMAKE_VERSION=""
+CMAKE_VERSION="0.0.0"
 
 # Colors
 CSI='\033['
@@ -558,15 +558,20 @@ install_deps() {
       apt-get build-dep -qq imagemagick -y
     fi
 
-    # Install other build dependencies
-    PKG_LIST=(git curl make cmake automake libtool yasm g++ pkg-config perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libxml2 libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev)
-
-    if [[ "${OS_SHORT_CODENAME,,}" != *"stretch"* && "${OS_SHORT_CODENAME,,}" != *"xenial"* ]]; then
-      PKG_LIST+=(libraqm-dev libraqm0)
-    fi
+    # Install minimum build dependencies
+    PKG_LIST=(git curl make cmake automake libtool yasm g++ pkg-config perl)
 
     if [ -n "$CHECKINSTALL" ]; then
       PKG_LIST+=(checkinstall)
+    fi
+
+    apt-get install -y "${PKG_LIST[@]}"
+
+    # Install imagemagick + delegates build dependencies
+    PKG_LIST=(libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libxml2 libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev)
+
+    if [[ "${OS_SHORT_CODENAME,,}" != *"stretch"* && "${OS_SHORT_CODENAME,,}" != *"xenial"* ]]; then
+      PKG_LIST+=(libraqm-dev libraqm0)
     fi
 
     apt-get install -y "${PKG_LIST[@]}"
@@ -593,7 +598,7 @@ install_aom() {
     echo -ne ' Building aom                  [..]\r'
 
     if [ "$(version "$CMAKE_VERSION")" -lt "$(version 3.6)" ]; then
-      echo -ne " Building aom                  [${CYELLOW}SKIPPED (CMAKE version not sufficient)${CEND}]\\r"
+      echo -ne " Building aom                  [${CYELLOW}SKIPPED (CMAKE version $CMAKE_VERSION not sufficient)${CEND}]\\r"
       echo ""
 
       return
@@ -796,7 +801,7 @@ install_jxl() {
     echo -ne ' Building jpegxl               [..]\r'
 
     if [ "$(version "$CMAKE_VERSION")" -lt "$(version 3.10)" ]; then
-      echo -ne " Building jpegxl               [${CYELLOW}SKIPPED (CMAKE version not sufficient)${CEND}]\\r"
+      echo -ne " Building jpegxl               [${CYELLOW}SKIPPED (CMAKE version $CMAKE_VERSION not sufficient)${CEND}]\\r"
       echo ""
 
       return
