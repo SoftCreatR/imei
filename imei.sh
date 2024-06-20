@@ -1019,7 +1019,7 @@ install_imagemagick() {
           make
 
         if [ -n "$CHECKINSTALL" ]; then
-          REQUIRES="libraqm0,libgomp1,libfftw3-dev,liblcms2-2,libfontconfig1,libxext6,libltdl7,liblqr-1-0-dev,webp|libwebp-dev,libjpeg-dev,libzip-dev,libice-dev,libsm-dev,libxml2|libxml2-dev"
+          REQUIRES="libraqm0,libgomp1,libfftw3-dev,liblcms2-2,libfontconfig1,libxext6,libltdl7,liblqr-1-0-dev,webp\|libwebp-dev,libjpeg-dev,libzip-dev,libice-dev,libsm-dev,libxml2\|libxml2-dev"
           RECOMMENDS=""
 
           if [ "$IM_HEIC" == "with" ]; then
