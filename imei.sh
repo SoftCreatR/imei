@@ -6,9 +6,9 @@
 #                  including advanced delegate support.      #
 #                                                            #
 # Author         : Sascha Greuel <hello@1-2.dev>             #
-# Date           : 2024-05-20 02:29                          #
+# Date           : 2024-06-20 11:28                          #
 # License        : ISC                                       #
-# Version        : 6.11.2                                    #
+# Version        : 6.11.3                                    #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
