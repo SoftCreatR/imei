@@ -758,6 +758,7 @@ install_libheif() {
               --pakdir="$BUILD_DIR" \
               --requires="libde265-dev,libx265-dev,imei-libaom" \
               --provides="libheif1 \(= $LIBHEIF_VER\)" \
+              --conflicts="libheif1" \
               --fstrans=no \
               --backup=no \
               --deldoc=yes \
@@ -1049,10 +1050,10 @@ install_imagemagick() {
               --pkgversion="$IMAGEMAGICK_VER" \
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="$BUILD_DIR" \
-              --conflicts="imagemagick" \
+              --conflicts="imagemagick,imagemagick-7,imagemagick-6-common" \
               --requires="${REQUIRES}" \
               --recommends="${RECOMMENDS}" \
-              --provides="imagemagick \(= $IMAGEMAGICK_VER\),imagemagick-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickcore-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickwand-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\)" \
+              --provides="imagemagick \(= $IMAGEMAGICK_VER\),imagemagick-7, imagemagick-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickcore-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickwand-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\)" \
               --fstrans=no \
               --backup=no \
               --deldoc=yes \
