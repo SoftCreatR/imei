@@ -209,7 +209,7 @@ if [[ -z "$QUANTUM_DEPTH" || ! " ${allowedQuantumDepth[*]} " =~ $QUANTUM_DEPTH ]
 fi
 
 if [ -z "$BUILD_CFLAGS" ]; then
-  BUILD_CFLAGS="-O3 -mtune=generic" 
+  BUILD_CFLAGS="-O3 -mtune=generic"
 fi
 
 if [ -z "$BUILD_CXXFLAGS" ]; then
@@ -553,7 +553,7 @@ install_deps() {
 
     # Update package list and satisfy build dependencies for imagemagick
     apt-get update -qq
-    
+
     if [ -n "$SKIP_BUILD_DEP" ]; then
       apt-get build-dep -qq imagemagick -y
     fi
@@ -655,7 +655,7 @@ install_aom() {
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="$BUILD_DIR" \
               --provides="libaom3 \(= $AOM_VER\)" \
-              --fstrans=no \
+              --fstrans=yes \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
@@ -759,7 +759,7 @@ install_libheif() {
               --requires="libde265-dev,libx265-dev,imei-libaom" \
               --provides="libheif1 \(= $LIBHEIF_VER\)" \
               --conflicts="libheif1" \
-              --fstrans=no \
+              --fstrans=yes \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
@@ -837,7 +837,7 @@ install_jxl() {
 
         tar -xf "libjxl-$JXL_VER.tar.gz" &&
           cd "libjxl-$JXL_VER"
-          
+
           # 45e552880a862c56ab3b356b8ff28c0b0ff8ac94@libjxl
           # shellcheck disable=SC2016
           sed -i 's/varname="\${varname\/\[\\\/-\]\/_}"/varname="\${varname\/\/\[\\\/-\]\/_}"/' ./deps.sh
@@ -860,7 +860,7 @@ install_jxl() {
               --pakdir="$BUILD_DIR" \
               --requires="libgif7,libjpeg-dev,libopenexr-dev,libbrotli-dev" \
               --provides="libjxl$JXL_VER \(= $JXL_VER\)" \
-              --fstrans=no \
+              --fstrans=yes \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
@@ -1054,7 +1054,7 @@ install_imagemagick() {
               --requires="${REQUIRES}" \
               --recommends="${RECOMMENDS}" \
               --provides="imagemagick \(= $IMAGEMAGICK_VER\),imagemagick-7, imagemagick-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickcore-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickwand-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\)" \
-              --fstrans=no \
+              --fstrans=yes \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
