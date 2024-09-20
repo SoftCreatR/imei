@@ -764,6 +764,7 @@ install_libheif() {
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
+              --disable-hdri \
               --install="${INSTALL:-"yes"}"
 
               if [ -n "$INSTALL" ]; then
