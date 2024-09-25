@@ -1064,6 +1064,10 @@ install_imagemagick() {
             RECOMMENDS="${RECOMMENDS//imei-libaom,/}"
           fi
 
+          if [ "$TCMALLOC_C" == "with" ]; then
+            REQUIRES="${REQUIRES},libtcmalloc-minimal4"
+          fi
+
           echo "image manipulation programs (IMEI v$INSTALLER_VER)" >>description-pak &&
             checkinstall \
               --default \
