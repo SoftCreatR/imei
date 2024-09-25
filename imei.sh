@@ -114,6 +114,9 @@ while [ $# -gt 0 ]; do
   --with-tcmalloc)
     USE_TCMALLOC="yes"
     ;;
+  --disable-hdri)
+    DISABLE_HDRI="yes"
+    ;;
   --skip-dependencies | --skip-deps)
     SKIP_DEPS="yes"
     ;;
@@ -965,6 +968,12 @@ install_imagemagick() {
           TCMALLOC_C="without"
         fi
 
+        if [ -n "$DISABLE_HDRI" ]; then
+          HDRI_C="disable"
+        else
+          HDRI_C="enable"
+        fi
+
         # see https://github.com/SoftCreatR/imei/issues/100
         if [ -n "$BUILD_STATIC" ]; then
           STATIC_C="enable"
@@ -983,7 +992,7 @@ install_imagemagick() {
             --${SHARED_C}-shared \
             --enable-openmp \
             --enable-cipher \
-            --disable-hdri \
+            --${HDRI_C}-hdri \
             --enable-docs \
             --${OPENCL_C}-opencl \
             --with-threads \
