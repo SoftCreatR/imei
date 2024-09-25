@@ -8,7 +8,7 @@
 # Author         : Sascha Greuel <hello@1-2.dev>             #
 # Date           : 2024-06-20 11:28                          #
 # License        : ISC                                       #
-# Version        : 6.11.3                                    #
+# Version        : 6.11.3-cole1                              #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -110,6 +110,9 @@ while [ $# -gt 0 ]; do
       shift
       JXL_VER="$1"
     fi
+    ;;
+  --with-tcmalloc)
+    USE_TCMALLOC="yes"
     ;;
   --skip-dependencies | --skip-deps)
     SKIP_DEPS="yes"
@@ -576,6 +579,12 @@ install_deps() {
 
     apt-get install -y "${PKG_LIST[@]}"
 
+    # TCMalloc dependencies
+    if [[ -n "$USE_TCMALLOC" ]]; then
+      PKG_LIST=(libgoogle-perftools-dev)
+      apt-get install -y "${PKG_LIST[@]}"
+    fi
+
     CMAKE_VERSION=$(cmake --version | head -n1 | cut -d" " -f3)
   } >>"$LOG_FILE" 2>&1; then
     echo -ne " Installing dependencies       [${CGREEN}OK${CEND}]\\r"
@@ -655,7 +664,7 @@ install_aom() {
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="$BUILD_DIR" \
               --provides="libaom3 \(= $AOM_VER\)" \
-              --fstrans=yes \
+              --fstrans=no \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
@@ -758,13 +767,11 @@ install_libheif() {
               --pakdir="$BUILD_DIR" \
               --requires="libde265-dev,libx265-dev,imei-libaom" \
               --provides="libheif1 \(= $LIBHEIF_VER\)" \
-              --conflicts="libheif1" \
-              --fstrans=yes \
+              --fstrans=no \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
-              --disable-hdri \
               --install="${INSTALL:-"yes"}"
 
               if [ -n "$INSTALL" ]; then
@@ -861,7 +868,7 @@ install_jxl() {
               --pakdir="$BUILD_DIR" \
               --requires="libgif7,libjpeg-dev,libopenexr-dev,libbrotli-dev" \
               --provides="libjxl$JXL_VER \(= $JXL_VER\)" \
-              --fstrans=yes \
+              --fstrans=no \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
@@ -952,6 +959,12 @@ install_imagemagick() {
           OPENCL_C="enable"
         fi
 
+        if [ -n "$USE_TCMALLOC" ]; then
+          TCMALLOC_C="with"
+        else
+          TCMALLOC_C="without"
+        fi
+
         # see https://github.com/SoftCreatR/imei/issues/100
         if [ -n "$BUILD_STATIC" ]; then
           STATIC_C="enable"
@@ -970,7 +983,7 @@ install_imagemagick() {
             --${SHARED_C}-shared \
             --enable-openmp \
             --enable-cipher \
-            --enable-hdri \
+            --disable-hdri \
             --enable-docs \
             --${OPENCL_C}-opencl \
             --with-threads \
@@ -979,7 +992,7 @@ install_imagemagick() {
             --with-magick-plus-plus \
             --with-perl \
             --without-jemalloc \
-            --without-tcmalloc \
+            --${TCMALLOC_C}-tcmalloc \
             --without-umem \
             --without-autotrace \
             --with-bzlib \
@@ -1051,11 +1064,11 @@ install_imagemagick() {
               --pkgversion="$IMAGEMAGICK_VER" \
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="$BUILD_DIR" \
-              --conflicts="imagemagick,imagemagick-7,imagemagick-6-common" \
+              --conflicts="imagemagick" \
               --requires="${REQUIRES}" \
               --recommends="${RECOMMENDS}" \
-              --provides="imagemagick \(= $IMAGEMAGICK_VER\),imagemagick-7, imagemagick-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickcore-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickwand-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\)" \
-              --fstrans=yes \
+              --provides="imagemagick \(= $IMAGEMAGICK_VER\), imagemagick-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickcore-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickwand-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\)" \
+              --fstrans=no \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
