@@ -1,7 +1,6 @@
 #!/bin/bash
 install_svtav1() {
   cd "$WORK_DIR" || exit 1
-  pwd
   if {
     echo -ne ' Building svt-av1              [..]\r'
 
