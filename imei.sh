@@ -166,6 +166,8 @@ while [ $# -gt 0 ]; do
     ;;
   --build-only)
     INSTALL="no"
+    REMOVE_PAK="yes"
+    FSTRANS="yes"
     ;;
   --no-backports)
     BACKPORTS="${CYELLOW}disabled${CEND}"
@@ -678,16 +680,12 @@ install_aom() {
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="$BUILD_DIR" \
               --provides="libaom3 \(= $AOM_VER\)" \
-              --fstrans=no \
+              --fstrans="${FSTRANS:-"no"}" \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
-              --install="${INSTALL:-"yes"}"
-
-              if [ -n "$INSTALL" ]; then
-                make uninstall
-              fi
+              --install=yes
         else
           make install
         fi
@@ -795,16 +793,12 @@ install_libheif() {
               --pakdir="$BUILD_DIR" \
               --requires="libde265-dev,libx265-dev,${AV1ENC_PAK}" \
               --provides="libheif1 \(= $LIBHEIF_VER\)" \
-              --fstrans=no \
+              --fstrans="${FSTRANS:-"no"}" \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
-              --install="${INSTALL:-"yes"}"
-
-              if [ -n "$INSTALL" ]; then
-                make uninstall
-              fi
+              --install=yes
         else
           make install
         fi
@@ -896,16 +890,12 @@ install_jxl() {
               --pakdir="$BUILD_DIR" \
               --requires="libgif7,libjpeg-dev,libopenexr-dev,libbrotli-dev" \
               --provides="libjxl$JXL_VER \(= $JXL_VER\)" \
-              --fstrans=no \
+              --fstrans="${FSTRANS:-"no"}" \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
-              --install="${INSTALL:-"yes"}"
-
-              if [ -n "$INSTALL" ]; then
-                make uninstall
-              fi
+              --install=yes
         else
           cmake --install .
         fi
@@ -1106,12 +1096,12 @@ install_imagemagick() {
               --requires="${REQUIRES}" \
               --recommends="${RECOMMENDS}" \
               --provides="imagemagick \(= $IMAGEMAGICK_VER\),imagemagick-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickcore-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickwand-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\)" \
-              --fstrans=no \
+              --fstrans="${FSTRANS:-"no"}" \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
-              --install="${INSTALL:-"yes"}"
+              --install=yes
         else
           make install
         fi
@@ -1167,6 +1157,9 @@ finish_installation() {
       echo ""
     fi
   else
+    if [[ $REMOVE_PAK == "yes" ]]; then
+      apt-get -y remove imei-imagemagick imei-libjxl imei-libheif imei-libsvtav1 imei-libaom
+    fi
     echo -ne " Verifying installation        [${CYELLOW}SKIPPED (Checkinstall is set to build-only)${CEND}]\\r"
     echo ""
     echo ""
