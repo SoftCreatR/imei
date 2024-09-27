@@ -40,12 +40,18 @@ getLatestVersion() {
   local TAG_PATTERN="$2"
   local PLATFORM="$3"
   local VERSION=""
+  local BASE_URL=""
 
   if [ "$PLATFORM" = "github" ]; then
-    VERSION=$(git ls-remote --tags --sort="v:refname" --refs "https://github.com/$REPO.git" | awk -F/ '{print $NF}' | grep -oE "$TAG_PATTERN" | sort -rV | head -1)
+    BASE_URL="https://github.com"
   elif [ "$PLATFORM" = "gitlab" ]; then
-    VERSION=$(git ls-remote --tags --sort="v:refname" --refs "https://gitlab.com/$REPO.git" | awk -F/ '{print $NF}' | grep -oE "$TAG_PATTERN" | sort -rV | head -1)
+    BASE_URL="https://gitlab.com"
+  else
+    echo "Error: Unsupported PLATFORM '$PLATFORM' in getLatestVersion." >&2
+    exit 1
   fi
+
+  VERSION=$(git ls-remote --tags --sort="v:refname" --refs "$BASE_URL/$REPO.git" | awk -F/ '{print $NF}' | grep -oE "$TAG_PATTERN" | sort -rV | head -1)
 
   if [ -z "$VERSION" ]; then
     echo "Error: Failed to get VERSION information for $REPO." >&2
@@ -59,13 +65,19 @@ getTarballHash() {
   local REPO="$1"
   local VERSION="$2"
   local PLATFORM="$3"
+  local HASH=""
+  local URL=""
 
   if [ "$PLATFORM" = "github" ]; then
-    HASH=$(httpGet "$GH_FILE_BASE/$REPO/tar.gz/$VERSION" | sha1sum | cut -b-40)
+    URL="$GH_FILE_BASE/$REPO/tar.gz/$VERSION"
   elif [ "$PLATFORM" = "gitlab" ]; then
-    # GitLab tarball URL format
-    HASH=$(httpGet "$GL_FILE_BASE/$REPO/-/archive/$VERSION/$REPO-$VERSION.tar.gz" | sha1sum | cut -b-40)
+    URL="$GL_FILE_BASE/$REPO/-/archive/$VERSION/$REPO-$VERSION.tar.gz"
+  else
+    echo "Error: Unsupported PLATFORM '$PLATFORM' in getTarballHash." >&2
+    exit 1
   fi
+
+  HASH=$(httpGet "$URL" | sha1sum | cut -b-40)
 
   if [ -z "$HASH" ]; then
     echo "Error: Failed to get hash information for $REPO $VERSION tarball." >&2
