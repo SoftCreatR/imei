@@ -1105,7 +1105,7 @@ install_imagemagick() {
               --conflicts="imagemagick" \
               --requires="${REQUIRES}" \
               --recommends="${RECOMMENDS}" \
-              --provides="imagemagick \(= $IMAGEMAGICK_VER\), imagemagick-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickcore-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickwand-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\)" \
+              --provides="imagemagick \(= $IMAGEMAGICK_VER\),imagemagick-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickcore-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickwand-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\)" \
               --fstrans=no \
               --backup=no \
               --deldoc=yes \
