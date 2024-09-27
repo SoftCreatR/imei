@@ -89,6 +89,9 @@ while [ $# -gt 0 ]; do
       AOM_VER="$1"
     fi
     ;;
+  --use-svtav1)
+    AV1ENC="svtav1"
+    ;;
   --skip-libheif | --skip-heif)
     SKIP_LIBHEIF="yes"
     ;;
@@ -227,6 +230,7 @@ OS_DISTRO="$(lsb_release -ds)"
 OS_SHORT_CODENAME="$(lsb_release -sc)"
 OS_ARCH="$(uname -m)"
 GH_FILE_BASE="https://codeload.github.com"
+GL_FILE_BASE="https://gitlab.com"
 SOURCE_LIST="/etc/apt/sources.list.d/imei.list"
 LIB_DIR="/usr/local"
 CMAKE_VERSION="0.0.0"
@@ -428,6 +432,10 @@ if [ -z "$JXL_VER" ]; then
   JXL_HASH=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libjxl.hash")
 fi
 
+if [ -z "$SVT_VER" ]; then
+  SVT_VER="2.2.1"
+fi
+
 # Make sure, that a version number for ImageMagick has been set
 if [ -z "$IMAGEMAGICK_VER" ]; then
   echo -e "${CRED}Unable to determine version number for ImageMagick${CEND}"
@@ -475,6 +483,9 @@ fi
 #######################
 # Installer functions #
 #######################
+
+# Build SVT-AV1
+source imei-svtav1.sh
 
 # Speed up the compilation process
 NUM_CORES=$(nproc || echo 1)
@@ -722,10 +733,19 @@ install_libheif() {
       return
     fi
 
-    if [ ! -L "$LIB_DIR/lib/libaom.so" ]; then
+    AV1ENC_PAK="imei-libaom"
+    if [[ $AV1ENC == "svtav1" ]]; then
+      AV1ENC_PAK="imei-libaom,imei-libsvtav1"
+      if [[ ! -L "$LIB_DIR/lib/libSvtAv1Enc.so" ]]; then
+        echo -ne " Building libheif              [${CYELLOW}SKIPPED (svtav1 is required but not installed)${CEND}]\\r"
+        echo ""
+        return
+      fi
+    fi
+
+    if [[ ! -L "$LIB_DIR/lib/libaom.so" ]]; then
       echo -ne " Building libheif              [${CYELLOW}SKIPPED (aom is required but not installed)${CEND}]\\r"
       echo ""
-
       return
     fi
 
@@ -754,7 +774,12 @@ install_libheif() {
             cd "libheif-$LIBHEIF_VER" &&
             mkdir build &&
             cd build &&
-            cmake --preset=release ..
+            if [[ $AV1ENC == "svtav1" ]]; then
+              CMAKE_FLAGS=(-DWITH_AOM_ENCODER=OFF -DWITH_AOM_ENCODER_PLUGIN=OFF -DWITH_SvtEnc=ON -DWITH_SvtEnc_PLUGIN=ON)
+            else
+              CMAKE_FLAGS=(-DWITH_SvtEnc=OFF -DWITH_SvtEnc_PLUGIN=OFF)
+            fi
+            cmake --preset=release "${CMAKE_FLAGS[@]}" ..
           make
         fi
 
@@ -768,7 +793,7 @@ install_libheif() {
               --pkgversion="$LIBHEIF_VER" \
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="$BUILD_DIR" \
-              --requires="libde265-dev,libx265-dev,imei-libaom" \
+              --requires="libde265-dev,libx265-dev,${AV1ENC_PAK}" \
               --provides="libheif1 \(= $LIBHEIF_VER\)" \
               --fstrans=no \
               --backup=no \
@@ -1208,6 +1233,7 @@ echo ""
 
 # Run installer functions
 install_deps
+install_svtav1
 install_aom
 install_libheif
 install_jxl
