@@ -48,7 +48,7 @@ install_svtav1() {
 
         tar -xf "SVT-AV1-v${SVT_VER}.tar.gz" &&
           cd "$WORK_DIR/SVT-AV1-v${SVT_VER}/Build" &&
-          cmake --parallel "$(nproc)" .. "${CMAKE_FLAGS[@]}" &&
+          cmake .. "${CMAKE_FLAGS[@]}" &&
           make -j "$(nproc)"
 
         if [ -n "$CHECKINSTALL" ]; then
