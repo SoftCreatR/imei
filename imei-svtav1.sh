@@ -48,7 +48,7 @@ install_svtav1() {
 
         tar -xf "SVT-AV1-v${SVT_VER}.tar.gz" &&
           cd "$WORK_DIR/SVT-AV1-v${SVT_VER}/Build" &&
-          cmake .. "${CMAKE_FLAGS[@]}" &&
+          cmake --parallel "$(nproc)" .. "${CMAKE_FLAGS[@]}" &&
           make -j "$(nproc)"
 
         if [ -n "$CHECKINSTALL" ]; then
@@ -62,25 +62,22 @@ install_svtav1() {
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="$BUILD_DIR" \
               --provides="libsvtav1 \(= $SVT_VER\)" \
-              --fstrans=no \
+              --fstrans="${FSTRANS:-"no"}" \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
-              --install="${INSTALL:-"yes"}"
-
-              if [ -n "$INSTALL" ]; then
-                make uninstall
-              fi
+              --install=yes \
+              make -j "$(nproc)" install
         else
-          make install
+          make -j "$(nproc)" install
         fi
 
-        ldconfig $LIB_DIR
+        ldconfig "$LIB_DIR"
       fi
     } >>"$LOG_FILE" 2>&1
   }; then
-    UPDATE_LIBHEIF="yes"
+    export UPDATE_LIBHEIF="yes"
 
     echo -ne " Building svt-av1              [${CGREEN}OK${CEND}]\\r"
     echo ""
