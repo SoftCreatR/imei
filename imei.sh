@@ -8,7 +8,7 @@
 # Author         : Sascha Greuel <hello@1-2.dev>             #
 # Date           : 2024-06-20 11:28                          #
 # License        : ISC                                       #
-# Version        : 6.11.3                                    #
+# Version        : 6.11.4                                    #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
@@ -89,6 +89,9 @@ while [ $# -gt 0 ]; do
       AOM_VER="$1"
     fi
     ;;
+  --use-svtav1)
+    AV1ENC="svtav1"
+    ;;
   --skip-libheif | --skip-heif)
     SKIP_LIBHEIF="yes"
     ;;
@@ -110,6 +113,12 @@ while [ $# -gt 0 ]; do
       shift
       JXL_VER="$1"
     fi
+    ;;
+  --with-tcmalloc)
+    USE_TCMALLOC="yes"
+    ;;
+  --disable-hdri)
+    DISABLE_HDRI="yes"
     ;;
   --skip-dependencies | --skip-deps)
     SKIP_DEPS="yes"
@@ -209,7 +218,7 @@ if [[ -z "$QUANTUM_DEPTH" || ! " ${allowedQuantumDepth[*]} " =~ $QUANTUM_DEPTH ]
 fi
 
 if [ -z "$BUILD_CFLAGS" ]; then
-  BUILD_CFLAGS="-O3 -mtune=generic" 
+  BUILD_CFLAGS="-O3 -mtune=generic"
 fi
 
 if [ -z "$BUILD_CXXFLAGS" ]; then
@@ -221,6 +230,7 @@ OS_DISTRO="$(lsb_release -ds)"
 OS_SHORT_CODENAME="$(lsb_release -sc)"
 OS_ARCH="$(uname -m)"
 GH_FILE_BASE="https://codeload.github.com"
+GL_FILE_BASE="https://gitlab.com"
 SOURCE_LIST="/etc/apt/sources.list.d/imei.list"
 LIB_DIR="/usr/local"
 CMAKE_VERSION="0.0.0"
@@ -422,6 +432,11 @@ if [ -z "$JXL_VER" ]; then
   JXL_HASH=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/libjxl.hash")
 fi
 
+if [ -z "$SVT_VER" ]; then
+  SVT_VER=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/svt.version")
+  SVT_HASH=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/svt.hash")
+fi
+
 # Make sure, that a version number for ImageMagick has been set
 if [ -z "$IMAGEMAGICK_VER" ]; then
   echo -e "${CRED}Unable to determine version number for ImageMagick${CEND}"
@@ -469,6 +484,9 @@ fi
 #######################
 # Installer functions #
 #######################
+
+# Build SVT-AV1
+source imei-svtav1.sh
 
 # Speed up the compilation process
 NUM_CORES=$(nproc || echo 1)
@@ -553,7 +571,7 @@ install_deps() {
 
     # Update package list and satisfy build dependencies for imagemagick
     apt-get update -qq
-    
+
     if [ -n "$SKIP_BUILD_DEP" ]; then
       apt-get build-dep -qq imagemagick -y
     fi
@@ -575,6 +593,12 @@ install_deps() {
     fi
 
     apt-get install -y "${PKG_LIST[@]}"
+
+    # TCMalloc dependencies
+    if [[ -n "$USE_TCMALLOC" ]]; then
+      PKG_LIST=(libgoogle-perftools-dev)
+      apt-get install -y "${PKG_LIST[@]}"
+    fi
 
     CMAKE_VERSION=$(cmake --version | head -n1 | cut -d" " -f3)
   } >>"$LOG_FILE" 2>&1; then
@@ -655,16 +679,12 @@ install_aom() {
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="$BUILD_DIR" \
               --provides="libaom3 \(= $AOM_VER\)" \
-              --fstrans=no \
+              --fstrans="no" \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
               --install="${INSTALL:-"yes"}"
-
-              if [ -n "$INSTALL" ]; then
-                make uninstall
-              fi
         else
           make install
         fi
@@ -710,10 +730,19 @@ install_libheif() {
       return
     fi
 
-    if [ ! -L "$LIB_DIR/lib/libaom.so" ]; then
+    AV1ENC_PAK="imei-libaom"
+    if [[ $AV1ENC == "svtav1" ]]; then
+      AV1ENC_PAK="imei-libaom,imei-libsvtav1"
+      if [[ ! -L "$LIB_DIR/lib/libSvtAv1Enc.so" ]]; then
+        echo -ne " Building libheif              [${CYELLOW}SKIPPED (svtav1 is required but not installed)${CEND}]\\r"
+        echo ""
+        return
+      fi
+    fi
+
+    if [[ ! -L "$LIB_DIR/lib/libaom.so" ]]; then
       echo -ne " Building libheif              [${CYELLOW}SKIPPED (aom is required but not installed)${CEND}]\\r"
       echo ""
-
       return
     fi
 
@@ -742,7 +771,12 @@ install_libheif() {
             cd "libheif-$LIBHEIF_VER" &&
             mkdir build &&
             cd build &&
-            cmake --preset=release ..
+            if [[ $AV1ENC == "svtav1" ]]; then
+              CMAKE_FLAGS=(-DWITH_AOM_ENCODER=OFF -DWITH_AOM_ENCODER_PLUGIN=OFF -DWITH_SvtEnc=ON -DWITH_SvtEnc_PLUGIN=ON)
+            else
+              CMAKE_FLAGS=(-DWITH_SvtEnc=OFF -DWITH_SvtEnc_PLUGIN=OFF)
+            fi
+            cmake --preset=release "${CMAKE_FLAGS[@]}" ..
           make
         fi
 
@@ -756,18 +790,14 @@ install_libheif() {
               --pkgversion="$LIBHEIF_VER" \
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="$BUILD_DIR" \
-              --requires="libde265-dev,libx265-dev,imei-libaom" \
+              --requires="libde265-dev,libx265-dev,${AV1ENC_PAK}" \
               --provides="libheif1 \(= $LIBHEIF_VER\)" \
-              --fstrans=no \
+              --fstrans="no" \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
               --install="${INSTALL:-"yes"}"
-
-              if [ -n "$INSTALL" ]; then
-                make uninstall
-              fi
         else
           make install
         fi
@@ -836,7 +866,7 @@ install_jxl() {
 
         tar -xf "libjxl-$JXL_VER.tar.gz" &&
           cd "libjxl-$JXL_VER"
-          
+
           # 45e552880a862c56ab3b356b8ff28c0b0ff8ac94@libjxl
           # shellcheck disable=SC2016
           sed -i 's/varname="\${varname\/\[\\\/-\]\/_}"/varname="\${varname\/\/\[\\\/-\]\/_}"/' ./deps.sh
@@ -844,8 +874,7 @@ install_jxl() {
           ./deps.sh &&
           mkdir "build" &&
           cd "build" &&
-          cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF .. &&
-          cmake --build .
+          cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF ..
 
         if [ -n "$CHECKINSTALL" ]; then
           echo "JPEG XL image format reference implementation (IMEI v$INSTALLER_VER)" >>description-pak &&
@@ -859,21 +888,17 @@ install_jxl() {
               --pakdir="$BUILD_DIR" \
               --requires="libgif7,libjpeg-dev,libopenexr-dev,libbrotli-dev" \
               --provides="libjxl$JXL_VER \(= $JXL_VER\)" \
-              --fstrans=no \
+              --fstrans="no" \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
-              --install="${INSTALL:-"yes"}"
-
-              if [ -n "$INSTALL" ]; then
-                make uninstall
-              fi
+               --install="${INSTALL:-"yes"}"
         else
           cmake --install .
         fi
 
-        ldconfig $LIB_DIR
+        ldconfig "$LIB_DIR"
       fi
     } >>"$LOG_FILE" 2>&1
   }; then
@@ -950,6 +975,18 @@ install_imagemagick() {
           OPENCL_C="enable"
         fi
 
+        if [ -n "$USE_TCMALLOC" ]; then
+          TCMALLOC_C="with"
+        else
+          TCMALLOC_C="without"
+        fi
+
+        if [ -n "$DISABLE_HDRI" ]; then
+          HDRI_C="disable"
+        else
+          HDRI_C="enable"
+        fi
+
         # see https://github.com/SoftCreatR/imei/issues/100
         if [ -n "$BUILD_STATIC" ]; then
           STATIC_C="enable"
@@ -968,7 +1005,7 @@ install_imagemagick() {
             --${SHARED_C}-shared \
             --enable-openmp \
             --enable-cipher \
-            --enable-hdri \
+            --${HDRI_C}-hdri \
             --enable-docs \
             --${OPENCL_C}-opencl \
             --with-threads \
@@ -977,7 +1014,7 @@ install_imagemagick() {
             --with-magick-plus-plus \
             --with-perl \
             --without-jemalloc \
-            --without-tcmalloc \
+            --${TCMALLOC_C}-tcmalloc \
             --without-umem \
             --without-autotrace \
             --with-bzlib \
@@ -1040,6 +1077,23 @@ install_imagemagick() {
             RECOMMENDS="${RECOMMENDS//imei-libaom,/}"
           fi
 
+          if [ "$TCMALLOC_C" == "with" ]; then
+            REQUIRES="${REQUIRES},libtcmalloc-minimal4"
+          fi
+
+          if [[ ${FSTRANS:-"no"} == "yes" ]]; then
+            # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=717778
+            # checkinstall's fix on installwatch.in was reverted at some point, causing ImageMagick's install to fail
+            # We must manually create these directories to "trick" checkinstall's validation
+            mkdir -p "${BUILD_DIR}/include/ImageMagick-${MAIN_VER}"
+            IM_VER_WORKAROUND="${IMAGEMAGICK_VER%-*}"
+            IM_MODULES_DIR="modules-Q${QUANTUM_DEPTH}HDRI"
+            if [[ -n $DISABLE_HDRI ]]; then
+              IM_MODULES_DIR="modules-Q${QUANTUM_DEPTH}"
+            fi
+            mkdir -p "${BUILD_DIR}/lib/ImageMagick-${IM_VER_WORKAROUND}/${IM_MODULES_DIR}"
+          fi
+
           echo "image manipulation programs (IMEI v$INSTALLER_VER)" >>description-pak &&
             checkinstall \
               --default \
@@ -1053,7 +1107,7 @@ install_imagemagick() {
               --requires="${REQUIRES}" \
               --recommends="${RECOMMENDS}" \
               --provides="imagemagick \(= $IMAGEMAGICK_VER\),imagemagick-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickcore-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickwand-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\)" \
-              --fstrans=no \
+              --fstrans="no" \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
@@ -1180,6 +1234,7 @@ echo ""
 
 # Run installer functions
 install_deps
+install_svtav1
 install_aom
 install_libheif
 install_jxl
