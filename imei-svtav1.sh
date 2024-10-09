@@ -42,9 +42,9 @@ install_svtav1() {
         CMAKE_FLAGS=(-G"Unix Makefiles" -DCMAKE_BUILD_TYPE=Release)
 
         # Should we keep this?
-        #if [[ "${OS_DISTRO,,}" == *"raspbian"* ]]; then
-        #  CMAKE_FLAGS+=(-DCMAKE_C_FLAGS="-mfloat-abi=hard -march=armv7-a -marm -mfpu=neon")
-        #fi
+        if [[ "${OS_DISTRO,,}" == *"raspbian"* ]]; then
+          CMAKE_FLAGS+=(-DCMAKE_C_FLAGS="-mfloat-abi=hard -march=armv7-a -marm -mfpu=neon")
+        fi
 
         tar -xf "SVT-AV1-v${SVT_VER}.tar.gz" &&
           cd "$WORK_DIR/SVT-AV1-v${SVT_VER}/Build" &&
@@ -62,13 +62,12 @@ install_svtav1() {
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="$BUILD_DIR" \
               --provides="libsvtav1 \(= $SVT_VER\)" \
-              --fstrans="${FSTRANS:-"no"}" \
+              --fstrans=no \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
-              --install=yes \
-              make -j "$(nproc)" install
+              --install="${INSTALL:-"yes"}"
         else
           make -j "$(nproc)" install
         fi

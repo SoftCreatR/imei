@@ -166,8 +166,6 @@ while [ $# -gt 0 ]; do
     ;;
   --build-only)
     INSTALL="no"
-    REMOVE_PAK="yes"
-    FSTRANS="yes"
     ;;
   --no-backports)
     BACKPORTS="${CYELLOW}disabled${CEND}"
@@ -435,7 +433,8 @@ if [ -z "$JXL_VER" ]; then
 fi
 
 if [ -z "$SVT_VER" ]; then
-  SVT_VER="2.2.1"
+  SVT_VER=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/svt.version")
+  SVT_HASH=$(httpGet "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/svt.hash")
 fi
 
 # Make sure, that a version number for ImageMagick has been set
@@ -680,12 +679,12 @@ install_aom() {
               --pkgrelease="imei$INSTALLER_VER" \
               --pakdir="$BUILD_DIR" \
               --provides="libaom3 \(= $AOM_VER\)" \
-              --fstrans="${FSTRANS:-"no"}" \
+              --fstrans="no" \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
-              --install=yes
+              --install="${INSTALL:-"yes"}"
         else
           make install
         fi
@@ -793,12 +792,12 @@ install_libheif() {
               --pakdir="$BUILD_DIR" \
               --requires="libde265-dev,libx265-dev,${AV1ENC_PAK}" \
               --provides="libheif1 \(= $LIBHEIF_VER\)" \
-              --fstrans="${FSTRANS:-"no"}" \
+              --fstrans="no" \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
-              --install=yes
+              --install="${INSTALL:-"yes"}"
         else
           make install
         fi
@@ -875,8 +874,7 @@ install_jxl() {
           ./deps.sh &&
           mkdir "build" &&
           cd "build" &&
-          cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF .. &&
-          cmake --build .
+          cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF ..
 
         if [ -n "$CHECKINSTALL" ]; then
           echo "JPEG XL image format reference implementation (IMEI v$INSTALLER_VER)" >>description-pak &&
@@ -890,17 +888,17 @@ install_jxl() {
               --pakdir="$BUILD_DIR" \
               --requires="libgif7,libjpeg-dev,libopenexr-dev,libbrotli-dev" \
               --provides="libjxl$JXL_VER \(= $JXL_VER\)" \
-              --fstrans="${FSTRANS:-"no"}" \
+              --fstrans="no" \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
-              --install=yes
+               --install="${INSTALL:-"yes"}"
         else
           cmake --install .
         fi
 
-        ldconfig $LIB_DIR
+        ldconfig "$LIB_DIR"
       fi
     } >>"$LOG_FILE" 2>&1
   }; then
@@ -1083,6 +1081,19 @@ install_imagemagick() {
             REQUIRES="${REQUIRES},libtcmalloc-minimal4"
           fi
 
+          if [[ ${FSTRANS:-"no"} == "yes" ]]; then
+            # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=717778
+            # checkinstall's fix on installwatch.in was reverted at some point, causing ImageMagick's install to fail
+            # We must manually create these directories to "trick" checkinstall's validation
+            mkdir -p "${BUILD_DIR}/include/ImageMagick-${MAIN_VER}"
+            IM_VER_WORKAROUND="${IMAGEMAGICK_VER%-*}"
+            IM_MODULES_DIR="modules-Q${QUANTUM_DEPTH}HDRI"
+            if [[ -n $DISABLE_HDRI ]]; then
+              IM_MODULES_DIR="modules-Q${QUANTUM_DEPTH}"
+            fi
+            mkdir -p "${BUILD_DIR}/lib/ImageMagick-${IM_VER_WORKAROUND}/${IM_MODULES_DIR}"
+          fi
+
           echo "image manipulation programs (IMEI v$INSTALLER_VER)" >>description-pak &&
             checkinstall \
               --default \
@@ -1096,12 +1107,12 @@ install_imagemagick() {
               --requires="${REQUIRES}" \
               --recommends="${RECOMMENDS}" \
               --provides="imagemagick \(= $IMAGEMAGICK_VER\),imagemagick-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickcore-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\),libmagickwand-$MAIN_VER.q$QUANTUM_DEPTH \(= $IMAGEMAGICK_VER\)" \
-              --fstrans="${FSTRANS:-"no"}" \
+              --fstrans="no" \
               --backup=no \
               --deldoc=yes \
               --deldesc=yes \
               --delspec=yes \
-              --install=yes
+              --install="${INSTALL:-"yes"}"
         else
           make install
         fi
@@ -1157,9 +1168,6 @@ finish_installation() {
       echo ""
     fi
   else
-    if [[ $REMOVE_PAK == "yes" ]]; then
-      apt-get -y remove imei-imagemagick imei-libjxl imei-libheif imei-libsvtav1 imei-libaom
-    fi
     echo -ne " Verifying installation        [${CYELLOW}SKIPPED (Checkinstall is set to build-only)${CEND}]\\r"
     echo ""
     echo ""

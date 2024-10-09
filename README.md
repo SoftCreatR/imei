@@ -115,12 +115,15 @@ Currently available build options are
 * `--imagemagick-quantum-depth` / `--im-q` : ImageMagick Quantum Depth (8, 16 or 32)
 * `--imagemagick-opencl` / `--im-ocl` : Install ImageMagick with OpenCL support
 * `--imagemagick-static` / `--im-static` : Enables static libraries, disables shared libraries
+* `--disable-hdri` : Disables ImageMagick HDRI
 * `--aom-version` : Build the given aom version (e.g. `3.8.0`)
 * `--skip-aom` : Skip building aom
 * `--libheif-version` / `--heif-version` : Build the given libheif version (e.g. `1.17.6`)
 * `--skip-libheif` / `--skip-heif` : Skip building libheif
 * `--jpeg-xl-version` / `--jxl-version` : Build the given JPEG XL version (e.g. `0.9.0`)
 * `--skip-jpeg-xl` / `--skip-jxl` : Skip building JPEG XL
+* `--use-svtav1` : Installs the SVT-AV1 encoder (replaces AOM AV1)
+* `--with-tcmalloc` : Installs the TCMalloc memory allocator
 * `--log-file` : Log everything to the file provided
 * `--work-dir` : Download, extract & build within the directory provided
 * `--build-dir` : Build target directory for ImageMagick
@@ -137,10 +140,11 @@ Additional options / switches:
 **Default options** :
 
 <!-- versions start -->
-* ImageMagick version: `7.1.1-38 (Q16)`
+* ImageMagick version: `7.1.1-39 (Q16)`
 * libaom version: `3.10.0`
 * libheif version: `1.18.2`
-* libjxl version: `0.11.0`<!-- versions end -->
+* libjxl version: `0.11.0`
+* SVT-AV1 version: `2.2.1`<!-- versions end -->
 * Log File: `/var/log/imei-###.log` (`###` will be the timestamp of the script execution)
 * Work Dir: `/usr/local/src/imei`
 * Build Dir: `/usr/local`
