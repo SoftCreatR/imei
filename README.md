@@ -138,7 +138,7 @@ Additional options / switches:
 
 <!-- versions start -->
 * ImageMagick version: `7.1.1-40 (Q16)`
-* libaom version: `3.10.0`
+* libaom version: `3.11.0`
 * libheif version: `1.19.3`
 * libjxl version: `0.11.0`<!-- versions end -->
 * Log File: `/var/log/imei-###.log` (`###` will be the timestamp of the script execution)
