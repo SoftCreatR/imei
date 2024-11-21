@@ -620,7 +620,7 @@ install_aom() {
 
     {
       if [ -n "$AOM_VER" ]; then
-        httpGet "$GH_FILE_BASE/jbeich/aom/tar.gz/v$AOM_VER" >"aom-$AOM_VER.tar.gz"
+        httpGet "$GH_FILE_BASE/SoftCreatR/aom/tar.gz/v$AOM_VER" >"aom-$AOM_VER.tar.gz"
 
         if [ -n "$AOM_HASH" ]; then
           if [ "$(sha1sum "aom-$AOM_VER.tar.gz" | cut -b-40)" != "$AOM_HASH" ]; then
