@@ -620,7 +620,7 @@ install_aom() {
 
     {
       if [ -n "$AOM_VER" ]; then
-        httpGet "https://aomedia.googlesource.com/aom/+archive/v$AOM_VER.tar.gz" >"aom-$AOM_VER.tar.gz"
+        httpGet "$GH_FILE_BASE/SoftCreatR/aom/tar.gz/v$AOM_VER" >"aom-$AOM_VER.tar.gz"
 
         if [ -n "$AOM_HASH" ]; then
           if [ "$(sha1sum "aom-$AOM_VER.tar.gz" | cut -b-40)" != "$AOM_HASH" ]; then
@@ -637,8 +637,8 @@ install_aom() {
         if [[ "${OS_DISTRO,,}" == *"raspbian"* ]]; then
           CMAKE_FLAGS+=(-DCMAKE_C_FLAGS="-mfloat-abi=hard -march=armv7-a -marm -mfpu=neon")
         fi
-        mkdir -p "$WORK_DIR/aom-$AOM_VER"
-        tar -xf "aom-$AOM_VER.tar.gz" -C "$WORK_DIR/aom-$AOM_VER" &&
+
+        tar -xf "aom-$AOM_VER.tar.gz" &&
           mkdir "$WORK_DIR/build_aom" &&
           cd "$WORK_DIR/build_aom" &&
           cmake "../aom-$AOM_VER/" "${CMAKE_FLAGS[@]}" &&
