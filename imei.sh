@@ -8,7 +8,7 @@
 # Author         : Sascha Greuel <hello@1-2.dev>             #
 # Date           : 2024-06-20 11:28                          #
 # License        : ISC                                       #
-# Version        : 6.11.3                                    #
+# Version        : 6.11.4                                    #
 #                                                            #
 # Usage          : bash ./imei.sh                            #
 ##############################################################
