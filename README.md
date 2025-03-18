@@ -82,7 +82,7 @@ rm "$t"
 git clone https://github.com/SoftCreatR/imei && \
 cd imei && \
 chmod +x imei.sh && \
-./imei.sh
+sudo ./imei.sh
 ```
 
 ### Verify installer integrity
