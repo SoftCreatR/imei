@@ -1,5 +1,5 @@
 {
-  "name": "Main",
-  "description": "Action to validate the program code, perform a functional test build and sign the code, if changes to the program code have been made.",
+  "name": "Release Packages",
+  "description": "Build IMEI .deb packages for the current Debian and Ubuntu release targets and publish them on a GitHub release whenever tracked versions change.",
   "iconName": "github-octocat"
 }

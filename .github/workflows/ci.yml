@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+    paths-ignore:
+      - 'versions/*'
+
+env:
+  GITHUB_TOKEN: ${{ github.token }}
+
+jobs:
+  ShellCheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v6
+
+      - name: Install shellcheck
+        run: sudo apt-get update -qq && sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck
+        run: shellcheck imei.sh imei-bootstrap.sh update_version_info.sh scripts/*.sh
+
+  BashSyntax:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v6
+
+      - name: Validate shell syntax
+        run: |
+          bash -n imei.sh
+          bash -n imei-bootstrap.sh
+          bash -n update_version_info.sh
+          for script in scripts/*.sh; do
+            bash -n "$script"
+          done
+
+  SignInstaller:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v6
+
+      - name: Regenerate committed bootstrap launcher
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          bash ./scripts/generate-bootstrap.sh imei-bootstrap.sh
+
+      - name: Sign installer
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.PRIVATE_KEY != ''
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+        run: |
+          SIGNING_KEY_ID="$(tr -d '\n' < keys/active.key)"
+          echo "$PRIVATE_KEY" > private.pem
+          openssl dgst -sha512 -sign private.pem -out imei.sh.sig imei.sh
+          openssl dgst -sha512 -sign private.pem -out imei-bootstrap.sh.sig imei-bootstrap.sh
+          printf '%s\n' "$SIGNING_KEY_ID" > imei.sh.sig.key
+          printf '%s\n' "$SIGNING_KEY_ID" > imei-bootstrap.sh.sig.key
+          rm private.pem
+
+      - name: Verify installer signature
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.PRIVATE_KEY != ''
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+        run: |
+          SIGNING_KEY_ID="$(tr -d '\n' < keys/active.key)"
+          openssl dgst -sha512 -verify "keys/$SIGNING_KEY_ID.pem" -signature imei.sh.sig imei.sh
+          openssl dgst -sha512 -verify "keys/$SIGNING_KEY_ID.pem" -signature imei-bootstrap.sh.sig imei-bootstrap.sh
+
+      - name: Commit updated bootstrap and installer signature
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          if git diff --quiet -- imei-bootstrap.sh imei-bootstrap.sh.sig imei-bootstrap.sh.sig.key imei.sh.sig imei.sh.sig.key; then
+            exit 0
+          fi
+
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add imei-bootstrap.sh imei-bootstrap.sh.sig imei-bootstrap.sh.sig.key imei.sh.sig imei.sh.sig.key
+          git commit -m "Update bootstrap and installer signature"
+          git push

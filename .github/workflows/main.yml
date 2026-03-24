@@ -1,132 +1,228 @@
-name: Main
+name: Release Packages
 
 on:
   push:
-    paths:
-      - 'imei.sh'
-      - 'versions/*'
     branches:
-      - '**'
-    tags-ignore:
-      - '**'
+      - main
+    paths:
+      - 'versions/*'
   workflow_dispatch:
-    inputs:
-      im_version:
-        default: ""
-        description: "ImageMagick Version"
+
+env:
+  GITHUB_TOKEN: ${{ github.token }}
 
 jobs:
-  ShellCheck:
-    runs-on: ubuntu-latest
+  BuildPackages:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: debian11
+            arch: amd64
+            runner: ubuntu-latest
+          - target: debian12
+            arch: amd64
+            runner: ubuntu-latest
+          - target: debian13
+            arch: amd64
+            runner: ubuntu-latest
+          - target: ubuntu20.04
+            arch: amd64
+            runner: ubuntu-latest
+          - target: ubuntu22.04
+            arch: amd64
+            runner: ubuntu-latest
+          - target: ubuntu24.04
+            arch: amd64
+            runner: ubuntu-latest
+          - target: ubuntu26.04
+            arch: amd64
+            runner: ubuntu-latest
+          - target: debian11
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - target: debian12
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - target: debian13
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - target: ubuntu20.04
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - target: ubuntu22.04
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - target: ubuntu24.04
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - target: ubuntu26.04
+            arch: arm64
+            runner: ubuntu-24.04-arm
 
     steps:
       - name: Git checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Run Shellcheck
-        uses: azohra/shell-linter@v0.6.0
+      - name: Restore source archive cache
+        uses: actions/cache@v5
         with:
-          path: 'imei.sh'
+          path: .imei-cache/sources
+          key: imei-sources-v1-${{ hashFiles('versions/*') }}
+          restore-keys: |
+            imei-sources-v1-
 
-  TestBuild:
-    needs: ShellCheck
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Git checkout
-        uses: actions/checkout@v4
+      - name: Build packages in container
+        run: |
+          mkdir -p .imei-cache/sources
+          image="$(bash -lc '. ./scripts/common.sh; target_container_image "${{ matrix.target }}"')"
+          docker run --rm \
+            -v "$PWD:/workspace" \
+            -w /workspace \
+            -e IMEI_SOURCE_CACHE_DIR=/workspace/.imei-cache/sources \
+            "$image" \
+            bash -lc '
+              bash ./scripts/install-build-deps.sh &&
+              bash ./scripts/build-packages.sh --target "${{ matrix.target }}" --output-dir "/workspace/dist/${{ matrix.target }}"
+            '
 
-      - name: Pre-Cleanup
-        env:
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-        run: |-
-          sudo apt remove "*imagemagick*" --purge -y
-          sudo apt autoremove --purge -y
-
-      - uses: awalsh128/cache-apt-pkgs-action@latest
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v7
         with:
-          packages: git curl make cmake automake libtool yasm g++ pkg-config perl libde265-dev libx265-dev libltdl-dev libopenjp2-7-dev liblcms2-dev libbrotli-dev libzip-dev libbz2-dev liblqr-1-0-dev libzstd-dev libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev librsvg2-dev libwmf-dev libxml2-dev libxml2 libtiff-dev libraw-dev ghostscript gsfonts ffmpeg libpango1.0-dev libdjvulibre-dev libfftw3-dev libgs-dev libgraphviz-dev
-          version: 1.0
+          name: packages-${{ matrix.target }}-${{ matrix.arch }}
+          path: dist/${{ matrix.target }}/*.deb
+          if-no-files-found: error
 
-      - name: Build
-        env:
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-        run: |-
-          INPUT=${{ github.event.inputs.im_version }}
-          IM_VERSION=${INPUT:-""}
-          sudo bash imei.sh --ci --im-version "$IM_VERSION" --log-file "/build.log"
-          identify -version
-          [[ "$(identify -version)" == *"heic"* ]] && [[ "$(identify -version)" == *"jxl"* ]] && echo "Test build OK" || (echo "Test build FAILED" && exit 1)
-
-      - name: On failure
-        if: ${{ failure() }}
-        run: cat /build.log
-
-  Sign:
-    needs: TestBuild
+  PublishRelease:
+    needs: BuildPackages
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
 
     steps:
       - name: Git checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Sign release
+      - name: Download package artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: dist
+          pattern: packages-*
+          merge-multiple: false
+
+      - name: Normalize artifact layout
+        run: |
+          shopt -s nullglob
+          for artifact_dir in dist/packages-*; do
+            artifact_name="${artifact_dir#dist/packages-}"
+            arch="${artifact_name##*-}"
+            target="${artifact_name%-${arch}}"
+            mkdir -p "dist/$target"
+            mv "$artifact_dir"/*.deb "dist/$target/"
+            rmdir "$artifact_dir"
+          done
+
+      - name: Normalize release asset filenames
+        run: |
+          find dist -type f -name '*.deb' -print0 | while IFS= read -r -d '' package_path; do
+            package_dir="$(dirname "$package_path")"
+            package_name="$(basename "$package_path")"
+            normalized_name="${package_name//\~/\.}"
+            if [[ "$normalized_name" != "$package_name" ]]; then
+              mv "$package_path" "$package_dir/$normalized_name"
+            fi
+          done
+
+      - name: Generate release metadata
+        run: |
+          bash ./scripts/generate-release-manifest.sh dist dist/release-manifest.env dist/SHA256SUMS
+          echo "RELEASE_TAG=$(bash ./scripts/stack-release-tag.sh)" >>"$GITHUB_ENV"
+          echo "SIGNING_KEY_ID=$(tr -d '\n' < keys/active.key)" >>"$GITHUB_ENV"
+
+      - name: Build self-update bundle
+        run: |
+          tar \
+            --exclude='keys/private-*.pem' \
+            -czf dist/imei-update.tar.gz \
+            imei.sh \
+            imei.sh.sig \
+            imei.sh.sig.key \
+            imei.sh.pem \
+            update_version_info.sh \
+            README.md \
+            LICENSE.md \
+            scripts \
+            keys \
+            versions
+
+      - name: Generate one-step bootstrap launcher
+        run: |
+          bash ./scripts/generate-bootstrap.sh dist/imei-bootstrap.sh
+
+      - name: Sign release assets and metadata
         env:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-        run: |-
+        run: |
           echo "$PRIVATE_KEY" > private.pem
-          openssl dgst -sha512 -sign private.pem -out imei.sh.sig imei.sh
+          openssl dgst -sha512 -sign private.pem -out dist/imei-bootstrap.sh.sig dist/imei-bootstrap.sh
+          openssl dgst -sha512 -sign private.pem -out dist/imei-update.tar.gz.sig dist/imei-update.tar.gz
+          openssl dgst -sha512 -sign private.pem -out dist/release-manifest.env.sig dist/release-manifest.env
+          openssl dgst -sha512 -sign private.pem -out dist/SHA256SUMS.sig dist/SHA256SUMS
+          printf '%s\n' "${{ env.SIGNING_KEY_ID }}" > dist/imei-bootstrap.sh.sig.key
+          printf '%s\n' "${{ env.SIGNING_KEY_ID }}" > dist/imei-update.tar.gz.sig.key
+          printf '%s\n' "${{ env.SIGNING_KEY_ID }}" > dist/release-manifest.env.sig.key
+          printf '%s\n' "${{ env.SIGNING_KEY_ID }}" > dist/SHA256SUMS.sig.key
           rm private.pem
 
-      - name: Verify release
-        run: |-
-          openssl dgst -sha512 -verify imei.sh.pem -signature imei.sh.sig imei.sh
-
-      - name: Commit and push on changes
-        run: |-
-          git add .
-          git diff
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          git commit -m "Updated signature" -a || echo "No changes to commit"
-          git push
-
-  CreateRelease:
-    needs: Sign
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Git checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: main
-
-      - name: Check if version differs
-        id: version-check
+      - name: Verify release asset signatures
         run: |
-          LATEST_VERSION=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" | jq -r .tag_name)
-          THIS_VERSION=$(grep -oP 'Version\s*:\s*\K[0-9.]+' imei.sh)
-          echo "Latest version: $LATEST_VERSION"
-          echo "This version: $THIS_VERSION"
-          if [[ "$LATEST_VERSION" != "$THIS_VERSION" ]]; then
-            echo "RELEASE_NEEDED=true" >> $GITHUB_OUTPUT
-            echo "LATEST_VERSION=$LATEST_VERSION" >> $GITHUB_OUTPUT
-            echo "THIS_VERSION=$THIS_VERSION" >> $GITHUB_OUTPUT
-          else
-            echo "RELEASE_NEEDED=false" >> $GITHUB_OUTPUT
+          openssl dgst -sha512 -verify "keys/${{ env.SIGNING_KEY_ID }}.pem" -signature dist/imei-bootstrap.sh.sig dist/imei-bootstrap.sh
+          openssl dgst -sha512 -verify "keys/${{ env.SIGNING_KEY_ID }}.pem" -signature dist/imei-update.tar.gz.sig dist/imei-update.tar.gz
+          openssl dgst -sha512 -verify "keys/${{ env.SIGNING_KEY_ID }}.pem" -signature dist/release-manifest.env.sig dist/release-manifest.env
+          openssl dgst -sha512 -verify "keys/${{ env.SIGNING_KEY_ID }}.pem" -signature dist/SHA256SUMS.sig dist/SHA256SUMS
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_TAG }}
+          generate_release_notes: true
+          files: |
+            imei.sh
+            dist/imei-bootstrap.sh
+            dist/imei-bootstrap.sh.sig
+            dist/imei-bootstrap.sh.sig.key
+            dist/*/*.deb
+            dist/imei-update.tar.gz
+            dist/imei-update.tar.gz.sig
+            dist/imei-update.tar.gz.sig.key
+            imei.sh.sig
+            imei.sh.sig.key
+            imei.sh.pem
+            keys/*.pem
+            keys/active.key
+            dist/release-manifest.env
+            dist/release-manifest.env.sig
+            dist/release-manifest.env.sig.key
+            dist/SHA256SUMS
+            dist/SHA256SUMS.sig
+            dist/SHA256SUMS.sig.key
+          overwrite_files: true
+
+      - name: Refresh committed bootstrap launcher
+        run: |
+          bash ./scripts/generate-bootstrap.sh imei-bootstrap.sh
+
+      - name: Commit updated bootstrap launcher
+        run: |
+          if git diff --quiet -- imei-bootstrap.sh; then
+            exit 0
           fi
 
-      - name: Create Release
-        id: create-release
-        if: steps.version-check.outputs.RELEASE_NEEDED == 'true'
-        run: |
-          LATEST_VERSION="${{ steps.version-check.outputs.LATEST_VERSION }}"
-          THIS_VERSION="${{ steps.version-check.outputs.THIS_VERSION }}"
-          RELEASE_BODY="**Full Changelog**: https://github.com/${{ github.repository }}/compare/$LATEST_VERSION...$THIS_VERSION"
-          echo "Creating release $THIS_VERSION..."
-          echo "Tagging commit..."
-          git tag $THIS_VERSION
-          git push --tag
-          echo "Creating release..."
-          response=$(curl -s --data "{\"tag_name\": \"$THIS_VERSION\", \"name\": \"$THIS_VERSION\", \"body\": \"$RELEASE_BODY\"}" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases")
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add imei-bootstrap.sh
+          git commit -m "Update bootstrap launcher"
+          git push

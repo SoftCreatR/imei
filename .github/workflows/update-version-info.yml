@@ -2,33 +2,42 @@ name: Update Version Information
 
 on:
   push:
+    branches:
+      - main
     paths:
       - 'update_version_info.sh'
-    branches:
-      - '**'
-    tags-ignore:
-      - '**'
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
+
+env:
+  GITHUB_TOKEN: ${{ github.token }}
 
 jobs:
   Update:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
       - name: Git checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Update Version Information
-        run: |-
-          sudo bash update_version_info.sh -- && echo "OK"
+      - name: Install dependencies
+        run: sudo apt-get update -qq && sudo apt-get install -y git perl curl
 
-      - name: Commit and push on changes
-        run: |-
-          git add .
-          git diff
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          git commit -m "Updated version information" -a || echo "No changes to commit"
+      - name: Update version information
+        run: bash ./update_version_info.sh
+
+      - name: Commit and push changes
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add README.md versions/*.version versions/*.hash
+          git commit -m "Update tracked upstream versions"
           git push
