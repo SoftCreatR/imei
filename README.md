@@ -6,7 +6,9 @@
 [![Release Packages](https://img.shields.io/github/actions/workflow/status/SoftCreatR/imei/main.yml?branch=main&style=flat-square)](https://github.com/SoftCreatR/imei/actions/workflows/main.yml)
 [![CI](https://img.shields.io/github/actions/workflow/status/SoftCreatR/imei/ci.yml?branch=main&label=ci&style=flat-square)](https://github.com/SoftCreatR/imei/actions/workflows/ci.yml)
 [![GitHub release](https://img.shields.io/github/release/SoftCreatR/imei?style=flat-square)](https://github.com/SoftCreatR/imei/releases)
-[![GitHub license](https://img.shields.io/github/license/SoftCreatR/imei?style=flat-square&color=lightgray)](LICENSE.md)
+[![GitHub license](https://img.shields.io/github/license/SoftCreatR/imei?style=flat-square&color=lightgray)](LICENSE.md) [![Plant Tree](https://img.shields.io/badge/dynamic/json?color=brightgreen&label=Plant%20Tree&query=%24.total&url=https%3A%2F%2Fpublic.ecologi.com%2Fusers%2Fsoftcreatr%2Ftrees&style=flat-square)](https://ecologi.com/softcreatr?r=61212ab3fc69b8eb8a2014f4)  [![Installs](https://img.shields.io/badge/dynamic/json?style=flat-square&color=blue&label=installs&query=value&url=https://dist.1-2.dev/imei.php?cnt)](https://github.com/SoftCreatR/imei#one-step-automated-install)
+
+[![Codacy grade](https://img.shields.io/codacy/grade/db0b2b5f22454f4280e4623de9f7075f?style=flat-square&label=codacy%20grade)](https://app.codacy.com/gh/SoftCreatR/imei/dashboard) [![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/SoftCreatR/imei?style=flat-square&label=codefactor%20rating)](https://www.codefactor.io/repository/github/softcreatr/imei)
 
 </div>
 
