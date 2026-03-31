@@ -67,6 +67,28 @@ Pre-built release assets are currently intended for these `amd64` and `arm64` ta
 
 Other Debian and Ubuntu systems, including Ubuntu non-LTS releases, or other architectures, can still use IMEI through local package builds.
 
+## Runtime Container
+
+IMEI also publishes a small runtime container image built from the released `ubuntu24.04` IMEI packages.
+
+Image:
+
+```bash
+ghcr.io/softcreatr/imei-imagemagick:latest
+```
+
+Example:
+
+```bash
+docker run --rm ghcr.io/softcreatr/imei-imagemagick:latest -version
+```
+
+The container image is intentionally a secondary delivery format:
+
+* it uses one base target only: `ubuntu24.04` (amd64 / arm64)
+* it is meant to provide the full ImageMagick 7 runtime in Dockerized environments, including longer-lived containers
+* the primary supported install path for host systems remains the signed `.deb` packages
+
 ## Package Layout
 
 IMEI currently builds and installs these packages:

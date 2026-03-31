@@ -226,3 +226,79 @@ jobs:
           git add imei-bootstrap.sh
           git commit -m "Update bootstrap launcher"
           git push
+
+  PublishRuntimeImage:
+    needs: PublishRelease
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v6
+
+      - name: Download ubuntu24.04 package artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: dist
+          pattern: packages-ubuntu24.04-*
+          merge-multiple: false
+
+      - name: Normalize artifact layout
+        run: |
+          shopt -s nullglob
+          mkdir -p dist/ubuntu24.04
+          for artifact_dir in dist/packages-ubuntu24.04-*; do
+            mv "$artifact_dir"/*.deb dist/ubuntu24.04/
+            rmdir "$artifact_dir"
+          done
+
+      - name: Normalize release asset filenames
+        run: |
+          find dist -type f -name '*.deb' -print0 | while IFS= read -r -d '' package_path; do
+            package_dir="$(dirname "$package_path")"
+            package_name="$(basename "$package_path")"
+            normalized_name="${package_name//\~/\.}"
+            if [[ "$normalized_name" != "$package_name" ]]; then
+              mv "$package_path" "$package_dir/$normalized_name"
+            fi
+          done
+
+      - name: Compute image metadata
+        run: |
+          echo "RELEASE_TAG=$(bash ./scripts/stack-release-tag.sh)" >>"$GITHUB_ENV"
+          echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}-imagemagick" >>"$GITHUB_ENV"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Build and push runtime image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.runtime
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: false
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.RELEASE_TAG }}
+            ${{ env.IMAGE_NAME }}:ubuntu24.04
+            ${{ env.IMAGE_NAME }}:latest
+          labels: |
+            org.opencontainers.image.title=IMEI ImageMagick Runtime
+            org.opencontainers.image.description=Small Ubuntu 24.04 runtime image built from IMEI packages.
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ env.RELEASE_TAG }}

@@ -1,0 +1,33 @@
+FROM ubuntu:24.04
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN set -eux; \
+    cat >/etc/dpkg/dpkg.cfg.d/01-imei-minimal <<'EOF'
+path-exclude=/usr/share/doc/*
+path-include=/usr/share/doc/*/copyright
+path-exclude=/usr/share/man/*
+path-exclude=/usr/share/info/*
+path-exclude=/usr/share/locale/*
+path-include=/usr/share/locale/en*
+EOF
+
+COPY dist/ubuntu24.04/ /tmp/imei/
+
+RUN set -eux; \
+    arch="$(dpkg --print-architecture)"; \
+    shopt -s nullglob; \
+    packages=(/tmp/imei/*_"${arch}".deb); \
+    if ((${#packages[@]} == 0)); then \
+      echo "No IMEI packages found for architecture: ${arch}" >&2; \
+      exit 1; \
+    fi; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends "${packages[@]}"; \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives /tmp/imei; \
+    magick -version; \
+    magick -list format | grep -E '(^|[[:space:]])(JPEG|HEIC|JXL)\*?[[:space:]]'
+
+CMD ["magick", "-version"]
