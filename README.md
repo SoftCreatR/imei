@@ -104,6 +104,13 @@ The private runtime stack is installed below `/opt/imei`.
 
 `imei-imagemagick` exposes the CLI tools through `/usr/bin`, while the delegate libraries remain under `/opt/imei` so IMEI does not overwrite distro `libaom`, `libheif`, or `libjxl` packages.
 
+Upgrade note:
+
+* older IMEI releases installed the ImageMagick commands under `/usr/local/bin` because they used a direct source install into `/usr/local`
+* the current default system install is package-managed, and Debian packages must not place managed files in `/usr/local`
+* existing automation that hard-codes `/usr/local/bin/magick`, `/usr/local/bin/identify`, or similar paths should be updated to use `/usr/bin`
+* if you need an isolated non-system prefix instead of `/usr/bin`, use `--user-install`
+
 ## Default Behavior
 
 Running `sudo ./imei.sh` does this:
