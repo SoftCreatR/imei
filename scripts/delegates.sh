@@ -80,7 +80,7 @@ delegate_pkgconfig_module() {
   heic) echo "libheif" ;;
   jxl) echo "libjxl" ;;
   lcms) echo "lcms2" ;;
-  lqr) echo "liblqr-1" ;;
+  lqr) echo "lqr-1" ;;
   lzma) echo "liblzma" ;;
   openexr) echo "OpenEXR" ;;
   openjp2) echo "libopenjp2" ;;
