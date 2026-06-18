@@ -666,14 +666,14 @@ create_imagemagick_symlinks() {
 }
 
 # IMEI exports ImageMagick command names into /usr/bin, so distro ImageMagick
-# command packages must be treated as conflicting system installs.
+# command packages must be treated as conflicting system installs. Keep the
+# common/library packages co-installable because tools such as libvips depend on
+# distro MagickCore without needing the distro ImageMagick CLI package.
 imagemagick_conflict_packages() {
   printf '%s\n' \
     imagemagick \
-    imagemagick-6-common \
     imagemagick-6.q16 \
     imagemagick-6.q16hdri \
-    imagemagick-7-common \
     imagemagick-7.q16 \
     imagemagick-7.q16hdri \
     graphicsmagick-imagemagick-compat

@@ -478,7 +478,7 @@ sudo apt remove imei-imagemagick imei-libheif imei-libjxl imei-libaom --purge
 
 ## Operational Notes
 
-* `imei-imagemagick` is intended to be mutually exclusive with distro ImageMagick command packages. If stock ImageMagick is already installed, `apt` may remove it to install IMEI. Installing stock ImageMagick afterward may remove `imei-imagemagick` for the same reason. Use `--user-install` if you need IMEI without taking over `/usr/bin`.
+* `imei-imagemagick` is intended to be mutually exclusive with distro ImageMagick command packages. Distro ImageMagick common/library packages may still coexist when other packages, such as `libvips-tools`, need them as runtime dependencies. If stock ImageMagick commands are already installed, `apt` may remove them to install IMEI. Installing stock ImageMagick commands afterward may remove `imei-imagemagick` for the same reason. Use `--user-install` if you need IMEI without taking over `/usr/bin`.
 * pre-built release assets are target-specific; if no exact match exists, IMEI falls back to a local build unless `--prebuilt-only` is set
 * release metadata must match the published asset filenames exactly, so release generation normalizes filenames before creating the manifest and checksums
 * `--user-install` is a separate source-build backend and intentionally does not try to behave like a package-managed install
