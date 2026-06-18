@@ -18,6 +18,8 @@ export DEBIAN_FRONTEND=noninteractive
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck disable=SC1091
+. "$SCRIPT_DIR/common.sh"
+# shellcheck disable=SC1091
 . "$SCRIPT_DIR/delegates.sh"
 
 GENERATED_LIST="/etc/apt/sources.list.d/imei-src.list"
@@ -412,6 +414,23 @@ install_bootstrap_packages() {
   apt-get install -y "${BOOTSTRAP_PACKAGES[@]}"
 }
 
+# Current libheif releases need C++20 library support not provided by Focal's
+# default GCC 9.
+install_target_toolchain_packages() {
+  local target
+
+  if [[ "$SKIP_LIBHEIF" == "yes" ]]; then
+    return 0
+  fi
+
+  target="$(detect_local_target)"
+  case "$target" in
+  ubuntu20.04)
+    apt-get install -y gcc-10 g++-10
+    ;;
+  esac
+}
+
 # Ask APT to install the distro-maintained build dependencies for one source package.
 install_component_build_deps() {
   local label="$1"
@@ -627,6 +646,7 @@ install_libjxl_fallback_build_deps() {
 }
 
 install_bootstrap_packages
+install_target_toolchain_packages
 trap cleanup_source_repositories EXIT
 ensure_source_repositories
 apt-get update -qq

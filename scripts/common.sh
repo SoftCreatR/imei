@@ -68,6 +68,26 @@ require_commands() {
   fi
 }
 
+# Focal's default GCC 9 is too old for current libheif releases, which use
+# C++20 library APIs such as std::ranges. Prefer the newer distro compiler on
+# that target unless the caller explicitly selected another toolchain.
+configure_target_toolchain() {
+  local target="$1"
+
+  case "$target" in
+  ubuntu20.04)
+    if [[ -z "${CC:-}" ]]; then
+      command_exists gcc-10 || die "Ubuntu 20.04 builds require gcc-10. Install gcc-10 or set CC to a compatible compiler."
+      export CC=gcc-10
+    fi
+    if [[ -z "${CXX:-}" ]]; then
+      command_exists g++-10 || die "Ubuntu 20.04 builds require g++-10. Install g++-10 or set CXX to a compatible compiler."
+      export CXX=g++-10
+    fi
+    ;;
+  esac
+}
+
 # Download a file with the default retry policy used across IMEI scripts.
 fetch_file() {
   local url="$1"

@@ -173,6 +173,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 require_commands curl sha1sum tar make cmake dpkg-deb dpkg-shlibdeps file sed find xargs
+if [[ "$SKIP_LIBHEIF" != "yes" ]]; then
+  configure_target_toolchain "$TARGET"
+fi
 
 if command_exists ninja; then
   CMAKE_GENERATOR_ARGS=(-G Ninja)
