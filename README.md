@@ -470,7 +470,7 @@ sudo apt remove imei-imagemagick imei-libheif imei-libjxl imei-libaom --purge
 ## Default Versions
 
 <!-- versions start -->
-* ImageMagick version: `7.1.2-28 (Q16)`
+* ImageMagick version: `7.1.2-29 (Q16)`
 * libaom version: `3.13.3`
 * libheif version: `1.23.1`
 * libjxl version: `0.12.0`
