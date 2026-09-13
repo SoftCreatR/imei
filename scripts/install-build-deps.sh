@@ -24,6 +24,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 GENERATED_LIST="/etc/apt/sources.list.d/imei-src.list"
 GENERATED_SOURCES="/etc/apt/sources.list.d/imei-src.sources"
+BULLSEYE_SNAPSHOT_LIST="/etc/apt/imei-bullseye-snapshot.list"
+BULLSEYE_SNAPSHOT_CONFIG="/etc/apt/apt.conf.d/99imei-bullseye-snapshot"
+BULLSEYE_SNAPSHOT_TIMESTAMP="20260831T235959Z"
 
 BOOTSTRAP_PACKAGES=(
   apt-file
@@ -46,6 +49,65 @@ DISABLED_DELEGATES=()
 
 package_exists() {
   apt-cache show "$1" >/dev/null 2>&1
+}
+
+apt_get() {
+  apt-get -o Acquire::Retries=3 "$@"
+}
+
+refresh_apt_indexes() {
+  local no_cache="${1:-no}"
+  local options=()
+
+  if [[ "$no_cache" == "yes" ]]; then
+    options+=(
+      -o Acquire::http::No-Cache=true
+      -o Acquire::https::No-Cache=true
+    )
+  fi
+
+  apt_get "${options[@]}" update -qq
+}
+
+install_apt_packages() {
+  if apt_get install -y "$@"; then
+    return 0
+  fi
+
+  echo "Warning: APT package installation failed; refreshing package indexes and retrying." >&2
+  refresh_apt_indexes yes
+  apt_get install -y "$@"
+}
+
+install_apt_build_deps() {
+  if DEB_BUILD_PROFILES="nocheck nodoc" apt_get build-dep --arch-only -y "$@"; then
+    return 0
+  fi
+
+  echo "Warning: APT build-dependency installation failed; refreshing package indexes and retrying." >&2
+  refresh_apt_indexes yes
+  DEB_BUILD_PROFILES="nocheck nodoc" apt_get build-dep --arch-only -y "$@"
+}
+
+# Bullseye's live security metadata references package files that disappeared
+# after EOL. Use the final coherent archive snapshot for reproducible builds.
+configure_eol_debian_repositories() {
+  [[ "$(detect_local_target)" == "debian11" ]] || return 0
+
+  cat >"$BULLSEYE_SNAPSHOT_LIST" <<EOF
+deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/$BULLSEYE_SNAPSHOT_TIMESTAMP/ bullseye main
+deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/$BULLSEYE_SNAPSHOT_TIMESTAMP/ bullseye-updates main
+deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/$BULLSEYE_SNAPSHOT_TIMESTAMP/ bullseye-security main
+deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian/$BULLSEYE_SNAPSHOT_TIMESTAMP/ bullseye main
+deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian/$BULLSEYE_SNAPSHOT_TIMESTAMP/ bullseye-updates main
+deb-src [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/$BULLSEYE_SNAPSHOT_TIMESTAMP/ bullseye-security main
+EOF
+
+  cat >"$BULLSEYE_SNAPSHOT_CONFIG" <<EOF
+Dir::Etc::sourcelist "$BULLSEYE_SNAPSHOT_LIST";
+Dir::Etc::sourceparts "-";
+Acquire::Check-Valid-Until "false";
+EOF
 }
 
 detect_debian_signed_by() {
@@ -275,6 +337,10 @@ EOF
       exit 1
     }
 
+    if [[ "$debian_codename" == "bullseye" ]]; then
+      return 0
+    fi
+
     archive_base="http://deb.debian.org/debian"
     security_base="http://security.debian.org/debian-security"
     debian_signed_by="$(detect_debian_signed_by)"
@@ -360,7 +426,11 @@ EOF
 
 # Remove the temporary deb-src configuration after dependency installation.
 cleanup_source_repositories() {
-  rm -f "$GENERATED_LIST" "$GENERATED_SOURCES"
+  rm -f \
+    "$GENERATED_LIST" \
+    "$GENERATED_SOURCES" \
+    "$BULLSEYE_SNAPSHOT_LIST" \
+    "$BULLSEYE_SNAPSHOT_CONFIG"
   apt-get update -qq || true
 }
 
@@ -407,11 +477,12 @@ resolve_component_source() {
 
 # Install the minimal toolchain needed before any source/delegate resolution can happen.
 install_bootstrap_packages() {
-  if ! apt-get update -qq; then
+  configure_eol_debian_repositories
+  if ! refresh_apt_indexes; then
     configure_eol_ubuntu_repositories
-    apt-get update -qq
+    refresh_apt_indexes yes
   fi
-  apt-get install -y "${BOOTSTRAP_PACKAGES[@]}"
+  install_apt_packages "${BOOTSTRAP_PACKAGES[@]}"
 }
 
 # Current libheif releases need C++20 library support not provided by Focal's
@@ -426,7 +497,7 @@ install_target_toolchain_packages() {
   target="$(detect_local_target)"
   case "$target" in
   ubuntu20.04)
-    apt-get install -y gcc-10 g++-10
+    install_apt_packages gcc-10 g++-10
     ;;
   esac
 }
@@ -442,8 +513,7 @@ install_component_build_deps() {
   fi
 
   echo "Installing build dependencies for $label via source package: $source_name"
-  DEB_BUILD_PROFILES="nocheck nodoc" \
-    apt-get build-dep --arch-only -y "$source_name"
+  install_apt_build_deps "$source_name"
 }
 
 # Install the minimal ImageMagick baseline when distro build-deps on archived
@@ -508,7 +578,7 @@ ensure_package_installed() {
     return 0
   fi
 
-  apt-get install -y "$package_name"
+  install_apt_packages "$package_name"
 }
 
 # Best-effort install for optional packages that may exist in package metadata
@@ -520,7 +590,7 @@ try_ensure_package_installed() {
     return 0
   fi
 
-  if ! apt-get install -y "$package_name"; then
+  if ! install_apt_packages "$package_name"; then
     echo "Warning: unable to install optional package '$package_name'; continuing." >&2
     return 1
   fi
@@ -645,11 +715,11 @@ install_libjxl_fallback_build_deps() {
     libwebp-dev
 }
 
+trap cleanup_source_repositories EXIT
 install_bootstrap_packages
 install_target_toolchain_packages
-trap cleanup_source_repositories EXIT
 ensure_source_repositories
-apt-get update -qq
+refresh_apt_indexes
 
 if [[ "$SKIP_AOM" != "yes" ]]; then
   install_component_build_deps "aom" "$(resolve_component_source aom libaom-dev aom-tools)"
